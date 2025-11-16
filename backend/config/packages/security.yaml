@@ -1,0 +1,164 @@
+security:
+    # password_hashers:
+    #     App\Entity\User: 'auto'
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        App\Entity\User: 'auto'
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: emailUsers
+
+    firewalls:
+        login:
+            pattern: ^/api/auth/login
+            stateless: true
+            json_login:
+                check_path: /api/auth/login
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+                username_path: email
+                password_path: password
+
+        api:
+            pattern: ^/api
+            stateless: true
+            jwt: ~
+
+    access_control:
+        - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }  # nouveau user client
+        - { path: ^/api/auth/admin/register, roles: PUBLIC_ACCESS } # nouveai user admin
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
+        # - { path: ^/api/client, roles: ROLE_USER }
+        - { path: ^/api/client/loginVerifier, roles: PUBLIC_ACCESS }
+        - { path: ^/api/client/profile, roles: PUBLIC_ACCESS }
+        - { path: ^/api/client/adresse, roles: ROLE_USER }
+        - { path: ^/api/products, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/products, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE] }
+        - { path: ^/api/categorie, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/categorie, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE] }
+        - { path: ^/api/commande, roles: ROLE_USER, methods: [POST] }
+        - { path: ^/api/commande, roles: ROLE_ADMIN, methods: [GET] }
+        - { path: ^/api/user, roles: ROLE_ADMIN }
+        # - { path: ^/api/client, roles: ROLE_ADMIN }
+
+
+
+
+
+
+
+
+
+
+# # config/packages/security.yaml
+# security:
+#     password_hashers:
+#         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+#         App\Entity\User: 'auto'
+
+#     providers:
+#         app_user_provider:
+#             entity:
+#                 class: App\Entity\User
+#                 property: emailUsers
+
+#     firewalls:
+#         dev:
+#             pattern: ^/(_(profiler|wdt)|css|images|js)/
+#             security: false
+        
+#         main:
+#             lazy: true
+#             provider: app_user_provider
+#             stateless: true
+#             json_login:
+#                 check_path: api_login_check
+#                 username_path: email
+#                 password_path: password
+#                 success_handler: lexik_jwt_authentication.handler.authentication_success
+#                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            
+#             jwt: ~
+
+#     access_control:
+#                 # route publique
+#         # - { path: ^/api/categorie, roles: PUBLIC_ACCESS } 
+#         # - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
+#         # - { path: ^/api/user/register, roles: PUBLIC_ACCESS }
+#         # - { path: ^/api/products, roles: PUBLIC_ACCESS }
+#         #         # User connecté seulement
+#         # - { path: ^/api/commande, roles: ROLE_USER }
+#         # - { path: ^/api/panier, roles: ROLE_USER }
+#         # - { path: ^/api/addresse, roles: ROLE_USER }
+#         # - { path: ^/api/user/profile, roles: ROLE_USER }
+#         #         # route protegé
+#         # - { path: ^/api/admin, roles: ROLE_ADMIN }
+#         # - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+
+#         # ----------------------------------------------------
+#         # 1. ROUTES PUBLIQUES (Accès à tous)
+#         # ----------------------------------------------------
+#         - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
+#         - { path: ^/api/user/register, roles: PUBLIC_ACCESS }
+        
+#         # Lecture des produits et catégories (pour la vitrine)
+#         - { path: ^/api/products, roles: PUBLIC_ACCESS, methods: [GET] }
+#         - { path: ^/api/categorie, roles: PUBLIC_ACCESS, methods: [GET] }
+#         - { path: ^/api/categorie, roles: PUBLIC_ACCESS } 
+        
+#         # ----------------------------------------------------
+#         # 2. ROUTES ADMINISTRATEUR (ROLE_ADMIN)
+#         # ----------------------------------------------------
+#         # Gestion des utilisateurs et clients (CRUD)
+#         - { path: ^/api/user, roles: ROLE_ADMIN }
+#         - { path: ^/api/client, roles: ROLE_ADMIN }
+
+#         # Gestion complète des commandes, paiements, adresses, et produits (CRUD)
+#         - { path: ^/api/commande, roles: ROLE_ADMIN, methods: [GET, POST, PUT, DELETE] }
+#         - { path: ^/api/payment, roles: ROLE_ADMIN, methods: [GET, PUT, DELETE] } # L'initiation se fait souvent via Commande
+#         - { path: ^/api/admin/addresses, roles: ROLE_ADMIN } # Gestion de toutes les adresses
+        
+#         # Modification des produits et catégories (l'affichage est public, mais la modification est admin)
+#         - { path: ^/api/products, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE] }
+#         - { path: ^/api/categories, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE] }
+        
+#         # ----------------------------------------------------
+#         # 3. ROUTES UTILISATEUR (ROLE_USER)
+#         # ----------------------------------------------------
+#         # Profil et informations personnelles
+#         - { path: ^/api/user/profile, roles: ROLE_USER }
+
+#         # Commandes : peut créer (POST) et lire (GET) SES commandes
+#         - { path: ^/api/orders, roles: ROLE_USER, methods: [GET, POST] }
+        
+#         # Panier : l'utilisateur gère SON panier (lecture, ajout, modification)
+#         - { path: ^/api/cart, roles: ROLE_USER }
+        
+#         # Adresses : l'utilisateur gère SES adresses (CRUD)
+#         - { path: ^/api/addresses, roles: ROLE_USER } 
+        
+#         # Paiement : souvent géré par la finalisation de la commande (route sécurisée POST)
+#         - { path: ^/api/checkout, roles: ROLE_USER } # Route de finalisation
+        
+#         # ----------------------------------------------------
+#         # 4. RÈGLE PAR DÉFAUT (Sécurisation maximale)
+#         # ----------------------------------------------------
+#         # Toutes les autres routes API non listées nécessitent d'être connecté
+#         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        
+#     role_hierarchy:
+#         ROLE_ADMIN: ROLE_USER
+
+# when@test:
+#     security:
+#         password_hashers:
+#             # Pour les tests, utiliser un hashage plus rapide
+#             Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+#                 algorithm: auto
+#                 cost: 4
+#                 time_cost: 3
+#                 memory_cost: 10

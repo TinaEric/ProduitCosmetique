@@ -1,0 +1,29 @@
+lexik_jwt_authentication:
+    secret_key: '%env(resolve:JWT_SECRET_KEY)%'
+    public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
+    pass_phrase: '%env(JWT_PASSPHRASE)%'
+    token_ttl: 3600
+
+    encoder:
+        service: lexik_jwt_authentication.encoder.lcobucci
+        signature_algorithm: 'RS256'
+
+    token_extractors:
+        authorization_header:
+            enabled: true
+            prefix: Bearer
+            name: Authorization
+        query_parameter:
+            enabled: true
+            name: bearer
+        cookie:
+            enabled: false
+            name: auth
+
+    api_platform:
+        enabled: false
+
+    clock_skew: 0
+    user_id_claim: username
+    remove_token_from_body_when_cookies_used: false
+    allow_no_expiration: false

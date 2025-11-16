@@ -1,0 +1,19 @@
+# see https://symfony.com/doc/current/reference/configuration/framework.html
+framework:
+    secret: '%env(APP_SECRET)%'
+
+    # Configuration du Serializer : indispensable pour lire les #[Groups] et #[MaxDepth]
+    serializer:
+        # CORRECTION : Remplacer 'enable_annotations' par 'enable_attributes' pour Symfony 5.4+
+        enable_attributes: true 
+
+    # Note that the session will be started ONLY if you read or write from it.
+    session: true
+    #esi: true
+    #fragments: true
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file

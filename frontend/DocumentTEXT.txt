@@ -1,0 +1,40 @@
+.styley:hover{
+    transform: scale(1.3);
+    transition: 2s;
+}
+
+.input-container{
+    position: relative;
+    margin: 15px 0;
+    width: 100%;
+}
+.input1{
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 16px;
+    border: 2px solid #545a64;
+    border-radius: 15px;
+    outline: none;
+    background: transparent;
+}
+.label1{
+    position: absolute;
+    left: 10px;
+    top: 7px;
+    padding: 0px 5px;
+    background-color: #272935;
+    color: #a4a9b3;
+    font-size: 16px;
+    transition:
+        transform  0.3s ease, color  0.3s ease;
+}
+.input1:focus + .label1,.input1:not(:placeholder-shown) + .label1{
+    transform: translateY(-16px);
+    font-size: 0.875rem /* 14px */;
+    line-height: 1.25rem /* 20px */;
+    color: #0051ff;
+}
+
+.input1:focus{
+    border-color: #0051ff;
+}

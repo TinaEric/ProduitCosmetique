@@ -1,0 +1,47 @@
+-- USERS
+INSERT INTO USERS (ID_Users, nomUsers, emailUsers, passwordUsers, roleUsers) VALUES
+(1, 'Rakoto', 'rakoto@example.com', 'pass123', 'admin'),
+(2, 'Rasoa', 'rasoa@example.com', 'pass456', 'client'),
+(3, 'Jean', 'jean@example.com', 'pass789', 'client');
+
+-- CLIENT
+INSERT INTO CLIENT (REF_Client, ID_Users, nomClient, prenomClient, telephone, civilite, dateNaissance) VALUES
+('CL001', 2, 'Rasoa', 'Mamy', '0321234567', 'Mme', '1990-05-10'),
+('CL002', 3, 'Jean', 'Paul', '0339876543', 'M.', '1985-11-22'),
+('CL003', 2, 'Rasoa', 'Tiana', '0341122334', 'Mme', '1992-03-15');
+
+-- ADRESSE
+INSERT INTO ADRESSE (LOT, REF_Client, ville, codePostal, quartier) VALUES
+('LT001', 'CL001', 'Fianarantsoa', '301', 'Ampasambazaha'),
+('LT002', 'CL002', 'Antsirabe', '110', 'Mahazoarivo'),
+('LT003', 'CL003', 'Toliara', '601', 'Tanambao');
+
+-- CATEGORIE
+INSERT INTO CATEGORIE (CODE_Categorie, Titre, description) VALUES
+('CAT01', 'Électronique', 'Appareils et gadgets'),
+('CAT02', 'Vêtements', 'Mode et habillement'),
+('CAT03', 'Alimentation', 'Produits alimentaires');
+
+-- PRODUIT
+INSERT INTO PRODUIT (REF_Produit, CODE_Categorie, nomProduit, descriptionProduit, prixUnitaire, quantiteStock) VALUES
+('PR001', 'CAT01', 'Smartphone X', 'Téléphone haut de gamme', 1200.00, 50),
+('PR002', 'CAT02', 'T-shirt coton', 'T-shirt 100% coton bio', 15.50, 200),
+('PR003', 'CAT03', 'Riz blanc 5kg', 'Sacs de riz de qualité', 18.75, 100);
+
+-- COMMANDE
+INSERT INTO COMMANDE (REF_Commande, REF_Client, dateCommande, statutCommande, montantCommande) VALUES
+('CMD001', 'CL001', '2025-09-01', 'validée', 1234.50),
+('CMD002', 'CL002', '2025-09-15', 'en attente', 45.00),
+('CMD003', 'CL003', '2025-09-20', 'annulée', 0.00);
+
+-- PAIEMENT
+INSERT INTO PAIEMENT (CODE_Paiement, REF_Commande, modePaiement, statutPaiement, datePaiement, referencePaiement, montantPaye) VALUES
+('PAY001', 'CMD001', 'carte', 'réussi', '2025-09-01', 'REF123', 1234.50),
+('PAY002', 'CMD002', 'espèces', 'en attente', '2025-09-15', 'REF456', 45.00),
+('PAY003', 'CMD003', 'carte', 'échoué', '2025-09-20', 'REF789', 0.00);
+
+-- PANIER
+INSERT INTO PANIER (ID_Panier, REF_Client, REF_Produit, quantite, dateAjout) VALUES
+(1, 'CL001', 'PR001', 1, '2025-08-30'),
+(2, 'CL002', 'PR002', 3, '2025-09-10'),
+(3, 'CL003', 'PR003', 2, '2025-09-18');

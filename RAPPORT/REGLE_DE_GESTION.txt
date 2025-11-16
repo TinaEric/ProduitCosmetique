@@ -1,0 +1,76 @@
+~~ USERS - CLIENT ~~
+* Chaque client est lié à un Utilisateur, mais tous les utilisateurs ne sont pas forcement des clients:
+	- Un client est toujours un Utilisateur (obligatoirement possédant un compte).
+	- Un utilisateur peut ne pas être un client (admin, gestionnaire).
+
+~~ CLIENT - ADRESSE - COMMANDE ~~
+* L'adresse de livraison (adresse du client) peut modifier à chaque commande:
+	- Un client peut avoir plusieurs adresses.
+	- Chaque adresse est liée à un seul client.
+	- Une adresse peut être utilisée par plusieurs commandes.
+	- Chaque commande référence à une seule adresse précise.
+	- Un client peut passer plusieurs commandes.
+	- Un commande est appartient à un seul client.
+
+~~ CATEGORIE - PRODUIT ~~
+* Un produit appartient à un seul catégorie et un catégorie contient au moins un produit.
+* Un commande peut contenir un ou plusieurs produits.
+* Un commande contient un ou plusieurs produit, et un produit peut acheter plusieurs fois à chaque commande.
+
+~~ PAIEMENT - COMMANDE ~~
+* Chaque paiement est obligatoirement lié à une seule commande.
+* Une commande peut avoir plusieurs tentatives de paiement (échec, relance, remboursement).
+*Le client doit pouvoir choisir parmi plusieurs modes de paiement:
+	- Paiement immédiat.
+	- Paiement plus tard.
+	- Paiement à la livraison ou en caisse (espèces).
+	- Paiement partielle.
+
+~~~~ PLUS D'INFORMATIONS ~~~~
+*montantTotal = total à payé pour un commande
+*subTotal = total à payé  pour un produit (prix*quantité)
+*statut commande = en attente, validé,  livré, annulé (utilisateur)
+*Statut paiement = en attente, validé, échoué, rembourser 
+*paiement en Mvola ou en espèces 
+
+~~~~ CAS POSSIBLE LORS DE TRANSACTIONS ~~~~
+# Commande valide + paiement reçue = livraison
+# Commande valide + paiement non reçue  = (en attente)
+# Commande annulé + paiement reçue = recréation
+# Montant incorrect
+# Paiement deux fois
+**cas par défaut de système e-commerce
+=> chaque commande est lié en un paiement (1 commande = 1 paiement)
+=> chaque commande est payé une seule fois 
+=> il est possible que le commande est crée en un jour mais payé en un autre jour
+
+~~ CLE PRIMAIRE ~~
+# LOT: AV13
+# CODE_CATEGORIE: COSM001
+# REF_CLIENT: CLI_dateHeureCreation ex: CLI_202203150200
+# REF_COMMANDE: CMD_dateHeureCommande ex: CMD_202512010939
+# CODE_PAIEMENT : PAYE_dateHeurePaiement ex: PAYE_202510221522
+
+
+
+STATUT DU COMMANDE DURANT LE PROCESSUS:
+1. COMMANDE_CREATED : Panier actif, statut initial, la commande a été créée dans la base de données et contient les PANIER, le client est en train de renseigner les étapes durant le processus du commande
+2. EN_ATTENE_PAIEMENT : le client a atteint la dernière étape de processus  et s'apprête à payer. Tous les détails sont finalisés sur l'entité Commande . Le système attend la Confirmation du prestataire de paiement
+3. COMPLETED : payé ou validé , la confirmation de paiement est reçue. Ce qui déclenche l'envoi email de confirmation et décrémentation du stock
+3. CONCELLED : La commande est annulé avant le paiement où un peu après (par l'administrateur ou le paiement a échoué.
+4.PAIMENT_FAILED : Le paiement est rejeté (fonds insuffisant) , la commande reste en attente de paiement ou annule 
+
+STATUT DE LIVRAISON
+5. EN_PREPARATION: l'entrepôt prise en charge la commande . le stock est définitivement décrémenté
+6. EXPEDIEE :  La commande a quitté l'entrepôt . le numéro de suivi est ajouté dans l'entité COMMANDE  et envoyé au client
+7. LIVREE: le transporteur confirme que la commande a été reçue par le client 
+
+
+
+Panier Local -- Authentification -- création de Commande -- étape de paiement - succès paiement -- Préparation -- Expédié -- Livré 
+
+
+
+
+
+

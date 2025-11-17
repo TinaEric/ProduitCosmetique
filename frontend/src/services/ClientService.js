@@ -57,3 +57,13 @@ export const updateCommandePanier = async (dataCommande) => {
   return await verifierReponse(() =>  api.put('/api/client/updateCommande', dataCommande));
     
 };
+
+export const updateClientAddress = async (addressData) => {
+  try {
+      const response = await api.put('/api/client/adresse/update', addressData);
+      return response.data;
+  } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'adresse:', error);
+      throw error;
+  }
+};

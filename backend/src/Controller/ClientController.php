@@ -291,6 +291,7 @@ final class ClientController extends AbstractController
             $facturation = $adresseData['adresseFacturation'];
             
             $adresseLivraison = $cmdService->creerRecupererAdresse($livraison, $client, $em, $adresseRepos);
+
             if (!$adresseLivraison) {
                 return $this->json([
                     'error' => [
@@ -315,7 +316,7 @@ final class ClientController extends AbstractController
                 $adresseFacturation = $adresseLivraison;
             }
     
-            $result = $cmdService->createPanierCommande($client,$prodRepos,$em,$CliRepos,$adresseLivraison,$adresseFacturation);
+            $result = $cmdService->createPanierCommande($client,$adresseLivraison,$adresseFacturation);
             // if ($result['ProdIntrouvable']){
             //     return $this->json([
             //         'error' => [
@@ -338,8 +339,11 @@ final class ClientController extends AbstractController
             return new JsonResponse([
                 'data' => [
                     'refCommande' => $Order->getRefCommande(),
-                    'totalComplet' => $result['TotalPanier'],
                     'StatutCommande' => $Order->getStatutCommande(),
+                    'adresse' => [
+                        'adresseLivraison' => $Order->getAdresseLivraison(),
+                        'adresseFacturation' => $Order->getAdresseFacturation(),
+                    ]
                 ],
                 'message' => 'La création de la commande est réussie',
                 'status' => 'success'
@@ -381,20 +385,9 @@ final class ClientController extends AbstractController
             
             $data = json_decode($request->getContent(), true);
             
-            // $panierItem = $data['panier'] ?? [];
             $adresseData = $data['adresse'] ?? [];
-            $refCommande = $data['refCommande'] ?? [];
-            $adresseDifferent = $data['AdresseDifferent'] ?? [];
-            
-            // if(empty($panierItem)){
-            //     return $this->json([
-            //         'error' => [
-            //             'code' => 400,
-            //             'message' => 'Le panier est vide',
-            //             'status' => 'error'
-            //         ]
-            //     ], 400);
-            // }
+            $refCommande = $data['refCommande'] ?? null;
+            $adresseDifferent = $data['AdresseDifferent'] ?? false;
     
             if (empty($adresseData)) {
                 return $this->json([
@@ -405,6 +398,7 @@ final class ClientController extends AbstractController
                     ]
                 ], 400);
             }
+            
             if (empty($refCommande)) {
                 return $this->json([
                     'error' => [
@@ -414,6 +408,7 @@ final class ClientController extends AbstractController
                     ]
                 ], 400);
             }
+            
             if (!$client) {
                 return $this->json([
                     'error' => [
@@ -423,6 +418,7 @@ final class ClientController extends AbstractController
                     ]
                 ], 404);
             }
+            
             if (!isset($adresseData['adresseLivraison']) || !isset($adresseData['adresseFacturation'])) {
                 return $this->json([
                     'error' => [
@@ -432,77 +428,107 @@ final class ClientController extends AbstractController
                     ]
                 ], 400);
             }
+            
             $livraison = $adresseData['adresseLivraison'];
             $facturation = $adresseData['adresseFacturation'];
-            $commande = $em->getRepository(Commande::class)->find($refCommande);
+            
+            // CORRECTION : Recherche par refCommande
+            $commande = $em->getRepository(Commande::class)->findOneBy(['refCommande' => $refCommande]);
+            
             if (!$commande){
                 return $this->json([
                     'error' => [
                         'code' => 404,
-                        'message' => "Reference commande non trouvé",
+                        'message' => "Commande avec la référence '$refCommande' non trouvée",
                         'status' => 'error'
                     ]
                 ], 404);
-            };
-            if ($livraison['estAdresseExistante'])
-            {
-                $id = $livraison['refAdresse'];
-                $adresse = $em->getRepository(Adresse::class)->find($id);
-                $commande->setAdresseLivraison();
             }
-
-            $adresseLivraison = $cmdService->MisAjourAdresse($livraison, $client, $em, $adresseRepos);
-            if (!$adresseLivraison) {
+    
+            // Vérification de sécurité
+            if ($commande->getClient() !== $client) {
                 return $this->json([
                     'error' => [
-                        'code' => 400,
-                        'message' => 'Erreur lors de la création de l\'adresse de livraison',
+                        'code' => 403,
+                        'message' => "Accès non autorisé à cette commande! Client: " . $commande->getClient()->getNomClient(),
                         'status' => 'error'
                     ]
-                ], 400);
+                ], 403);
             }
-            if ($adresseDifferent){
-                $adresseFacturation = $cmdService->MisAjourAdresse($facturation, $client, $em, $adresseRepos);
-                if (!$adresseFacturation) {
+    
+            // Le reste de votre code reste inchangé...
+            // Gestion adresse livraison
+            if ($livraison['estAdresseExistante']) {
+                $id = $livraison['refAdresse'];
+                $adresse = $em->getRepository(Adresse::class)->find($id);
+                if(!$adresse){
+                    return $this->json([
+                        'error' => [
+                            'code' => 404,
+                            'message' => "ID d'adresse de livraison non trouvé",
+                            'status' => 'error'
+                        ]
+                    ], 404);
+                }
+                $commande->setAdresseLivraison($adresse);
+            } else {
+                $adresseLivraison = $cmdService->MisAjourAdresse($livraison, $client);
+                if (!$adresseLivraison) {
                     return $this->json([
                         'error' => [
                             'code' => 400,
-                            'message' => 'Erreur lors de la création de l\'adresse de facturation',
+                            'message' => 'Erreur lors de la création de l\'adresse de livraison',
                             'status' => 'error'
                         ]
                     ], 400);
                 }
-            }else{
-                $adresseFacturation = $adresseLivraison;
+                $commande->setAdresseLivraison($adresseLivraison);
             }
+    
+            // Gestion adresse facturation
+            if ($adresseDifferent) {
+                if ($facturation['estAdresseExistante']) {
+                    $id = $facturation['refAdresse'];
+                    $adresse = $em->getRepository(Adresse::class)->find($id);
+                    if(!$adresse){
+                        return $this->json([
+                            'error' => [
+                                'code' => 404,
+                                'message' => "ID d'adresse de facturation non trouvé",
+                                'status' => 'error'
+                            ]
+                        ], 404);
+                    }
+                    $commande->setAdresseFacturation($adresse);
+                } else {
+                    $adresseFacturation = $cmdService->MisAjourAdresse($facturation, $client);
+                    if (!$adresseFacturation) {
+                        return $this->json([
+                            'error' => [
+                                'code' => 400,
+                                'message' => 'Erreur lors de la création de l\'adresse de facturation',
+                                'status' => 'error'
+                            ]
+                        ], 400);
+                    }
+                    $commande->setAdresseFacturation($adresseFacturation);
+                }
+            } else {
+                $commande->setAdresseFacturation($commande->getAdresseLivraison());
+            }
+    
+            $em->flush();
             
-            $result = $cmdService->createPanierCommande($client,$prodRepos,$em,$CliRepos,$adresseLivraison,$adresseFacturation);
-            // if ($result['ProdIntrouvable']){
-            //     return $this->json([
-            //         'error' => [
-            //             'code' => 404,
-            //             'message' => "Produit " . $result['ProdIntrouvable'] . " introuvable!",
-            //             'status' => 'error'
-            //         ]
-            //     ], 404);
-            // }
-            // if ($result['stockInsuffisant']){
-            //     return $this->json([
-            //         'error' => [
-            //             'code' => 400,
-            //             'message' => "La quantité du Produit " . $result['stockInsuffisant'] . " est insuffisante pour cette commande!",
-            //             'status' => 'error'
-            //         ]
-            //     ], 400);
-            // }
-            $Order = $result['commande'];
             return new JsonResponse([
                 'data' => [
-                    'refCommande' => $Order->getRefCommande(),
-                    'totalComplet' => $result['TotalPanier'],
-                    'StatutCommande' => $Order->getStatutCommande(),
+                    'refCommande' => $commande->getRefCommande(),
+                    'StatutCommande' => $commande->getStatutCommande(),
+                    'adresse' => [
+                        'adresseLivraison' => $commande->getAdresseLivraison(),
+                        'adresseFacturation' => $commande->getAdresseFacturation(),
+                    ]
                 ],
-                'message' => 'La création de la commande est réussie',
+                'message' => 'La mis à jour de la commande est réussie',
                 'status' => 'success'
             ], 200);
             
@@ -565,4 +591,57 @@ final class ClientController extends AbstractController
         }
     }
     
+    #[Route('/api/client/adresse/update', name: 'client_address_update', methods: ['PUT'])]
+    public function updateAddress(Request $request, EntityManagerInterface $em, AdresseRepository $adresseRepos): JsonResponse
+    {
+    try {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+        
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'Utilisateur non valide'], 401);
+        }
+
+        $client = $user->getClient();
+        if (!$client) {
+            return new JsonResponse(['error' => 'Client non trouvé'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        
+        // Vérifier que l'adresse existe et appartient au client
+        $adresse = $adresseRepos->find($data['id']);
+        if (!$adresse || $adresse->getClient() !== $client) {
+            return $this->json(['error' => 'Adresse non trouvée'], 404);
+        }
+
+        // Mettre à jour les champs
+        $adresse->setQuartier($data['quartier'] ?? $adresse->getQuartier());
+        $adresse->setVille($data['ville'] ?? $adresse->getVille());
+        $adresse->setCodePostal($data['codePostal'] ?? $adresse->getCodePostal());
+        $adresse->setLot($data['lot'] ?? $adresse->getLot());
+        $adresse->setLibelleAdresse($data['labelle'] ?? $adresse->getLibelleAdresse());
+        $adresse->setComplementAdresse($data['complement'] ?? $adresse->getComplementAdresse());
+
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Adresse mise à jour avec succès',
+            'adresse' => [
+                'id' => $adresse->getRefAdresse(),
+                'quartier' => $adresse->getQuartier(),
+                'ville' => $adresse->getVille(),
+                'codePostal' => $adresse->getCodePostal(),
+                'lot' => $adresse->getLot(),
+                'labelle' => $adresse->getLibelleAdresse(),
+                'complement' => $adresse->getComplementAdresse(),
+            ]
+        ]);
+
+    } catch (\Exception $e) {
+        return $this->json([
+            'error' => 'Erreur interne du serveur: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }

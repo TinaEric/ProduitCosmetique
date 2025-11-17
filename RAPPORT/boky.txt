@@ -1,0 +1,148 @@
+L'informatique s'impose aujourd'hui comme le principal moteur d'efficacité et de croissance du commerce moderne. Ce stage représente le prolongement professionnel de ma Licence 2 à l'École Nationale d'Informatique (ENI), où j'ai pu transformer mes connaissances théoriques en une réalisation concrète. [Entreprise] J'ai effectué cette mission au sein de Spray Info, une structure reconnue à Fianarantsoa pour son pôle de formation supérieure et son activité de prestation numérique (TechnoSupport). [Problématique] L'entreprise a cherché à capitaliser sur cette dynamique en répondant à la demande croissante d'e-commerce, posant ainsi la problématique de la conception d'une plateforme de vente stable et sécurisée. [Solution] La réponse à ce besoin s'est matérialisée par le développement d'un site web complet de vente en ligne de produits cosmétiques. [Travail à faire] Mon rôle a été central dans ce processus, couvrant le développement Full-Stack de la plateforme, de la modélisation des données à l'intégration des fonctionnalités transactionnelles.
+
+
+
+
+. Contexte du Stage et de la Formation
+L'École Nationale d'Informatique (ENI) de Fianarantsoa, établissement de référence dans la formation des professionnels du numérique à Madagascar, exige de ses étudiants en deuxième année de Licence de réaliser un stage en entreprise. Ce stage a pour vocation de permettre aux étudiants du parcours Informatique Générale (IG) de confronter les connaissances théoriques acquises aux réalités pratiques du monde professionnel.
+
+
+
+
+
+Dans ce cadre, j'ai eu l'opportunité d'effectuer un stage de [Durée du stage, ex : 8 semaines] au sein de l'entreprise Spray_Info, spécialisée dans [domaine d'expertise de Spray_Info, ex : le développement de solutions numériques et la transformation digitale].
+
+2. Présentation du Projet et de la Problématique
+Le secteur de la vente de produits cosmétiques connaît une digitalisation rapide, imposant aux entreprises locales d'intégrer le commerce électronique (e-commerce) pour rester compétitives. C'est dans ce contexte que s'inscrit mon projet de stage, centré sur la conception et la réalisation d'un site web de vente en ligne pour des produits cosmétiques.
+
+Actuellement, [Nom de l'entreprise cliente, ou "l'entreprise partenaire de Spray_Info"] gère sa distribution de manière traditionnelle ou via des canaux non optimisés, ce qui entraîne des lacunes en matière de gestion des stocks, de traçabilité des commandes et d'accessibilité client.
+
+
+
+La problématique qui a guidé mon travail de conception est la suivante :
+
+« Comment concevoir et développer une plateforme e-commerce robuste et ergonomique, basée sur la méthodologie MERISE, afin d’optimiser le processus de vente de produits cosmétiques pour [Nom de l'entreprise/client] ? »
+
+3. Objectifs et Méthodologie
+L'objectif principal de ce stage était de fournir une solution numérique complète permettant :
+
+La gestion autonome du catalogue de produits (ajout, modification, suppression).
+
+Un parcours utilisateur fluide pour l'achat en ligne (panier, paiement sécurisé).
+
+La traçabilité et le suivi des commandes pour l'administrateur et le client.
+
+Pour atteindre ces objectifs, ce rapport adoptera une démarche structurée, en respectant le canevas de l'ENI, en s'appuyant sur la méthode MERISE qui permet une modélisation rigoureuse du Système d’Information (MCD, MLD, MCT, MOT).
+
+
+
+4. Annonce du Plan
+Ce rapport est organisé en trois parties principales. La première partie sera consacrée à la présentation des structures (ENI et Spray_Info) et à la description du projet. La deuxième partie détaillera l'analyse préalable et la conception du système selon la méthodologie MERISE. Enfin, la troisième partie exposera la phase de réalisation technique et de développement de l'application, avant de conclure sur le bilan et les perspectives d'avenir.
+
+
+
+Le cursus de Licence Professionnelle en Informatique de l'École Nationale d'Informatique (ENI) de Fianarantsoa prévoit, en Deuxième Année, la réalisation d'un stage en milieu professionnel. Cette étape est essentielle pour confronter la formation théorique reçue dans le parcours Informatique Générale (IG) aux exigences concrètes du secteur des Technologies de l'Information et de la Communication (TIC). 
+C'est dans ce cadre que s'est déroulé mon stage de [Durée du stage, ex : 8 semaines] au sein de Spray_Info, une structure reconnue pour son expertise en développement numérique et conseil. Le travail qui fait l'objet de ce rapport a porté sur la conception et la réalisation d'une plateforme d'e-commerce pour la vente de produits cosmétiques, une réponse directe aux besoins de l'entreprise cliente de moderniser ses canaux de distribution. La problématique centrale était de savoir comment mettre en œuvre un système d'information de vente en ligne efficace, sécurisé et modélisé selon la méthode MERISE, afin d'assurer une gestion optimisée des stocks et des transactions. Ce rapport est structuré en trois parties conformément aux exigences académiques : la première partie présente l'environnement de travail, la deuxième détaille l'analyse et la conception du système d'information, et la troisième expose la phase de réalisation technique et les conclusions tirées de cette expérience.
+
+
+
+
+📝 Chapitre I : Analyse Préalable
+Le but de cette analyse est de comprendre l'environnement de travail du stage (Spray Info et son client), d'évaluer les processus existants et de définir la méthode de conception du nouveau système d'information.
+
+1.1 Analyse de l’Existant
+L'analyse de l'existant se concentre sur la situation du client final de Spray Info (l'entreprise de produits cosmétiques) avant l'intervention du stagiaire. Si cette entreprise n'avait aucun système de vente en ligne, il s'agit d'analyser le processus de vente "traditionnel".
+
+1.1.1 Organisation Actuelle (Applications et Personnels Impliqués)
+Processus Commercial Actuel :
+
+Vente Physique : Les transactions se font principalement via un point de vente physique (boutique) ou des appels/messages directs (téléphone, réseaux sociaux).
+
+Gestion Manuelle/Simple : La gestion des commandes et des stocks est probablement réalisée manuellement (cahier de bord, fiches) ou à l'aide d'outils bureautiques simples (tableur Excel pour les inventaires).
+
+Personnel Impliqué :
+
+Vendeurs/Caissiers : Gèrent la vente directe et le service client.
+
+Gestionnaire de Stock : Responsable du décompte des produits et de la vérification des niveaux de stock.
+
+Propriétaire/Manager : Prend les décisions et gère les finances.
+
+Applications Utilisées (si existantes) :
+
+Outils de messagerie (WhatsApp, Messenger) pour la prise de commande.
+
+Logiciels bureautiques (Microsoft Office/LibreOffice) pour la facturation et le suivi de base.
+
+1.1.2 Inventaire des Moyens Matériels et Logiciels
+Moyens Matériels (Client) :
+
+Poste(s) de caisse ou de bureau.
+
+Téléphones portables et/ou fixe pour les commandes et le service client.
+
+Imprimante (pour les factures/bons de commande).
+
+Moyens Logiciels (Client) :
+
+Système d'exploitation standard (Windows, Linux, macOS).
+
+Suite bureautique (pour la tenue des registres).
+
+Accès à Internet limité (essentiellement pour la communication).
+
+1.2 Critique de l’Existant
+La critique vise à justifier pourquoi le projet d'e-commerce est nécessaire.
+
+1.2.1 Points Forts
+Relation Client Directe : La vente physique permet un contact humain direct et des conseils personnalisés immédiats.
+
+Faibles Coûts Initiaux : L'absence d'un système informatique lourd réduit les coûts de licence et de maintenance logicielle.
+
+Flexibilité : Les processus manuels peuvent s'adapter rapidement aux exceptions.
+
+1.2.2 Points Faibles (Justification du Projet)
+Portée Commerciale Limitée : La vente est restreinte à la zone géographique du magasin ou du réseau social (limite de croissance).
+
+Risques d'Erreur : La gestion manuelle ou via tableur (stock, facturation, suivi des commandes) est source d'erreurs, de pertes d'informations et de doubles saisies.
+
+Lenteur du Traitement : La prise de commande et la vérification des stocks sont chronophages, entraînant une faible réactivité.
+
+Absence de Traçabilité : Difficulté à générer des statistiques fiables ou à consulter l'historique des achats de manière structurée.
+
+Non-alignement avec la Demande : L'entreprise ne capitalise pas sur la demande croissante d'e-commerce, perdant des parts de marché potentielles.
+
+1.3 Conception Avant Projet
+Cette section définit la cible du projet et la méthodologie utilisée.
+
+1.3.1 Proposition des Solutions
+Le projet de stage propose une solution radicale et moderne pour pallier les faiblesses identifiées :
+
+Solution Retenue : Conception et Réalisation d'un Site Web de Vente en Ligne (E-commerce).
+
+Objectifs de la Solution :
+
+Digitaliser les Ventes : Ouvrir le commerce 24h/24 et 7j/7 au niveau national.
+
+Automatiser la Gestion : Centraliser la prise de commande, la facturation et la gestion des stocks.
+
+Sécuriser les Transactions : Mettre en place des passerelles de paiement sécurisées.
+
+1.3.2 Méthodes de Conception et Outils Utilisés
+Méthode de Conception :
+
+MERISE (Méthode d'Étude et de Réalisation Informatique pour les Systèmes d'Entreprise) : Cette méthode sera utilisée pour l'analyse et la conception du Système d'Information (SI). Elle permet une distinction claire entre le niveau Conceptuel (ce que fait le SI) et le niveau Organisationnel/Logique (comment le SI le fait).
+
+Phases de MERISE : Analyse Conceptuelle (MCD, MCT) et Analyse Logique/Organisationnelle (MLD, MOT, MLT).
+
+Outils de Modélisation :
+
+Logiciel de Modélisation : Utilisation d'un outil graphique comme Lucidchart, Dia ou PowerPoint (selon la préférence) pour dessiner les modèles (MCD, MLD, etc.).
+
+Outils de Développement : (Voir la liste détaillée précédemment dans les Moyens Logiciels)
+
+Langages : PHP, JavaScript, HTML5/CSS3.
+
+Base de Données : MySQL.
+
+Environnement : XAMPP/WAMP (local), VS Code (éditeur).

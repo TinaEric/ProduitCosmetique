@@ -14,11 +14,7 @@ const PanierDrawer = ({children}) => {
     const {items, ajouteAuPanier,PlusQuantite,MoinsQuantite , setItems, supprimerDuPanier} = usePanier();
     const navigate = useNavigate();
     const panierRef = useRef();
-    // const [total, setTotal] = useState(() => {
-    //     return items.reduce((acc,item)  => {
-    //         return acc + item.prix * item.quantite;
-    //     },0)
-    // })
+    
     const total = items.reduce((acc,item)  => {
         return acc + item.prix * item.quantite;
     },0)

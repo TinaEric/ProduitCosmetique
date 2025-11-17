@@ -10,11 +10,6 @@ export function PanierProvider({children}){
         setItems(panier)
     }, [])
     
-
-
-
-
-    
     const ajouteAuPanier = (produit) => {
         setItems((prev) => {
             const IsExist = prev.find((item) => item.id === produit.id);
@@ -35,13 +30,6 @@ export function PanierProvider({children}){
         })
     }
     
-
-
-
-
-
-
-
     const PlusQuantite = (id) => {
         setItems((prev) => {
             const newItems = prev.map((item) => 

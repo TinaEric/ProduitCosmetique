@@ -16,10 +16,11 @@ use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuild
 class AdminCommandeController extends AbstractController
 {
     #[Route('/', name: 'admin_commandes_index', methods: ['GET'])]
-    public function index(CommandeRepository $commandeRepository, Request $request, SerializerInterface $serializer): JsonResponse
+    public function index(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
         try {
-            $commandes = $commandeRepository->findAllWithDetails();
+            $commandes = $entityManager->getRepository(Commande::class)->findAllWithRelations();
             
             if(!$commandes){
                 return $this->json([
@@ -247,136 +248,3 @@ class AdminCommandeController extends AbstractController
         }
     }
 }
-
-// namespace App\Controller;
-
-// use App\Entity\Commande;
-// use App\Repository\CommandeRepository;
-// use Doctrine\ORM\EntityManagerInterface;
-// use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-// use Symfony\Component\HttpFoundation\JsonResponse;
-// use Symfony\Component\HttpFoundation\Request;
-// use Symfony\Component\HttpFoundation\Response;
-// use Symfony\Component\Routing\Annotation\Route;
-// use Symfony\Component\Serializer\SerializerInterface;
-
-// #[Route('/api/admin/commandes')]
-// class AdminCommandeController extends AbstractController
-// {
-//     #[Route('/', name: 'admin_commandes_index', methods: ['GET'])]
-//     public function index(CommandeRepository $commandeRepository): JsonResponse
-//     {
-//         $commandes = $commandeRepository->findAllWithDetails();
-        
-//         $data = [];
-//         foreach ($commandes as $commande) {
-//             $data[] = $this->serializeCommande($commande);
-//         }
-
-//         return $this->json([
-//             'success' => true,
-//             'data' => $data
-//         ]);
-//     }
-
-//     #[Route('/{refCommande}', name: 'admin_commandes_show', methods: ['GET'])]
-//     public function show(Commande $commande): JsonResponse
-//     {
-//         return $this->json([
-//             'success' => true,
-//             'data' => $this->serializeCommande($commande)
-//         ]);
-//     }
-
-//     #[Route('/statut/{status}', name: 'admin_commandes_by_status', methods: ['GET'])]
-//     public function getByStatus(string $status, CommandeRepository $commandeRepository): JsonResponse
-//     {
-//         $commandes = $commandeRepository->findByStatus($status);
-        
-//         $data = [];
-//         foreach ($commandes as $commande) {
-//             $data[] = $this->serializeCommande($commande);
-//         }
-
-//         return $this->json([
-//             'success' => true,
-//             'data' => $data
-//         ]);
-//     }
-
-//     #[Route('/{refCommande}/statut', name: 'admin_commandes_update_status', methods: ['PUT'])]
-//     public function updateStatus(Request $request, Commande $commande,EntityManagerInterface $entityManager): JsonResponse
-//     {
-//         $data = json_decode($request->getContent(), true);
-        
-//         if (!isset($data['statutCommande'])) {
-//             return $this->json([
-//                 'success' => false,
-//                 'message' => 'Statut manquant'
-//             ], Response::HTTP_BAD_REQUEST);
-//         }
-
-//         $commande->setStatutCommande($data['statutCommande']);
-//         $commande->setDateUpdate(new \DateTime());
-//         $entityManager->flush();
-
-//         return $this->json([
-//             'success' => true,
-//             'message' => 'Statut mis à jour',
-//             'data' => $this->serializeCommande($commande)
-//         ]);
-//     }
-
-//     private function serializeCommande(Commande $commande): array
-//     {
-//         $total = 0;
-//         $articles = [];
-        
-//         foreach ($commande->getPaniers() as $panier) {
-//             // Supposons que votre entité Panier ait des méthodes getPrix() et getQuantite()
-//             // Adaptez selon votre structure réelle
-//             $prixArticle = $panier->getProduit()->getPrixProduit() * $panier->getQuantite();
-//             $total += $prixArticle;
-            
-//             $articles[] = [
-//                 'produit' => $panier->getProduit()->getNomProduit(), // Adaptez selon votre structure
-//                 'quantite' => $panier->getQuantite(),
-//                 'prixUnitaire' => $panier->getProduit()->getPrixProduit(),
-//                 'prixTotal' => $prixArticle
-//             ];
-//         }
-
-//         return [
-//             'refCommande' => $commande->getRefCommande(),
-//             'client' => [
-//                 'refClient' => $commande->getClient()->getRefClient(),
-//                 'nom' => $commande->getClient()->getNomClient(),
-//                 'prenom' => $commande->getClient()->getPrenomClient(),
-//                 'email' => $commande->getClient()->getUser()->getEmailUsers(),
-//             ],
-//             'adresseLivraison' => $this->serializeAdresse($commande->getAdresseLivraison()),
-//             'adresseFacturation' => $this->serializeAdresse($commande->getAdresseFacturation()),
-//             'dateCommande' => $commande->getDateCommande()->format('Y-m-d H:i:s'),
-//             'dateUpdate' => $commande->getDateUpdate() ? $commande->getDateUpdate()->format('Y-m-d H:i:s') : null,
-//             'methodeLivraison' => $commande->getMethodeLivraison(),
-//             'fraisLivraison' => $commande->getFraisLivraison(),
-//             'statutCommande' => $commande->getStatutCommande(),
-//             'articles' => $articles,
-//             'totalCommande' => $total + (float) $commande->getFraisLivraison()
-//         ];
-//     }
-
-//     private function serializeAdresse($adresse): array
-//     {
-//         if (!$adresse) {
-//             return [];
-//         }
-
-//         return [
-//             'rue' => $adresse->getRue(),
-//             'ville' => $adresse->getVille(),
-//             'codePostal' => $adresse->getCodePostal(),
-//             'pays' => $adresse->getPays()
-//         ];
-//     }
-// }

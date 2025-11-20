@@ -6,6 +6,7 @@ namespace App\Entity;
 use App\Repository\PaiementRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PaiementRepository::class)]
 class Paiement
@@ -13,6 +14,7 @@ class Paiement
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['commande:read'])]
     private ?string $idPaiement = null;
     
     #[ORM\ManyToOne(targetEntity: Commande::class, inversedBy: 'paiements')]
@@ -20,18 +22,22 @@ class Paiement
     private ?Commande $commande = null;
 
     #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?string $modePaiment = null;
 
     #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?string $statutPaiment = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $datePaiment = null;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?string $referencePaiment = null;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?string $montantPaye = null;
 
     public function getIdPaiement(): ?string

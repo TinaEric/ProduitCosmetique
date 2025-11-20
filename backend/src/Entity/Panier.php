@@ -6,6 +6,7 @@ namespace App\Entity;
 use App\Repository\PanierRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PanierRepository::class)]
 #[ORM\UniqueConstraint(name: 'primary_key', columns: ['ref_commande', 'num_produit'])]
@@ -14,6 +15,7 @@ class Panier
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
+    #[Groups(['commande:read'])]
     private ?int $id = null;
 
      #[ORM\ManyToOne(targetEntity: Commande::class, inversedBy: 'paniers')]
@@ -22,10 +24,12 @@ class Panier
  
      #[ORM\ManyToOne(targetEntity: Produit::class, inversedBy: 'paniers')]
      #[ORM\JoinColumn(name: 'num_produit', referencedColumnName: 'NUM_PRODUIT', nullable: false)]
+     #[Groups(['commande:read'])]
      private ?Produit $produit = null;
  
 
      #[ORM\Column(type: Types::INTEGER, nullable: true)]
+     #[Groups(['commande:read'])]
      private ?int $quantite = null;
 
     public function getCommande(): ?Commande

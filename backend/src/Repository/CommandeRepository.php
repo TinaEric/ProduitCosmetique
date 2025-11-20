@@ -28,6 +28,25 @@ class CommandeRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findAllWithRelations()
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.client', 'client')
+            ->leftJoin('c.adresseLivraison', 'adresseLivraison')
+            ->leftJoin('c.adresseFacturation', 'adresseFacturation')
+            ->leftJoin('c.paniers', 'paniers')
+            ->leftJoin('paniers.produit', 'produit')
+            ->leftJoin('c.paiements', 'paiements')
+            ->addSelect('client')
+            ->addSelect('adresseLivraison')
+            ->addSelect('adresseFacturation')
+            ->addSelect('paniers')
+            ->addSelect('produit')
+            ->addSelect('paiements')
+            ->getQuery()
+            ->getResult();
+    }
+    
     public function findByStatus(string $status)
     {
         return $this->createQueryBuilder('c')

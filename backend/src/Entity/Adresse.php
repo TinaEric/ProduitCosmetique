@@ -16,7 +16,7 @@ class Adresse
     #[ORM\Id]
     #[ORM\Column(type: Types::STRING, length: 50)] // ✅ CORRIGER ICI
     #[ORM\GeneratedValue(strategy: "NONE")] // ✅ AJOUTER CETTE LIGNE
-    #[Groups(["user:me"])]
+    #[Groups(["user:me", "commande:read"])]
     private ?string $refAdresse = null;
 
     #[ORM\ManyToOne(targetEntity: Client::class, inversedBy: 'adresses')]
@@ -24,27 +24,27 @@ class Adresse
     private ?Client $client = null;
 
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)] // ✅ CORRIGER ICI
-    #[Groups(["user:me"])]
+    #[Groups(["user:me", "commande:read"])]
     private ?string $ville = null;
 
     #[ORM\Column(type: Types::STRING, length: 10, nullable: true)] // ✅ CORRIGER ICI
-    #[Groups(["user:me"])]
+    #[Groups(["user:me", "commande:read"])]
     private ?string $codePostal = null;
 
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)] // ✅ CORRIGER ICI
-    #[Groups(["user:me"])]
+    #[Groups(["user:me", "commande:read"])]
     private ?string $quartier = null;
 
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)] // ✅ CORRIGER ICI
-    #[Groups(["user:me"])]
+    #[Groups(["user:me", "commande:read"])]
     private ?string $lot = null;
 
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)] // ✅ CORRIGER ICI
-    #[Groups(["user:me"])]
+    #[Groups(["user:me", "commande:read"])]
     private ?string $libelleAdresse = null;
 
     #[ORM\Column(type: Types::STRING, length: 100, nullable: true)] // ✅ CORRIGER ICI
-    #[Groups(["user:me"])]
+    #[Groups(["user:me", "commande:read"])]
     private ?string $complementAdresse = null;
 
     #[ORM\OneToMany(mappedBy: 'adresseLivraison', targetEntity: Commande::class)]

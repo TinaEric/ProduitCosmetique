@@ -47,56 +47,8 @@ class Client
     private Collection $adresses;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Commande::class)]
-    // NE PAS ajouter de groupe ici pour éviter la référence circulaire
     private Collection $commandes;
-// namespace App\Entity;
 
-// use App\Repository\ClientRepository;
-// use Doctrine\Common\Collections\ArrayCollection;
-// use Doctrine\Common\Collections\Collection;
-// use Doctrine\ORM\Mapping as ORM;
-// use Symfony\Component\Serializer\Annotation\Groups;
-
-// #[ORM\Entity(repositoryClass: ClientRepository::class)]
-// class Client
-// {
-//     #[ORM\Id]
-//     #[ORM\Column(type: 'string', length: 32)]
-//     #[Groups(["user:me", "client:read"])]
-//     private ?string $refClient = null;
-
-//     // CRITIQUE : Suppression du groupe pour casser la référence circulaire !
-//     #[ORM\OneToOne(inversedBy: 'client', targetEntity: User::class, cascade: ['persist'])]
-//     #[ORM\JoinColumn(name: 'id_users', referencedColumnName: 'id_users', nullable: false)]
-//     private ?User $user = null; 
-
-//     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-//     #[Groups(["user:me", "client:read"])] 
-//     private ?string $nomClient = null;
-
-//     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-//     #[Groups(["user:me", "client:read"])]
-//     private ?string $prenomClient = null;
-
-//     #[ORM\Column(type: 'string', length: 10, nullable: true)]
-//     #[Groups(["user:me", "client:read"])]
-//     private ?string $telephoneClient = null;
-
-//     #[ORM\Column(type: 'string', length: 5, nullable: true)]
-//     #[Groups(["user:me", "client:read"])]
-//     private ?string $civiliteClient = null;
-
-//     #[ORM\Column(type: 'date', nullable: true)]
-//     #[Groups(["user:me", "client:read"])]
-//     private ?\DateTimeInterface $dateNaissance = null;
-
-//     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Adresse::class)]
-//     #[Groups(["user:me"])]
-//     private Collection $adresses;
-
-//     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Commande::class)]
-//     private Collection $commandes;
-    
     public function __construct()
     {
         $this->adresses = new ArrayCollection();

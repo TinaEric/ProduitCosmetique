@@ -21,7 +21,7 @@ const Commande = () => {
       if (result.data) {
         setCommandes(result.data);
       } else {
-        // setError('Erreur lors du chargement des commandes');
+       setError('Erreur lors du chargement des commandes');
         console.log("Erreur commande : ", result.error)
       }
     } catch (err) {
@@ -85,20 +85,18 @@ const Commande = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-        {error}
-      </div>
-    );
-  }
+
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion des Commandes</h1>
       </div>
-
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        {error}
+      </div>
+      )}
       {/* Filtres */}
       <div className="bg-white rounded-lg shadow mb-6 p-4">
         <div className="flex flex-wrap gap-4 items-center">

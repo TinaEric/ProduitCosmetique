@@ -15,22 +15,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(["user:read","client:read"])] // Visible pour l'Admin via Client
+    #[Groups(["user:read","client:read","commande:read"])] // Visible pour l'Admin via Client
     private ?int $idUsers = null;
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    #[Groups(["user:read","client:read"])] 
+    #[Groups(["user:read","client:read","commande:read"])] 
     private ?string $nomUsers = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $passwordUsers = null; // PAS de groupe de sérialisation pour le mot de passe !
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    #[Groups(["user:read","client:read"])] // Exposer l'email pour l'Admin
+    #[Groups(["user:read","client:read","commande:read"])] // Exposer l'email pour l'Admin
     private ?string $emailUsers = null;
 
     #[ORM\Column(type: 'string', length: 32, nullable: true)]
-    #[Groups(["user:read"])] 
+    #[Groups(["user:read","commande:read"])] 
     private ?string $roleUsers = null; 
 
     #[ORM\OneToOne(mappedBy: 'user', targetEntity: Client::class, cascade: ['persist', 'remove'])]

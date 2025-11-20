@@ -16,7 +16,7 @@ class Produit
     #[ORM\Id]
     #[ORM\Column(name: 'NUM_PRODUIT',type: Types::INTEGER)]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read',"commande:read"])]
     private ?int $numProduit = null;
 
     #[ORM\ManyToOne(targetEntity: Categorie::class, inversedBy: 'produits')]
@@ -24,15 +24,15 @@ class Produit
     private ?Categorie $categorie = null;
 
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read',"commande:read"])]
     private ?string $nomProduit = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read',"commande:read"])]
     private ?string $prixProduit = null;
 
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read',"commande:read"])]
     private ?int $stockProduit = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
@@ -40,11 +40,11 @@ class Produit
     private ?string $imageUrlProduit = null;
     
     #[ORM\Column(name: 'description_produit', type: Types::STRING, length: 255, nullable: true)]
-    #[Groups(['category:read', 'groupe:write'])]
+    #[Groups(['category:read', 'groupe:write',"commande:read"])]
     private ?string $descriptionProduit = null;
     
     #[ORM\Column(type: Types::STRING, length: 10, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read',"commande:read"])]
     private ?string $codePromos = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]

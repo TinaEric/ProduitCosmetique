@@ -1,13 +1,13 @@
 <?php
-// src/Entity/Commande.php
-
 namespace App\Entity;
 
 use App\Repository\CommandeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CommandeRepository::class)]
 class Commande
@@ -15,45 +15,62 @@ class Commande
     #[ORM\Id]
     #[ORM\Column(type: Types::STRING, length: 100)]
     #[ORM\GeneratedValue(strategy: "NONE")]
+    #[Groups(['commande:read'])]
     private ?string $refCommande = null;
 
     #[ORM\ManyToOne(targetEntity: Client::class, inversedBy: 'commandes')]
     #[ORM\JoinColumn(name: 'ref_client', referencedColumnName: 'ref_client', nullable: false)]
+    #[Groups(['commande:read'])]
     private ?Client $client = null;
 
     #[ORM\ManyToOne(targetEntity: Adresse::class, inversedBy: 'commandesLivraison')]
     #[ORM\JoinColumn(name: 'ref_adresse', referencedColumnName: 'ref_adresse', nullable: false)]
+    #[Groups(['commande:read'])]
     private ?Adresse $adresseLivraison = null;
 
     #[ORM\ManyToOne(targetEntity: Adresse::class, inversedBy: 'commandesFacturation')]
     #[ORM\JoinColumn(name: 'ref_adresse_facturation', referencedColumnName: 'ref_adresse', nullable: false)]
+    #[Groups(['commande:read'])]
     private ?Adresse $adresseFacturation = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?\DateTimeInterface $dateCommande = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?\DateTimeInterface $dateUpdate = null;
 
     #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?string $methodeLivraison = null;
 
-    #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?string $fraisLivraison = null;
 
     #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
+    #[Groups(['commande:read'])]
     private ?string $statutCommande = null;
 
     #[ORM\OneToMany(mappedBy: 'commande', targetEntity: Paiement::class)]
+    #[Groups(['commande:read'])]
     private Collection $paiements;
 
     #[ORM\OneToMany(mappedBy: 'commande', targetEntity: Panier::class)]
+    #[Groups(['commande:read'])]
     private Collection $paniers;
 
     public function __construct()
     {
         $this->paiements = new ArrayCollection();
         $this->paniers = new ArrayCollection();
+    }
+
+    public function mettreAjourDate(): self 
+    {
+        $this->dateUpdate = new DateTimeImmutable();
+        return $this;
     }
 
     public function getRefCommande(): ?string
@@ -122,6 +139,39 @@ class Commande
         return $this;
     }
 
+public function getDateUpdate(): ?\DateTimeInterface
+{
+    return $this->dateUpdate;
+}
+
+public function setDateUpdate(?\DateTimeInterface $dateUpdate): static
+{
+    $this->dateUpdate = $dateUpdate;
+    return $this;
+}
+
+public function getMethodeLivraison(): ?string
+{
+    return $this->methodeLivraison;
+}
+
+public function setMethodeLivraison(?string $methodeLivraison): static
+{
+    $this->methodeLivraison = $methodeLivraison;
+    return $this;
+}
+
+public function getFraisLivraison(): ?string
+{
+    return $this->fraisLivraison;
+}
+
+public function setFraisLivraison(?string $fraisLivraison): static
+{
+    $this->fraisLivraison = $fraisLivraison;
+    return $this;
+}
+
     /**
      * @return Collection<int, Paiement>
      */
@@ -176,6 +226,60 @@ class Commande
         return $this;
     }
 }
+
+
+// namespace App\Entity;
+
+// use App\Repository\CommandeRepository;
+// use Doctrine\Common\Collections\ArrayCollection;
+// use Doctrine\Common\Collections\Collection;
+// use Doctrine\DBAL\Types\Types;
+// use Doctrine\ORM\Mapping as ORM;
+
+// #[ORM\Entity(repositoryClass: CommandeRepository::class)]
+// class Commande
+// {
+//     #[ORM\Id]
+//     #[ORM\Column(type: Types::STRING, length: 100)]
+//     #[ORM\GeneratedValue(strategy: "NONE")]
+//     private ?string $refCommande = null;
+
+//     #[ORM\ManyToOne(targetEntity: Client::class, inversedBy: 'commandes')]
+//     #[ORM\JoinColumn(name: 'ref_client', referencedColumnName: 'ref_client', nullable: false)]
+//     private ?Client $client = null;
+
+//     #[ORM\ManyToOne(targetEntity: Adresse::class, inversedBy: 'commandesLivraison')]
+//     #[ORM\JoinColumn(name: 'ref_adresse', referencedColumnName: 'ref_adresse', nullable: false)]
+//     private ?Adresse $adresseLivraison = null;
+
+//     #[ORM\ManyToOne(targetEntity: Adresse::class, inversedBy: 'commandesFacturation')]
+//     #[ORM\JoinColumn(name: 'ref_adresse_facturation', referencedColumnName: 'ref_adresse', nullable: false)]
+//     private ?Adresse $adresseFacturation = null;
+
+//     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+//     private ?\DateTimeInterface $dateCommande = null;
+
+//     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+//     private ?\DateTimeInterface $dateUpdate = null;
+
+//     #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
+//     private ?string $methodeLivraison = null;
+
+//     #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
+//     private ?string $fraisLivraison = null;
+
+//     #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
+//     private ?string $statutCommande = null;
+
+//     #[ORM\OneToMany(mappedBy: 'commande', targetEntity: Paiement::class)]
+//     private Collection $paiements;
+
+//     #[ORM\OneToMany(mappedBy: 'commande', targetEntity: Panier::class)]
+//     private Collection $paniers;
+
+
+
+
 // src/Entity/Commande.php
 
 // namespace App\Entity;

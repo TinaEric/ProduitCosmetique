@@ -18,7 +18,7 @@ const Filtres = {
 export const Header = ({ collapsed, setCollapsed }) => {
     const { theme, setTheme } = useTheme();
     const [User, setUser] = useState(null);
-    const { searchTerm, setSearchTerm, filterValue, setFilterValue } = useSearch();
+    const { searchTerm, setSearchTerm, filterValue,filtreStock,setFiltreStock, setFilterValue } = useSearch();
 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
@@ -38,7 +38,7 @@ export const Header = ({ collapsed, setCollapsed }) => {
    const currentPath = location.pathname;
    const [path,setPath] = useState("/admin/olo")
     return (
-        <header className={cn("relative z-10 flex h-[60px] pr-6 items-center flex-col mb-2 p-4 bg-white px-4 shadow-md transition-colors dark:bg-slate-900", (currentPath === '/admin/products' || currentPath === '/admin/categorie') && "h-[125px]")}>
+        <header className={cn("relative z-10 flex pr-6 items-center flex-col p-4 bg-white px-4 shadow-md transition-colors dark:bg-slate-900", (currentPath === '/admin/products' || currentPath === '/admin/categorie') ? "h-[150px]" : " h-[70px]")}>
             <div className=" w-full justify-between flex">
                 <div className="flex items-center gap-x-3">
                     <button
@@ -96,10 +96,41 @@ export const Header = ({ collapsed, setCollapsed }) => {
                     
                 </div>
             </div>
-            <div className="divider"></div>
+            {(currentPath === '/admin/products' || currentPath === '/admin/categorie') && ( <div className="divider"></div>)}
             {(currentPath === '/admin/products' || currentPath === '/admin/categorie') && (
             // <div className="flex  justify-center items-center flex-col px-4">
                     //<div className="flex w-full justify-end mb-0"> 
+                    <div className={`flex w-full`}>
+                        <div className="flex items-center gap-4">
+                            <button
+                                className={`btn btn-sm ${filtreStock === "Tous" ? "btn-accent " : "btn-ghost"}`}
+                                onClick={() => setFiltreStock("Tous")}
+                            >
+                                {/* Tous ({totalCount}) */}
+                                Tous
+                            </button>
+                            <button
+                                className={`btn btn-sm ${filtreStock === "enStock" ? "btn-accent" : "btn-ghost"}`}
+                                onClick={() => setFiltreStock("enStock")}
+                            >
+                                {/* Urgente ({urgentCount}) */}
+                                En stock
+                            </button>
+                            <button
+                                className={`btn btn-sm ${filtreStock === "rupture" ? "btn-accent" : "btn-ghost"}`}
+                                onClick={() => setFiltreStock("rupture")}
+                            >
+                                {/* Moyenne ({mediumCount}) */}
+                                Rupture
+                            </button>
+                            <button
+                                className={`btn btn-sm ${filtreStock === "alerte" ? "btn-accent" : "btn-ghost"}`}
+                                onClick={() => setFiltreStock("alerte")}
+                            >
+                                {/* Basse ({lowCount}) */}
+                                Alerte
+                            </button>
+                        </div>
                         <div className="flex items-center gap-4 justify-end w-full text-slate-950 dark:text-gray-200">
                             <label className="label">
                                 <span className="label-text  text-slate-950 dark:text-gray-200">Trié par :</span>
@@ -112,10 +143,10 @@ export const Header = ({ collapsed, setCollapsed }) => {
                                 <option value={Filtres.TOUS}>{Filtres.TOUS}</option>
                                 <option value={Filtres.ALPHABETIQUE}>{Filtres.ALPHABETIQUE}</option>
                                 <option value={Filtres.DERNIER_A_JOUR}>{Filtres.DERNIER_A_JOUR}</option>
-                                {currentPath === '/admin/products' && <option value={Filtres.CATEGORIE}>{Filtres.CATEGORIE}</option>}
+                                {/* {currentPath === '/admin/products' && <option value={Filtres.CATEGORIE}>{Filtres.CATEGORIE}</option>} */}
                             </select>
                         </div>
-                    // </div>  
+                     </div>  
             // </div>
             )}
         </header>

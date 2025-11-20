@@ -1,5 +1,6 @@
 import React, { useEffect ,useState} from "react";
 import Logo from "../../image/Logo.png";
+import  logoBleu from "@/image/logoBleu.png"
 import { IoMdSearch } from "react-icons/io";
 import { FaCartShopping } from "react-icons/fa6";
 import DarkMode from "./DarkMode";
@@ -14,6 +15,7 @@ import { RiHome5Fill } from "react-icons/ri";
 import { MdBookmarkBorder } from "react-icons/md";
 import Badge from '@mui/material/Badge';
 import { usePanier } from "../context/PanierContext";
+import { useUsers } from "../context/UserContext";
 import { useAuthContext } from '@/contexts/AuthContext';
 
 const people = [
@@ -24,7 +26,7 @@ const people = [
   { id: 5, name: 'Devon Webb' },
 ]
 const Navbar = () => {
-  // const { user, logout, isAuthenticated} = useAuth(); 
+  //  const { client} = useUsers(); 
   const { user, logout, isAuthenticated} = useAuthContext();
   const [ouvrePanier,setouvrePanier] = useState(false);
   const [query, setQuery] = useState('')
@@ -33,15 +35,11 @@ const Navbar = () => {
   const [nomUserConncte, setNomUserConnecte] = useState('')
   const { searchTerm, setSearchTerm, filterValue, setFilterValue,openPanier ,setOpenPanier,setNouveauteBtn} = useNavbar();
 
-  const filteredPeople =
-    query === ''
-      ? people
-      : people.filter((person) => {
-          return person.name.toLowerCase().includes(query.toLowerCase())
-        })
-      
-       
-    // console.log("NAVBAR = isAuthenticated :",isAuthenticated , "user :",user)
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  console.log("NAVBAR ETAT: \n \t isAuthenticated :",isAuthenticated , "\n \t user :",user)
 
     useEffect(() => {
       if (user && user.client) {
@@ -50,7 +48,15 @@ const Navbar = () => {
           setNomUserConnecte('');
       }
   }, [user]);
+  
+  useEffect(() => {
    
+    if (user && user.client) {
+        setNomUserConnecte(user.client.nomClient + ' ' + user.client.prenomClient);
+    } else {
+        setNomUserConnecte('');
+    }
+}, [user]);
        
   return (
     <nav className="fixed top-0 left-0 w-full h-20 md:h-16">
@@ -62,7 +68,7 @@ const Navbar = () => {
         {/* Logo */}
           <div className="w-1/2 md:w-auto">
             <Link to="/" className="font-bold text-gradient-to-r from-[#2563EB] to-[#313f58] text-2xl sm:text-3xl flex gap-2">
-              <img src={Logo} alt="Logo" className="w-10" />
+              <img src={logoBleu} alt="Logo" className="w-10" />
               MaBeauté
             </Link>
           </div>
@@ -72,6 +78,8 @@ const Navbar = () => {
               <input
                 type="text"
                 placeholder="Recherche..."
+                value={searchTerm} 
+                onChange={handleSearchChange}
                 className="
                  w-[350px]
                  rounded-full
@@ -112,8 +120,8 @@ const Navbar = () => {
 
               <div className="h-6 w-px bg-gray-950/10 dark:bg-white/10"></div>
              
-              {/* se connecter */}
-              {isAuthenticated && user.roleUsers === "ROLE_USER" ? (
+              {/* se connecter   || (user && user.roleUsers === "ROLE_USER")  */}
+              {(user && user.roleUsers === "ROLE_USER")? (
                 // Utilisateur connecté
                 <div className="dropdown dropdown-end">
                 <label
@@ -125,7 +133,7 @@ const Navbar = () => {
                     flex justify-end items-center gap-3"
                 >
                   <img
-                    src={user.avatar || "/public/image/user.png"}
+                    src={"/public/image/user.png"}
                     alt="avatar"
                     className="w-6 h-6 rounded-full flex-shrink-0"
                   />
@@ -146,14 +154,14 @@ const Navbar = () => {
                      
                       {/* Avatar à droite */}
                       <img
-                        src={user.avatar || "/public/image/user.png"}
+                        src={"/public/image/user.png"}
                         alt="avatar"
                         className="w-6 h-6 rounded-full flex-shrink-0"
                       />
                        <span
                         
                       >
-                       {nomUserConncte}
+                       {user.client.nomClient + " " + user.client.prenomClient}
                       </span>
           
                     </Link>
@@ -200,7 +208,7 @@ const Navbar = () => {
             <button
              className=" flex justify-center gap-2 items-center rounded-full px-3 py-1 hover:bg-gray-300 dark:hover:bg-gray-800">
               <MdOutlineStarRate className="cursor-pointer text-[#2563EB] dark:text-yellow-500" />
-              <Link to="/Produit">Nouveauté</Link>
+              <Link to="/Produit">Nos Produits</Link>
             </button>
             <button
              className=" flex justify-center gap-2 items-center rounded-full px-3 py-1 hover:bg-gray-300 dark:hover:bg-gray-800">

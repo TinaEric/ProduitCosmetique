@@ -10,15 +10,17 @@ const CardClient = ({ id, img, titre, prix, addPanier, onInfos, categorie, produ
     const defaultImage = "/image/image.png";
 
     return (
-        <div className="flex justify-evenly">
             <div
                 data-aos="fade-up"
-                key={id}
+                key={id} //max-h-[350px] w-[200px] 
                 className="
-                     m-10 max-h-[350px] w-[200px] flex-1 
-                    space-y-3 bg-white shadow-lg shadow-slate-800 
+                    max-h-[30rem] w-[150px]
+                    m-5 flex-1 
+                    space-y-2 bg-white 
+                    rounded-xl
                     transition-all duration-200 hover:-translate-y-2 
-                    hover:shadow-xl hover:shadow-slate-900 dark:bg-[#0F172A] dark:shadow-black"
+                    hover:shadow-lg hover:shadow-slate-500 dark:bg-[#0F172A] dark:shadow-black"
+                    // shadow-lg shadow-slate-800 
             >
                 <img
                     onClick={() => onInfos(produit)}
@@ -27,39 +29,38 @@ const CardClient = ({ id, img, titre, prix, addPanier, onInfos, categorie, produ
                     onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = defaultImage;
-                    }}
-                    className="h-[200px] w-[280px] rounded-md object-cover"
+                    }} //h-[200px] w-[280px]
+                    className=" h-[130px] w-[150px] rounded-md object-cover"
                 />
-                <div className="gap-2 p-2">
+                <div className="gap-2 px-2">
                     <h3
-                        className="text-lg font-semibold text-slate-900 dark:text-white"
+                        className="text-[14px] font-semibold text-slate-900 dark:text-white"
                         onClick={() => onInfos(produit)}
                     >
                         {titre}
                     </h3>
 
                     <div
-                        className="py-2 flex items-center gap-2"
+                        className=" flex items-center gap-2"
                         onClick={() => onInfos(produit)}
                     >
                         <FaSackDollar className="text-yellow-600 dark:text-yellow-400" />
                         <span className="text-slate-800 dark:text-slate-300"> {prix}</span>
                     </div>
                 </div>
-                <div className=" flex justify-end p-3 items-center">
+                <div className=" flex justify-center items-center">
                     <button
                         onClick={() => addPanier(produit)}
-                        className="btn btn-ghost p-2  text-slate-700 dark:text-slate-300 hover:text-slate-800 hover:bg-slate-300 dark:hover:bg-slate-800"
+                        className="btn  btn-ghost p-2 m-2 text-slate-700 dark:text-slate-300 hover:text-slate-800 hover:bg-slate-300 dark:hover:bg-slate-800"
                     >
                         <FaCartShopping
                             className=""
-                            size={20}
+                            size={15}
                         />
-                        <span>Ajouter au panier</span>
+                        <span className= "text-[11px] font-gothic">Ajouter au panier</span>
                     </button>
                 </div>
             </div>
-        </div>
     );
 };
 

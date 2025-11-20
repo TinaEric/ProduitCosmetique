@@ -12,7 +12,7 @@ const Card = ({id,img, titre,stock,prix ,onDelete, onUpdate,categorie, produit})
                 data-aos="fade-up"
                 // data-aos-delay={aosDelay}
                 key={id}
-                className="relative m-4 max-h-[50rem] max-w-[30rem] flex-1 space-y-3 bg-white shadow-lg shadow-slate-800 transition-all duration-200 hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-900 dark:bg-[#0F172A] dark:shadow-black"
+                className="relative m-4 max-h-[50rem] w-[180px] flex-1 space-y-3 bg-white shadow-lg shadow-slate-800 transition-all duration-200 hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-900 dark:bg-[#0F172A] dark:shadow-black"
             >
                 <img
                     onClick={() => onUpdate(categorie,produit)}
@@ -21,8 +21,8 @@ const Card = ({id,img, titre,stock,prix ,onDelete, onUpdate,categorie, produit})
                     onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = defaultImage; 
-                    }}
-                    className="h-[150px] w-auto rounded-md object-cover"
+                    }}// h-[150px] w-auto
+                    className="h-[150px] w-[180px] rounded-md object-cover"
                 />
                 <div className="p-2 gap-2">
                     <h3 className="font-semibold text-slate-900 dark:text-white" onClick={() => onUpdate(categorie,produit)}>{titre}</h3>

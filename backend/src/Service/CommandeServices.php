@@ -6,6 +6,7 @@ use App\Entity\Client;
 use App\Entity\Commande;
 use App\Entity\Panier;
 use App\Entity\Adresse;
+use App\Entity\Produit;
 use App\Repository\ClientRepository;
 use App\Repository\ProduitRepository;
 use App\Repository\AdresseRepository;
@@ -77,18 +78,14 @@ class CommandeServices
                     return null;
                 }
             } else {
-                // Création d'une nouvelle adresse
                 $adresse = new Adresse();
                 $adresse->setClient($client);
-                
-                // Générer le refAdresse
                 $refAdresse = $this->adresseRepos->RefAdresseSuivant();
                 $adresse->setRefAdresse($refAdresse);
                 
                 $this->entityManager->persist($adresse);
             }
             
-            // Mettre à jour les champs
             $adresse->setQuartier($adresseData['quartier'] ?? '');
             $adresse->setVille($adresseData['ville'] ?? '');
             $adresse->setCodePostal($adresseData['codePostal'] ?? '');
@@ -114,12 +111,11 @@ class CommandeServices
         try {
             $commande = new Commande();
             $commande->setClient($client);
-            $commande->setStatutCommande('initialisée');
+            $commande->setStatutCommande('INITIALISE');
             $commande->setDateCommande(new \DateTimeImmutable());
-
+            $commande->setDateUpdate(new \DateTimeImmutable());
             $refCommande = $this->CliRepos->RefCommandeSuivant($client->getRefClient());
             $commande->setRefCommande($refCommande);
-            
             $commande->setAdresseLivraison($adresseLivraison);
             $commande->setAdresseFacturation($adresseFacturation);
             
@@ -141,7 +137,10 @@ class CommandeServices
     public function MisAjourCommande(
         array $data, 
         Client $client,
-        string $refCommande
+        string $refCommande,
+        string $fraisLivraison,
+        string $methodeLivraison,
+        string $methodePaiement,
     ): array
     {
         $commande = $this->entityManager->getRepository(Commande::class)->findOneBy(['refCommande' => $refCommande]);
@@ -150,9 +149,86 @@ class CommandeServices
         };
 
         if ($commande->getClient()->getRefClient() !== $client->getRefClient()){
-            throw new \Exception("Accèes refusé. La commande n'appartient à cet Utilisateur.");
+            throw new \Exception("Accès refusé. La commande n'appartient pas à cet utilisateur.");
         };
 
-        return [];
+        $produitsIntrouvables = [];
+        $stocksInsuffisants = [];
+        $paniersAMettreAJour = [];
+
+        foreach ($data as $item) {
+            $produit = $this->entityManager->getRepository(Produit::class)->findOneBy(['numProduit' => $item['produit']]);
+            if (!$produit) {
+                $produitsIntrouvables[] = $item['produit'];
+                continue;
+            }
+
+            $quantite = $item['quantite'];
+            $stock = $produit->getStockProduit();
+            
+            if ($stock < $quantite) {
+                $stocksInsuffisants[] = [
+                    'produit' => $produit->getNumProduit(),
+                    'nom' => $produit->getNomProduit(),
+                    'stock_disponible' => $stock,
+                    'quantite_demandee' => $quantite
+                ];
+                continue;
+            }
+
+            $paniersAMettreAJour[] = [
+                'produit' => $produit,
+                'quantite' => $quantite
+            ];
+        }
+
+        // Retourner les erreurs si nécessaire
+        if (!empty($produitsIntrouvables)) {
+            return ['ProdIntrouvable' => implode(', ', $produitsIntrouvables)];
+        }
+
+        if (!empty($stocksInsuffisants)) {
+            $messages = [];
+            foreach ($stocksInsuffisants as $stockInsuffisant) {
+                $messages[] = sprintf("%s (stock: %d, demandé: %d)",
+                    $stockInsuffisant['nom'],
+                    $stockInsuffisant['stock_disponible'],
+                    $stockInsuffisant['quantite_demandee']
+                );
+            }
+            return ['stockInsuffisant' => implode('; ', $messages)];
+        }
+
+        $this->entityManager->beginTransaction();
+        try {
+            foreach ($paniersAMettreAJour as $item) {
+                $produit = $item['produit'];
+                $quantite = $item['quantite'];
+                $panier = new Panier();
+                $panier->setCommande($commande);
+                $panier->setProduit($produit);
+                $panier->setQuantite($quantite);
+                $this->entityManager->persist($panier);
+                $nouveauStock = $produit->getStockProduit() - $quantite;
+                $produit->setStockProduit($nouveauStock);
+                
+                $produit->setDateMiseAJourProduit(new \DateTimeImmutable());
+            }
+            $commande->setMethodeLivraison($methodeLivraison);
+            $commande->setFraisLivraison($fraisLivraison);
+            $commande->setStatutCommande('EN_ATTENTE_PAIEMENT');
+            $commande->mettreAjourDate();
+            $this->entityManager->flush();
+            $this->entityManager->commit();
+
+            return [
+                'commande' => $commande,
+                'message' => 'Commande et panier mis à jour avec succès'
+            ];
+
+        } catch (\Exception $e) {
+            $this->entityManager->rollback();
+            throw new \Exception("Erreur lors de la mise à jour de la commande: " . $e->getMessage());
+        }
     }
 }

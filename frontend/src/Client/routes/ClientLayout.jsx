@@ -6,6 +6,7 @@ import SideBar from "../Navigation/SideBar";
 import { useLocation } from 'react-router-dom';
 import { NavBarProvider } from "../context/NavbarContext";
 import {PanierProvider} from "../context/PanierContext"
+import {UsersProvider} from "../context/UserContext"
 import PanierDrawer from "../Pages/Produit/PanierDrawer"
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -25,6 +26,7 @@ function ClientLayout() {
   },[]);
     return (
       <AuthProvider>
+      <UsersProvider>
       <PanierProvider>
         <NavBarProvider>
           <PanierDrawer >
@@ -34,7 +36,7 @@ function ClientLayout() {
                   </header>
                     { (currentPath !== '/') ? (
                       <div className=" lg:mt-[110px] md:mt-[120px] mt-[130px] flex">
-                        {currentPath !== "/passerCommande" && 
+                        {currentPath === "/Produit" && 
                           <div className="h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden  md:block">
                           <SideBar />
                           </div>
@@ -53,6 +55,7 @@ function ClientLayout() {
               </PanierDrawer>
         </NavBarProvider>
         </PanierProvider>
+        </UsersProvider>
         </AuthProvider>
     );
 }

@@ -219,7 +219,7 @@ final class ClientController extends AbstractController
     }
 
     #[Route('/api/client/initialeCommande', name: 'initialise_commande', methods: ['POST'])]
-    public function createCommandePanier(
+    public function createCommande(
         EntityManagerInterface $em, 
         Request $request,
         ClientRepository $CliRepos,
@@ -243,20 +243,9 @@ final class ClientController extends AbstractController
             
             $data = json_decode($request->getContent(), true);
             
-            // $panierItem = $data['panier'] ?? [];
             $adresseData = $data['adresse'] ?? [];
             $adresseDifferent = $data['AdresseDifferent'] ?? [];
             
-            // if(empty($panierItem)){
-            //     return $this->json([
-            //         'error' => [
-            //             'code' => 400,
-            //             'message' => 'Le panier est vide',
-            //             'status' => 'error'
-            //         ]
-            //     ], 400);
-            // }
-    
             if (empty($adresseData)) {
                 return $this->json([
                     'error' => [
@@ -360,8 +349,8 @@ final class ClientController extends AbstractController
         }
     }
     
-    #[Route('/api/client/updateCommande', name: 'Update_commande', methods: ['PUT'])]
-    public function updateCommande(
+    #[Route('/api/client/updateAdresseCommande', name: 'Update_commande', methods: ['PUT'])]
+    public function updateCommandeAdresse(
         EntityManagerInterface $em, 
         Request $request,
         ClientRepository $CliRepos,
@@ -431,8 +420,6 @@ final class ClientController extends AbstractController
             
             $livraison = $adresseData['adresseLivraison'];
             $facturation = $adresseData['adresseFacturation'];
-            
-            // CORRECTION : Recherche par refCommande
             $commande = $em->getRepository(Commande::class)->findOneBy(['refCommande' => $refCommande]);
             
             if (!$commande){
@@ -455,8 +442,6 @@ final class ClientController extends AbstractController
                     ]
                 ], 403);
             }
-    
-            // Le reste de votre code reste inchangé...
             // Gestion adresse livraison
             if ($livraison['estAdresseExistante']) {
                 $id = $livraison['refAdresse'];
@@ -516,7 +501,7 @@ final class ClientController extends AbstractController
             } else {
                 $commande->setAdresseFacturation($commande->getAdresseLivraison());
             }
-    
+            $commande->setDateUpdate(new \DateTimeImmutable());
             $em->flush();
             
             return new JsonResponse([
@@ -532,6 +517,129 @@ final class ClientController extends AbstractController
                 'status' => 'success'
             ], 200);
             
+        } catch (Throwable $e) {
+            return $this->json([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne du serveur: ' . $e->getMessage(),
+                    'status' => 'error'
+                ]
+            ], 500);
+        }
+    }
+
+    #[Route('/api/client/updatePanierCommande', name: 'update_commande_panierPaiement', methods: ['PUT'])]
+    public function updateCommandePanier(
+        EntityManagerInterface $em, 
+        Request $request,
+        ClientRepository $CliRepos,
+        ProduitRepository $prodRepos,
+        AdresseRepository $adresseRepos,
+        CommandeServices $cmdService
+    ): JsonResponse
+    {
+        try {
+            $this->denyAccessUnlessGranted('ROLE_USER');
+            
+            $user = $this->getUser();
+    
+            if (!$user instanceof User) {
+                return new JsonResponse([
+                    'error' => 'Utilisateur non valide ou non connecté.'
+                ], 401);
+            }
+    
+            $client = $user->getClient();
+            
+            $data = json_decode($request->getContent(), true);
+            $fraisLivraison = $data['fraisLivraison'] ?? null;
+            $methodeLivraison = $data['methodeLivraison'] ?? null;
+            $panierItem = $data['panier'] ?? [];
+            $methodePaiement = $data['methodePaiement'] ?? null;
+            $refCommande = $data['refCommande'] ?? null;
+            if(empty($panierItem)){
+                return $this->json([
+                    'error' => [
+                        'code' => 400,
+                        'message' => 'Le panier est vide',
+                        'status' => 'error'
+                    ]
+                ], 400);
+            }
+            if( empty($methodeLivraison) || empty($methodePaiement)){
+                return $this->json([
+                    'error' => [
+                        'code' => 400,
+                        'message' => "Votre transaction n'est pas complete",
+                        'status' => 'error'
+                    ]
+                ], 400);
+            }
+            if (empty($refCommande)) {
+                return $this->json([
+                    'error' => [
+                        'code' => 400,
+                        'message' => "La référence commande non trouvé",
+                        'status' => 'error'
+                    ]
+                ], 400);
+            }
+    
+            if (!$client) {
+                return $this->json([
+                    'error' => [
+                        'code' => 404,
+                        'message' => 'Client associé non trouvé',
+                        'status' => 'error'
+                    ]
+                ], 404);
+            }
+
+            $result = $cmdService->MisAjourCommande($panierItem,$client,$refCommande,$fraisLivraison,$methodeLivraison,$methodePaiement);
+
+            if (isset($result['ProdIntrouvable'])) {
+                return $this->json([
+                    'error' => [
+                        'code' => 404,
+                        'message' => "Produit(s) " . $result['ProdIntrouvable'] . " introuvable(s)!",
+                        'status' => 'error'
+                    ]
+                ], 404);
+            }
+
+            if (isset($result['stockInsuffisant'])) {
+                return $this->json([
+                    'error' => [
+                        'code' => 400,
+                        'message' => "Stock insuffisant pour: " . $result['stockInsuffisant'],
+                        'status' => 'error'
+                    ]
+                ], 400);
+            }
+
+            $Order = $result['commande'];
+
+            return new JsonResponse([
+                'data' => [
+                    'refCommande' => $Order->getRefCommande(),
+                    'StatutCommande' => $Order->getStatutCommande(),
+                    'adresse' => [
+                        'adresseLivraison' => $Order->getAdresseLivraison(),
+                        'adresseFacturation' => $Order->getAdresseFacturation(),
+                    ],
+                    'panier' => array_map(function($panier) {
+                        return [
+                            'produit' => $panier->getProduit()->getNumProduit(),
+                            'quantite' => $panier->getQuantite(),
+                            'nomProduit' => $panier->getProduit()->getNomProduit(),
+                            'prix' => $panier->getProduit()->getPrixProduit()
+                        ];
+                    }, $Order->getPaniers()->toArray())
+                ],
+                'message' => $result['message'] ?? 'La mise à jour de la commande est réussie',
+                'status' => 'success'
+            ], 200);
+
         } catch (Throwable $e) {
             return $this->json([
                 'error' => [
@@ -643,5 +751,5 @@ final class ClientController extends AbstractController
             'error' => 'Erreur interne du serveur: ' . $e->getMessage()
         ], 500);
     }
-}
+    }
 }

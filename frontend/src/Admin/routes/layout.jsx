@@ -6,11 +6,13 @@ import { Sidebar } from "../layouts/sidebar";
 import { Header } from "../layouts/header";
 import { cn } from "../utils/cn";
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from 'react-router-dom';
 
 const Layout = () => {
     const isDesktopDevice = useMediaQuery("(min-width: 768px)");
     const [collapsed, setCollapsed] = useState(!isDesktopDevice);
-
+    const location = useLocation();
+    const currentPath = location.pathname;
     const sidebarRef = useRef(null);
 
     useEffect(() => {
@@ -41,7 +43,7 @@ const Layout = () => {
                     collapsed={collapsed}
                     setCollapsed={setCollapsed}
                 />
-                <div className="h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden p-5">
+                <div className={`h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden ${currentPath !== '/admin/products' ? "p-5" : "px-1"}`}>
                     <Outlet />
                 </div>
             </div>

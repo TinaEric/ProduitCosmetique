@@ -57,9 +57,8 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function findNonClientUsers(): array
     {
         return $this->createQueryBuilder('u')
-            // 'u.client' fait référence à la propriété $client (OneToOne) dans l'entité User.
-            // La condition IS NULL filtre les utilisateurs pour lesquels cette relation n'existe pas.
-            ->where('u.client IS NULL') 
+            ->leftJoin('u.client','c')
+            ->where('c.refClient IS NULL') 
             ->getQuery()
             ->getResult()
         ;

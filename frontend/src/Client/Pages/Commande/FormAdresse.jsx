@@ -5,7 +5,7 @@ import { useAuth } from "../../../hook/useAuth";
 import { getClientAddresses, updateClientAddress } from "@/services/ClientService";
 import FormControl from "@mui/material/FormControl";
 import { InputValidate } from "@/components/InputValidate";
-import { createCommandePanier, updateCommandePanier } from "@/services/ClientService";
+import { createCommande, updateCommandeAdresse } from "@/services/ClientService";
 import { MdLocationOn, MdAddLocation, MdHome, MdBusiness } from "react-icons/md";
 import { usePanier } from "@/Client/context/PanierContext";
 import { FaMapMarkerAlt } from "react-icons/fa";
@@ -15,38 +15,38 @@ import { Card, CardContent, Typography, Box, RadioGroup, FormControlLabel, Radio
 // Fonction de comparaison de valeur initial et la valeur modifier
 function IsChangedData(current, initial) {
     if (!current || !initial) return true;
-    
+
     const livraisonCurent = current.adresseLivraison || {};
     const facturationCurent = current.adresseFacturation || {};
     const livraisonInitial = initial.adresseLivraison || {};
     const facturationInitial = initial.adresseFacturation || {};
-    
+
     const compare = (curr, init) => {
         if (!curr && !init) return false;
         if (!curr || !init) return true;
-        
+
         return (
             curr.id !== init.id ||
             curr.codePostal !== init.codePostal ||
-            (curr.labelle || curr.LabelleAdresse) !== (init.labelle || init.LabelleAdresse) || 
+            (curr.labelle || curr.LabelleAdresse) !== (init.labelle || init.LabelleAdresse) ||
             curr.complement !== init.complement ||
             curr.description !== init.description ||
             curr.lot !== init.lot ||
             curr.quartier !== init.quartier ||
-            curr.ville !== init.ville 
-        ); 
+            curr.ville !== init.ville
+        );
     };
-    
+
     return compare(livraisonCurent, livraisonInitial) || compare(facturationCurent, facturationInitial);
 }
 
 // Fonction utilitaire pour trouver la nouvelle adresse créée
 const findNewAddress = (oldList, newList) => {
     if (!oldList || !newList || newList.length <= oldList.length) return null;
-    
+
     // Trouver l'adresse qui n'était pas dans l'ancienne liste
     for (let newAddr of newList) {
-        const existsInOld = oldList.some(oldAddr => oldAddr.id === newAddr.id);
+        const existsInOld = oldList.some((oldAddr) => oldAddr.id === newAddr.id);
         if (!existsInOld) {
             return newAddr;
         }
@@ -58,16 +58,16 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
     const { user, isAuthenticated } = useAuth();
     const [loading, setLoading] = useState(false);
     const { items } = usePanier();
-    
+
     // États pour les nouvelles adresses (toujours vides au début)
     const [data, setData] = useState({});
     const [donneesFacturation, setDonneesFacturation] = useState({});
-    
+
     const [errors, setErrors] = useState({});
     const [errorInfos, setErrorInfos] = useState(null);
     const [open, setOpen] = useState(false);
     const initial = useRef(initialData);
-    
+
     const [descriptionAdresse, setDescriptionAdresse] = useState("");
     const [adressesClient, setAdressesClient] = useState([]);
     const [chargementAdresses, setChargementAdresses] = useState(false);
@@ -86,9 +86,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
     const [adresseSelectionnee, setAdresseSelectionnee] = useState(null);
     const [adresseFacturationSelectionnee, setAdresseFacturationSelectionnee] = useState(null);
 
-    const [utiliserFacturationDifferent, setUtiliserFacturationDifferent] = useState(
-        initialData?.AdresseDifferent || false
-    );
+    const [utiliserFacturationDifferent, setUtiliserFacturationDifferent] = useState(initialData?.AdresseDifferent || false);
 
     const [erreursFacturation, setErreursFacturation] = useState({});
     const [descriptionFacturation, setDescriptionFacturation] = useState("");
@@ -103,9 +101,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
         if (initialData && adressesClient.length > 0) {
             // Initialiser l'adresse de livraison depuis les données initiales
             if (initialData.adresseLivraison?.estAdresseExistante && initialData.adresseLivraison?.id) {
-                const adresseTrouvee = adressesClient.find(adresse => 
-                    adresse.id === initialData.adresseLivraison.id
-                );
+                const adresseTrouvee = adressesClient.find((adresse) => adresse.id === initialData.adresseLivraison.id);
                 if (adresseTrouvee) {
                     setAdresseSelectionnee(adresseTrouvee);
                 }
@@ -113,9 +109,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
 
             // Initialiser l'adresse de facturation depuis les données initiales
             if (initialData.adresseFacturation?.estAdresseExistante && initialData.adresseFacturation?.id) {
-                const adresseFacturationTrouvee = adressesClient.find(adresse => 
-                    adresse.id === initialData.adresseFacturation.id
-                );
+                const adresseFacturationTrouvee = adressesClient.find((adresse) => adresse.id === initialData.adresseFacturation.id);
                 if (adresseFacturationTrouvee) {
                     setAdresseFacturationSelectionnee(adresseFacturationTrouvee);
                 }
@@ -133,13 +127,13 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                     // Trier par ID décroissant pour avoir les plus récentes en premier
                     const adressesTriees = listeAdresses.sort((a, b) => b.id - a.id);
                     setAdressesClient(adressesTriees);
-                    
+
                     // Si pas de données initiales, sélectionner la première adresse par défaut
                     if (!initialData && adressesTriees.length > 0) {
                         setAdresseSelectionnee(adressesTriees[0]);
                         setAdresseFacturationSelectionnee(adressesTriees[0]);
                     }
-                    
+
                     setChargementAdresses(false);
                     return adressesTriees;
                 } else {
@@ -171,7 +165,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
             if (response) {
                 // Mettre à jour la liste des adresses
                 await getAdresses();
-                
+
                 // Mettre à jour la sélection si l'adresse modifiée est actuellement sélectionnée
                 if (adresseSelectionnee && adresseSelectionnee.id === editedAddress.id) {
                     setAdresseSelectionnee(editedAddress);
@@ -179,7 +173,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                 if (adresseFacturationSelectionnee && adresseFacturationSelectionnee.id === editedAddress.id) {
                     setAdresseFacturationSelectionnee(editedAddress);
                 }
-                
+
                 setMessage({
                     ouvre: true,
                     texte: "Adresse modifiée avec succès",
@@ -338,7 +332,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
 
         if (validate()) {
             let donneesAdresse;
-            
+
             if (showNewAddressForm) {
                 donneesAdresse = {
                     adresseLivraison: {
@@ -347,23 +341,26 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                         refAdresse: null,
                         description: descriptionAdresse,
                     },
-                    adresseFacturation: utiliserFacturationDifferent ? 
-                        (showNewBillingAddressForm ? {
-                            ...donneesFacturation,
-                            estAdresseExistante: false,
-                            refAdresse: null,
-                            description: descriptionFacturation,
-                        } : {
-                            ...adresseFacturationSelectionnee,
-                            estAdresseExistante: true,
-                            refAdresse: adresseFacturationSelectionnee.id,
-                            description: descriptionFacturation || adresseFacturationSelectionnee.complement,
-                        }) : {
-                            ...data,
-                            estAdresseExistante: false,
-                            description: descriptionAdresse,
-                        },
-                    AdresseDifferent: utiliserFacturationDifferent
+                    adresseFacturation: utiliserFacturationDifferent
+                        ? showNewBillingAddressForm
+                            ? {
+                                  ...donneesFacturation,
+                                  estAdresseExistante: false,
+                                  refAdresse: null,
+                                  description: descriptionFacturation,
+                              }
+                            : {
+                                  ...adresseFacturationSelectionnee,
+                                  estAdresseExistante: true,
+                                  refAdresse: adresseFacturationSelectionnee.id,
+                                  description: descriptionFacturation || adresseFacturationSelectionnee.complement,
+                              }
+                        : {
+                              ...data,
+                              estAdresseExistante: false,
+                              description: descriptionAdresse,
+                          },
+                    AdresseDifferent: utiliserFacturationDifferent,
                 };
             } else {
                 donneesAdresse = {
@@ -373,44 +370,47 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                         refAdresse: adresseSelectionnee.id,
                         description: descriptionAdresse || adresseSelectionnee.complement,
                     },
-                    adresseFacturation: utiliserFacturationDifferent ? 
-                        (showNewBillingAddressForm ? {
-                            ...donneesFacturation,
-                            estAdresseExistante: false,
-                            refAdresse: null,
-                            description: descriptionFacturation,
-                        } : {
-                            ...adresseFacturationSelectionnee,
-                            estAdresseExistante: true,
-                            refAdresse: adresseFacturationSelectionnee.id,
-                            description: descriptionFacturation || adresseFacturationSelectionnee.complement,
-                        }) : {
-                            ...adresseSelectionnee,
-                            estAdresseExistante: true,
-                            refAdresse: adresseSelectionnee.id,
-                            description: descriptionAdresse || adresseSelectionnee.complement,
-                        },
-                    AdresseDifferent: utiliserFacturationDifferent
+                    adresseFacturation: utiliserFacturationDifferent
+                        ? showNewBillingAddressForm
+                            ? {
+                                  ...donneesFacturation,
+                                  estAdresseExistante: false,
+                                  refAdresse: null,
+                                  description: descriptionFacturation,
+                              }
+                            : {
+                                  ...adresseFacturationSelectionnee,
+                                  estAdresseExistante: true,
+                                  refAdresse: adresseFacturationSelectionnee.id,
+                                  description: descriptionFacturation || adresseFacturationSelectionnee.complement,
+                              }
+                        : {
+                              ...adresseSelectionnee,
+                              estAdresseExistante: true,
+                              refAdresse: adresseSelectionnee.id,
+                              description: descriptionAdresse || adresseSelectionnee.complement,
+                          },
+                    AdresseDifferent: utiliserFacturationDifferent,
                 };
             }
-            
+
             setLoading(true);
-            
+
             try {
                 const panier = JSON.parse(localStorage.getItem("panier")) || items;
                 if (panier.length > 0) {
-                    const commandeExiste = localStorage.getItem('RefCommande');
+                    const commandeExiste = localStorage.getItem("RefCommande");
                     let refCommandeNettoyee = null;
-                    
+
                     if (commandeExiste) {
                         try {
                             refCommandeNettoyee = JSON.parse(commandeExiste);
                         } catch (e) {
                             refCommandeNettoyee = commandeExiste;
                         }
-                        
-                        if (typeof refCommandeNettoyee === 'string') {
-                            refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, '');
+
+                        if (typeof refCommandeNettoyee === "string") {
+                            refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, "");
                         }
                     }
 
@@ -419,20 +419,20 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                     if (refCommandeNettoyee) {
                         const dataCommandeUpdate = {
                             adresse: donneesAdresse,
-                            refCommande: refCommandeNettoyee
+                            refCommande: refCommandeNettoyee,
                         };
-                        
-                        const response = await updateCommandePanier(dataCommandeUpdate);
-                        
+
+                        const response = await updateCommandeAdresse(dataCommandeUpdate);
+
                         if (response.data) {
-                            localStorage.setItem('RefCommande', response.data.refCommande);
-                            localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                            
+                            localStorage.setItem("RefCommande", response.data.refCommande);
+                            localStorage.setItem("DataAdresse", JSON.stringify(donneesAdresse));
+
                             if (showNewAddressForm || showNewBillingAddressForm) {
                                 const nouvellesAdresses = await getAdresses();
                                 if (nouvellesAdresses && nouvellesAdresses.length > 0) {
                                     const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                    
+
                                     if (showNewAddressForm) {
                                         setAdresseSelectionnee(nouvelleAdresse);
                                     }
@@ -441,10 +441,10 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                     }
                                 }
                             }
-                            
+
                             setShowNewAddressForm(false);
                             setShowNewBillingAddressForm(false);
-                            
+
                             setMessage({
                                 ouvre: true,
                                 texte: "Votre adresse a été créée et sélectionnée avec succès.",
@@ -461,20 +461,20 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                         }
                     } else {
                         const dataCommandeCreate = {
-                            adresse: donneesAdresse
+                            adresse: donneesAdresse,
                         };
-                        
-                        const response = await createCommandePanier(dataCommandeCreate);
-                        
+
+                        const response = await createCommande(dataCommandeCreate);
+
                         if (response.data) {
-                            localStorage.setItem('RefCommande', response.data.refCommande);
-                            localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                            
+                            localStorage.setItem("RefCommande", response.data.refCommande);
+                            localStorage.setItem("DataAdresse", JSON.stringify(donneesAdresse));
+
                             if (showNewAddressForm || showNewBillingAddressForm) {
                                 const nouvellesAdresses = await getAdresses();
                                 if (nouvellesAdresses && nouvellesAdresses.length > 0) {
                                     const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                    
+
                                     if (showNewAddressForm) {
                                         setAdresseSelectionnee(nouvelleAdresse);
                                     }
@@ -483,10 +483,10 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                     }
                                 }
                             }
-                            
+
                             setShowNewAddressForm(false);
                             setShowNewBillingAddressForm(false);
-                            
+
                             setMessage({
                                 ouvre: true,
                                 texte: "Votre adresse a été créée et sélectionnée avec succès.",
@@ -529,10 +529,10 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
     // Fonction pour valider la commande et passer à l'étape suivante
     const handleSubmit = async (e) => {
         e.preventDefault();
-       
+
         if (validate()) {
             let donneesAdresse;
-            
+
             if (showNewAddressForm) {
                 donneesAdresse = {
                     adresseLivraison: {
@@ -541,23 +541,26 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                         refAdresse: null,
                         description: descriptionAdresse,
                     },
-                    adresseFacturation: utiliserFacturationDifferent ? 
-                        (showNewBillingAddressForm ? {
-                            ...donneesFacturation,
-                            estAdresseExistante: false,
-                            refAdresse: null,
-                            description: descriptionFacturation,
-                        } : {
-                            ...adresseFacturationSelectionnee,
-                            estAdresseExistante: true,
-                            refAdresse: adresseFacturationSelectionnee.id,
-                            description: descriptionFacturation || adresseFacturationSelectionnee.complement,
-                        }) : {
-                            ...data,
-                            estAdresseExistante: false,
-                            description: descriptionAdresse,
-                        },
-                    AdresseDifferent: utiliserFacturationDifferent
+                    adresseFacturation: utiliserFacturationDifferent
+                        ? showNewBillingAddressForm
+                            ? {
+                                  ...donneesFacturation,
+                                  estAdresseExistante: false,
+                                  refAdresse: null,
+                                  description: descriptionFacturation,
+                              }
+                            : {
+                                  ...adresseFacturationSelectionnee,
+                                  estAdresseExistante: true,
+                                  refAdresse: adresseFacturationSelectionnee.id,
+                                  description: descriptionFacturation || adresseFacturationSelectionnee.complement,
+                              }
+                        : {
+                              ...data,
+                              estAdresseExistante: false,
+                              description: descriptionAdresse,
+                          },
+                    AdresseDifferent: utiliserFacturationDifferent,
                 };
             } else {
                 donneesAdresse = {
@@ -567,45 +570,48 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                         refAdresse: adresseSelectionnee.id,
                         description: descriptionAdresse || adresseSelectionnee.complement,
                     },
-                    adresseFacturation: utiliserFacturationDifferent ? 
-                        (showNewBillingAddressForm ? {
-                            ...donneesFacturation,
-                            estAdresseExistante: false,
-                            refAdresse: null,
-                            description: descriptionFacturation,
-                        } : {
-                            ...adresseFacturationSelectionnee,
-                            estAdresseExistante: true,
-                            refAdresse: adresseFacturationSelectionnee.id,
-                            description: descriptionFacturation || adresseFacturationSelectionnee.complement,
-                        }) : {
-                            ...adresseSelectionnee,
-                            estAdresseExistante: true,
-                            refAdresse: adresseSelectionnee.id,
-                            description: descriptionAdresse || adresseSelectionnee.complement,
-                        },
-                    AdresseDifferent: utiliserFacturationDifferent
+                    adresseFacturation: utiliserFacturationDifferent
+                        ? showNewBillingAddressForm
+                            ? {
+                                  ...donneesFacturation,
+                                  estAdresseExistante: false,
+                                  refAdresse: null,
+                                  description: descriptionFacturation,
+                              }
+                            : {
+                                  ...adresseFacturationSelectionnee,
+                                  estAdresseExistante: true,
+                                  refAdresse: adresseFacturationSelectionnee.id,
+                                  description: descriptionFacturation || adresseFacturationSelectionnee.complement,
+                              }
+                        : {
+                              ...adresseSelectionnee,
+                              estAdresseExistante: true,
+                              refAdresse: adresseSelectionnee.id,
+                              description: descriptionAdresse || adresseSelectionnee.complement,
+                          },
+                    AdresseDifferent: utiliserFacturationDifferent,
                 };
             }
-            
+
             setLoading(true);
-            
+
             if (IsChangedData(donneesAdresse, initialData)) {
                 try {
                     const panier = JSON.parse(localStorage.getItem("panier")) || items;
                     if (panier.length > 0) {
-                        const commandeExiste = localStorage.getItem('RefCommande');
+                        const commandeExiste = localStorage.getItem("RefCommande");
                         let refCommandeNettoyee = null;
-                        
+
                         if (commandeExiste) {
                             try {
                                 refCommandeNettoyee = JSON.parse(commandeExiste);
                             } catch (e) {
                                 refCommandeNettoyee = commandeExiste;
                             }
-                            
-                            if (typeof refCommandeNettoyee === 'string') {
-                                refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, '');
+
+                            if (typeof refCommandeNettoyee === "string") {
+                                refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, "");
                             }
                         }
 
@@ -614,20 +620,20 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                         if (refCommandeNettoyee) {
                             const dataCommandeUpdate = {
                                 adresse: donneesAdresse,
-                                refCommande: refCommandeNettoyee
+                                refCommande: refCommandeNettoyee,
                             };
-                            
-                            const response = await updateCommandePanier(dataCommandeUpdate);
-                            
+
+                            const response = await updateCommandeAdresse(dataCommandeUpdate);
+
                             if (response.data) {
-                                localStorage.setItem('RefCommande', response.data.refCommande);
-                                localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+                                localStorage.setItem("RefCommande", response.data.refCommande);
+                                localStorage.setItem("DataAdresse", JSON.stringify(donneesAdresse));
+
                                 if (showNewAddressForm || showNewBillingAddressForm) {
                                     const nouvellesAdresses = await getAdresses();
                                     if (nouvellesAdresses && nouvellesAdresses.length > 0) {
                                         const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                        
+
                                         if (showNewAddressForm) {
                                             setAdresseSelectionnee(nouvelleAdresse);
                                         }
@@ -636,10 +642,10 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                         }
                                     }
                                 }
-                                
+
                                 setShowNewAddressForm(false);
                                 setShowNewBillingAddressForm(false);
-                                
+
                                 setMessage({
                                     ouvre: true,
                                     texte: "Votre commande a été mis à jour avec succès.",
@@ -657,20 +663,20 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                             }
                         } else {
                             const dataCommandeCreate = {
-                                adresse: donneesAdresse
+                                adresse: donneesAdresse,
                             };
-                            
-                            const response = await createCommandePanier(dataCommandeCreate);
-                            
+
+                            const response = await createCommande(dataCommandeCreate);
+
                             if (response.data) {
-                                localStorage.setItem('RefCommande', response.data.refCommande);
-                                localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+                                localStorage.setItem("RefCommande", response.data.refCommande);
+                                localStorage.setItem("DataAdresse", JSON.stringify(donneesAdresse));
+
                                 if (showNewAddressForm || showNewBillingAddressForm) {
                                     const nouvellesAdresses = await getAdresses();
                                     if (nouvellesAdresses && nouvellesAdresses.length > 0) {
                                         const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                        
+
                                         if (showNewAddressForm) {
                                             setAdresseSelectionnee(nouvelleAdresse);
                                         }
@@ -679,10 +685,10 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                         }
                                     }
                                 }
-                                
+
                                 setShowNewAddressForm(false);
                                 setShowNewBillingAddressForm(false);
-                                
+
                                 setMessage({
                                     ouvre: true,
                                     texte: "Votre commande a été créée avec succès.",
@@ -730,17 +736,25 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
         <div className="w-full bg-transparent">
             <div>
                 {message.ouvre && (
-                    <Snackbar open={open} autoHideDuration={5000} onClose={() => setOpen(false)}>
-                        <Alert onClose={() => setOpen(false)} severity={message.statut} variant="filled" sx={{ width: "100%" }}>
+                    <Snackbar
+                        open={open}
+                        autoHideDuration={5000}
+                        onClose={() => setOpen(false)}
+                    >
+                        <Alert
+                            onClose={() => setOpen(false)}
+                            severity={message.statut}
+                            variant="filled"
+                            sx={{ width: "100%" }}
+                        >
                             {message.texte}
                         </Alert>
                     </Snackbar>
                 )}
             </div>
-            
+
             <form onSubmit={handleSubmit}>
                 <div className="flex w-full flex-col px-1">
-                    
                     {/* Section Adresse de Livraison */}
                     <div className="mb-6 flex items-center justify-center gap-4 text-xl">
                         <MdLocationOn className="text-accent" />
@@ -752,14 +766,14 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                             <div className="w-full">
                                 {!showNewAddressForm ? (
                                     <div className="w-full">
-                                        {chargementAdresses ? ( 
+                                        {chargementAdresses ? (
                                             <div className="flex justify-center py-4">
-                                                <div className="loading loading-spinner loading-xl text-accent"></div>
+                                                <div className="loading-xl loading loading-spinner text-accent"></div>
                                                 <span className="ml-2">Récupération de vos adresses...</span>
                                             </div>
                                         ) : adressesClient.length > 0 ? (
                                             <div>
-                                                <div className="flex w-full flex-col items-start justify-center gap-4 mb-4">
+                                                <div className="mb-4 flex w-full flex-col items-start justify-center gap-4">
                                                     {adressesClient.map((adresse) => (
                                                         <AddressCard
                                                             key={adresse.id}
@@ -770,11 +784,11 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                         />
                                                     ))}
                                                 </div>
-                                                <div className="flex justify-center mt-4">
+                                                <div className="mt-4 flex justify-center">
                                                     <button
                                                         type="button"
                                                         onClick={handleAddNewAddress}
-                                                        className="btn btn-outline btn-accent"
+                                                        className="btn btn-accent btn-outline"
                                                     >
                                                         <MdAddLocation className="mr-2" />
                                                         Ajouter une nouvelle adresse
@@ -782,28 +796,32 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                                                <Typography className="text-yellow-700 mb-4">
-                                                    Vous n'avez pas d'adresse enregistrée.
-                                                </Typography>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleAddNewAddress}
-                                                    className="btn btn-accent"
-                                                >
-                                                    <MdAddLocation className="mr-2" />
-                                                    Créer votre première adresse
-                                                </button>
+                                            <div className="items-center justify-center space-y-2">
+                                                <div className="rounded-lg bg-yellow-50 p-4 text-center">
+                                                    <Typography className="mb-4 text-yellow-700">Vous n'avez pas d'adresse enregistrée.</Typography>
+                                                </div>
+                                                <div className="flex w-full items-center justify-center">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAddNewAddress}
+                                                        className="btn btn-accent btn-outline"
+                                                    >
+                                                        <MdAddLocation className="mr-2" />
+                                                        Créer votre première adresse
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
                                 ) : (
-                                    <div className={`my-3 flex w-full flex-col items-center justify-center py-3 transition-all duration-500 ease-in-out overflow-hidden`}>
+                                    <div
+                                        className={`my-3 flex w-full flex-col items-center justify-center overflow-hidden py-3 transition-all duration-500 ease-in-out`}
+                                    >
                                         <div className="mb-4 flex items-center justify-center gap-2 text-lg">
                                             <MdLocationOn className="text-accent" />
                                             <span className="font-gothic text-black opacity-70 dark:text-white">Nouvelle Adresse de Livraison</span>
                                         </div>
-                                        
+
                                         <InputValidate
                                             IconComponent={MdLocationOn}
                                             type="text"
@@ -856,7 +874,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                             helperText={errors.quartier}
                                             ClassIcone="text-accent"
                                         />
-                                       
+
                                         <InputValidate
                                             IconComponent={MdLocationOn}
                                             type="text"
@@ -865,7 +883,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                             placeholder="Ex: Chez moi..."
                                             title="Labelle d'Adresse"
                                             name="labelle"
-                                            value={data.labelle  || ""}
+                                            value={data.labelle || ""}
                                             onChange={(val) => handleChange({ target: { name: "labelle", value: val } })}
                                             error={!!errors.labelle}
                                             helperText={errors.labelle}
@@ -874,7 +892,9 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                         <div className="flex w-full items-center justify-center">
                                             <label className="mb-5 w-2/3 items-center justify-center">
                                                 <div className="label">
-                                                    <span className={`label-text ${errorInfos ? "text-red-500" : "text-gray-800 dark:text-slate-300"} `}>
+                                                    <span
+                                                        className={`label-text ${errorInfos ? "text-red-500" : "text-gray-800 dark:text-slate-300"} `}
+                                                    >
                                                         Complement d'Adresse <span className="text-red-500">*</span>
                                                     </span>
                                                 </div>
@@ -888,11 +908,11 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                             </label>
                                         </div>
 
-                                        <div className="flex gap-4 mt-4">
+                                        <div className="mt-4 flex gap-4">
                                             <button
                                                 type="button"
                                                 onClick={handleCancelNewAddress}
-                                                className="btn btn-outline btn-error"
+                                                className="btn btn-error btn-outline"
                                             >
                                                 Annuler
                                             </button>
@@ -919,13 +939,13 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                     )}
 
                     <div className="my-6 flex justify-center">
-                        <label className="flex items-center space-x-3 cursor-pointer">
+                        <label className="flex cursor-pointer items-center space-x-3">
                             <Checkbox
                                 checked={utiliserFacturationDifferent}
                                 onChange={(e) => setUtiliserFacturationDifferent(e.target.checked)}
                                 color="primary"
                             />
-                            <span className="text-gray-700 dark:text-gray-300 font-medium">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">
                                 Utiliser une autre adresse pour l'adresse de facturation
                             </span>
                         </label>
@@ -939,13 +959,13 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                             </div>
 
                             {isUserConnected && (
-                                <div className="flex w-full items-center justify-center mb-4">
+                                <div className="mb-4 flex w-full items-center justify-center">
                                     <div className="w-full">
                                         {!showNewBillingAddressForm ? (
                                             <div className="w-full">
                                                 {adressesClient.length > 0 ? (
                                                     <div>
-                                                        <div className="flex w-full flex-col items-start justify-center gap-4 mb-4">
+                                                        <div className="mb-4 flex w-full flex-col items-start justify-center gap-4">
                                                             {adressesClient.map((adresse) => (
                                                                 <AddressCard
                                                                     key={adresse.id + "-facturation"}
@@ -957,11 +977,11 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                                 />
                                                             ))}
                                                         </div>
-                                                        <div className="flex justify-center mt-4">
+                                                        <div className="mt-4 flex justify-center">
                                                             <button
                                                                 type="button"
                                                                 onClick={handleAddNewBillingAddress}
-                                                                className="btn btn-outline btn-accent"
+                                                                className="btn btn-accent btn-outline"
                                                             >
                                                                 <MdAddLocation className="mr-2" />
                                                                 Ajouter une nouvelle adresse de facturation
@@ -969,28 +989,36 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                                                        <Typography className="text-yellow-700 mb-4">
-                                                            Vous n'avez pas d'adresse enregistrée.
-                                                        </Typography>
-                                                        <button
-                                                            type="button"
-                                                            onClick={handleAddNewBillingAddress}
-                                                            className="btn btn-accent"
-                                                        >
-                                                            <MdAddLocation className="mr-2" />
-                                                            Créer une adresse de facturation
-                                                        </button>
+                                                    <div className="items-center justify-center space-y-2">
+                                                        <div className="rounded-lg bg-yellow-50 p-4 text-center">
+                                                            <Typography className="mb-4 text-yellow-700">
+                                                                Vous n'avez pas d'adresse enregistrée.
+                                                            </Typography>
+                                                        </div>
+                                                        <div className="flex w-full items-center justify-center">
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleAddNewBillingAddress}
+                                                                className="btn btn-accent btn-outline"
+                                                            >
+                                                                <MdAddLocation className="mr-2" />
+                                                                Créer une adresse de facturation
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className={`my-3 flex w-full flex-col shadow-md shadow-slate-300 dark:shadow-black rounded-xl items-center justify-center py-3 transition-colors duration-500 ease-in-out overflow-hidden`}>
+                                            <div
+                                                className={`my-3 flex w-full flex-col items-center justify-center overflow-hidden rounded-xl py-3 shadow-md shadow-slate-300 transition-colors duration-500 ease-in-out dark:shadow-black`}
+                                            >
                                                 <div className="mb-4 flex items-center justify-center gap-2 text-lg">
                                                     <MdLocationOn className="text-accent" />
-                                                    <span className="font-bold text-black opacity-80 dark:text-white">Nouvelle Adresse de Facturation</span>
+                                                    <span className="font-bold text-black opacity-80 dark:text-white">
+                                                        Nouvelle Adresse de Facturation
+                                                    </span>
                                                 </div>
-                                               
+
                                                 <InputValidate
                                                     IconComponent={MdLocationOn}
                                                     type="text"
@@ -1043,7 +1071,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                     helperText={erreursFacturation.quartier}
                                                     ClassIcone="text-accent"
                                                 />
-                                               
+
                                                 <InputValidate
                                                     IconComponent={MdLocationOn}
                                                     type="text"
@@ -1052,7 +1080,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                     placeholder="Ex: Chez moi..."
                                                     title="Labelle d'Adresse"
                                                     name="labelle"
-                                                    value={donneesFacturation.labelle  || ""}
+                                                    value={donneesFacturation.labelle || ""}
                                                     onChange={(val) => gererChangementFacturation({ target: { name: "labelle", value: val } })}
                                                     error={!!erreursFacturation.labelle}
                                                     helperText={erreursFacturation.labelle}
@@ -1061,7 +1089,9 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                 <div className="flex w-full items-center justify-center">
                                                     <label className="mb-5 w-2/3 items-center justify-center">
                                                         <div className="label">
-                                                            <span className={`label-text ${erreursFacturation.description ? "text-red-500" : "text-gray-800 dark:text-slate-300"} `}>
+                                                            <span
+                                                                className={`label-text ${erreursFacturation.description ? "text-red-500" : "text-gray-800 dark:text-slate-300"} `}
+                                                            >
                                                                 Complement d'Adresse <span className="text-red-500">*</span>
                                                             </span>
                                                         </div>
@@ -1071,15 +1101,17 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                             className={`textarea textarea-bordered h-[100px] w-full border ${erreursFacturation.description ? "border-red-500" : "border-slate-500 dark:border-slate-600"} bg-transparent text-base text-black focus:border-blue-600 dark:text-white`}
                                                             placeholder="Décrire plus d'information sur votre adresse..."
                                                         ></textarea>
-                                                        {erreursFacturation.description && <p className="text-sm text-red-500">{erreursFacturation.description}</p>}
+                                                        {erreursFacturation.description && (
+                                                            <p className="text-sm text-red-500">{erreursFacturation.description}</p>
+                                                        )}
                                                     </label>
                                                 </div>
 
-                                                <div className="flex gap-4 mt-4">
+                                                <div className="mt-4 flex gap-4">
                                                     <button
                                                         type="button"
                                                         onClick={handleCancelNewBillingAddress}
-                                                        className="btn btn-outline btn-error"
+                                                        className="btn btn-error btn-outline"
                                                     >
                                                         Annuler
                                                     </button>
@@ -1112,10 +1144,9 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                             <button
                                 type="submit"
                                 className="btn btn-accent btn-outline btn-wide"
-                                
                             >
-                                {loading ? ( 
-                                    <div className="flex flex-row justify-center items-center gap-2">
+                                {loading ? (
+                                    <div className="flex flex-row items-center justify-center gap-2">
                                         <span className="loading loading-spinner text-accent"></span>
                                         <span>Validation en cours...</span>
                                     </div>
@@ -1125,7 +1156,6 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                             </button>
                         </div>
                     )}
-                    
                 </div>
             </form>
         </div>
@@ -1133,15 +1163,6 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
 };
 
 export default FormAdresse;
-
-
-
-
-
-
-
-
-
 
 // import React, { useEffect, useRef, useState } from "react";
 // import Alert from "@mui/material/Alert";
@@ -1160,35 +1181,35 @@ export default FormAdresse;
 // // Fonction de comparaison de valeur initial et la valeur modifier
 // function IsChangedData(current, initial) {
 //     if (!current || !initial) return true;
-    
+
 //     const livraisonCurent = current.adresseLivraison || {};
 //     const facturationCurent = current.adresseFacturation || {};
 //     const livraisonInitial = initial.adresseLivraison || {};
 //     const facturationInitial = initial.adresseFacturation || {};
-    
+
 //     const compare = (curr, init) => {
 //         if (!curr && !init) return false;
 //         if (!curr || !init) return true;
-        
+
 //         return (
 //             curr.id !== init.id ||
 //             curr.codePostal !== init.codePostal ||
-//             (curr.labelle || curr.LabelleAdresse) !== (init.labelle || init.LabelleAdresse) || 
+//             (curr.labelle || curr.LabelleAdresse) !== (init.labelle || init.LabelleAdresse) ||
 //             curr.complement !== init.complement ||
 //             curr.description !== init.description ||
 //             curr.lot !== init.lot ||
 //             curr.quartier !== init.quartier ||
-//             curr.ville !== init.ville 
-//         ); 
+//             curr.ville !== init.ville
+//         );
 //     };
-    
+
 //     return compare(livraisonCurent, livraisonInitial) || compare(facturationCurent, facturationInitial);
 // }
 
 // // Fonction utilitaire pour trouver la nouvelle adresse créée
 // const findNewAddress = (oldList, newList) => {
 //     if (!oldList || !newList || newList.length <= oldList.length) return null;
-    
+
 //     // Trouver l'adresse qui n'était pas dans l'ancienne liste
 //     for (let newAddr of newList) {
 //         const existsInOld = oldList.some(oldAddr => oldAddr.id === newAddr.id);
@@ -1203,16 +1224,16 @@ export default FormAdresse;
 //     const { user, isAuthenticated } = useAuth();
 //     const [loading, setLoading] = useState(false);
 //     const { items } = usePanier();
-    
+
 //     // États pour les nouvelles adresses (toujours vides au début)
 //     const [data, setData] = useState({});
 //     const [donneesFacturation, setDonneesFacturation] = useState({});
-    
+
 //     const [errors, setErrors] = useState({});
 //     const [errorInfos, setErrorInfos] = useState(null);
 //     const [open, setOpen] = useState(false);
 //     const initial = useRef(initialData);
-    
+
 //     const [descriptionAdresse, setDescriptionAdresse] = useState("");
 //     const [adressesClient, setAdressesClient] = useState([]);
 //     const [chargementAdresses, setChargementAdresses] = useState(false);
@@ -1248,7 +1269,7 @@ export default FormAdresse;
 //         if (initialData && adressesClient.length > 0) {
 //             // Initialiser l'adresse de livraison depuis les données initiales
 //             if (initialData.adresseLivraison?.estAdresseExistante && initialData.adresseLivraison?.id) {
-//                 const adresseTrouvee = adressesClient.find(adresse => 
+//                 const adresseTrouvee = adressesClient.find(adresse =>
 //                     adresse.id === initialData.adresseLivraison.id
 //                 );
 //                 if (adresseTrouvee) {
@@ -1258,7 +1279,7 @@ export default FormAdresse;
 
 //             // Initialiser l'adresse de facturation depuis les données initiales
 //             if (initialData.adresseFacturation?.estAdresseExistante && initialData.adresseFacturation?.id) {
-//                 const adresseFacturationTrouvee = adressesClient.find(adresse => 
+//                 const adresseFacturationTrouvee = adressesClient.find(adresse =>
 //                     adresse.id === initialData.adresseFacturation.id
 //                 );
 //                 if (adresseFacturationTrouvee) {
@@ -1278,13 +1299,13 @@ export default FormAdresse;
 //                     // Trier par ID décroissant pour avoir les plus récentes en premier
 //                     const adressesTriees = listeAdresses.sort((a, b) => b.id - a.id);
 //                     setAdressesClient(adressesTriees);
-                    
+
 //                     // Si pas de données initiales, sélectionner la première adresse par défaut
 //                     if (!initialData && adressesTriees.length > 0) {
 //                         setAdresseSelectionnee(adressesTriees[0]);
 //                         setAdresseFacturationSelectionnee(adressesTriees[0]);
 //                     }
-                    
+
 //                     setChargementAdresses(false);
 //                     return adressesTriees; // Retourner les adresses
 //                 } else {
@@ -1316,7 +1337,7 @@ export default FormAdresse;
 //             if (response) {
 //                 // Mettre à jour la liste des adresses
 //                 await getAdresses();
-                
+
 //                 // Mettre à jour la sélection si l'adresse modifiée est actuellement sélectionnée
 //                 if (adresseSelectionnee && adresseSelectionnee.id === editedAddress.id) {
 //                     setAdresseSelectionnee(editedAddress);
@@ -1324,7 +1345,7 @@ export default FormAdresse;
 //                 if (adresseFacturationSelectionnee && adresseFacturationSelectionnee.id === editedAddress.id) {
 //                     setAdresseFacturationSelectionnee(editedAddress);
 //                 }
-                
+
 //                 setMessage({
 //                     ouvre: true,
 //                     texte: "Adresse modifiée avec succès",
@@ -1484,12 +1505,12 @@ export default FormAdresse;
 
 //     //  Gérer spécifiquement la création d'adresse
 //     const handleCreateAddress = async (e) => {
-//         e.preventDefault(); 
+//         e.preventDefault();
 //         e.stopPropagation();
 
 //         if (validate()) {
 //             let donneesAdresse;
-            
+
 //             // Construction des données d'adresse (identique à handleSubmit)
 //             if (showNewAddressForm) {
 //                 donneesAdresse = {
@@ -1499,7 +1520,7 @@ export default FormAdresse;
 //                         refAdresse: null,
 //                         description: descriptionAdresse,
 //                     },
-//                     adresseFacturation: utiliserFacturationDifferent ? 
+//                     adresseFacturation: utiliserFacturationDifferent ?
 //                         (showNewBillingAddressForm ? {
 //                             ...donneesFacturation,
 //                             estAdresseExistante: false,
@@ -1525,7 +1546,7 @@ export default FormAdresse;
 //                         refAdresse: adresseSelectionnee.id,
 //                         description: descriptionAdresse || adresseSelectionnee.complement,
 //                     },
-//                     adresseFacturation: utiliserFacturationDifferent ? 
+//                     adresseFacturation: utiliserFacturationDifferent ?
 //                         (showNewBillingAddressForm ? {
 //                             ...donneesFacturation,
 //                             estAdresseExistante: false,
@@ -1545,23 +1566,23 @@ export default FormAdresse;
 //                     AdresseDifferent: utiliserFacturationDifferent
 //                 };
 //             }
-            
+
 //             setLoading(true);
 //             console.log("Création d'adresse:", donneesAdresse);
-            
+
 //             try {
 //                 const panier = JSON.parse(localStorage.getItem("panier")) || items;
 //                 if (panier.length > 0) {
 //                     const commandeExiste = localStorage.getItem('RefCommande');
 //                     let refCommandeNettoyee = null;
-                    
+
 //                     if (commandeExiste) {
 //                         try {
 //                             refCommandeNettoyee = JSON.parse(commandeExiste);
 //                         } catch (e) {
 //                             refCommandeNettoyee = commandeExiste;
 //                         }
-                        
+
 //                         if (typeof refCommandeNettoyee === 'string') {
 //                             refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, '');
 //                         }
@@ -1576,20 +1597,20 @@ export default FormAdresse;
 //                             adresse: donneesAdresse,
 //                             refCommande: refCommandeNettoyee
 //                         };
-                        
+
 //                         const response = await updateCommandePanier(dataCommandeUpdate);
-                        
+
 //                         if (response.data) {
 //                             console.log("Commande mis à jour avec succès:", response.data);
 //                             localStorage.setItem('RefCommande', response.data.refCommande);
 //                             localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                            
+
 //                             // Si une nouvelle adresse a été créée, recharger la liste et la sélectionner automatiquement
 //                             if (showNewAddressForm || showNewBillingAddressForm) {
 //                                 const nouvellesAdresses = await getAdresses();
 //                                 if (nouvellesAdresses && nouvellesAdresses.length > 0) {
 //                                     const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                    
+
 //                                     if (showNewAddressForm) {
 //                                         setAdresseSelectionnee(nouvelleAdresse);
 //                                     }
@@ -1598,10 +1619,10 @@ export default FormAdresse;
 //                                     }
 //                                 }
 //                             }
-                            
+
 //                             setShowNewAddressForm(false);
 //                             setShowNewBillingAddressForm(false);
-                            
+
 //                             setMessage({
 //                                 ouvre: true,
 //                                 texte: "Votre adresse a été créée et sélectionnée avec succès.",
@@ -1622,20 +1643,20 @@ export default FormAdresse;
 //                         const dataCommandeCreate = {
 //                             adresse: donneesAdresse
 //                         };
-                        
+
 //                         const response = await createCommandePanier(dataCommandeCreate);
-                        
+
 //                         if (response.data) {
 //                             console.log("Commande créée avec succès:", response.data);
 //                             localStorage.setItem('RefCommande', response.data.refCommande);
 //                             localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                            
+
 //                             // Si une nouvelle adresse a été créée, recharger la liste et la sélectionner automatiquement
 //                             if (showNewAddressForm || showNewBillingAddressForm) {
 //                                 const nouvellesAdresses = await getAdresses();
 //                                 if (nouvellesAdresses && nouvellesAdresses.length > 0) {
 //                                     const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                    
+
 //                                     if (showNewAddressForm) {
 //                                         setAdresseSelectionnee(nouvelleAdresse);
 //                                     }
@@ -1644,10 +1665,10 @@ export default FormAdresse;
 //                                     }
 //                                 }
 //                             }
-                            
+
 //                             setShowNewAddressForm(false);
 //                             setShowNewBillingAddressForm(false);
-                            
+
 //                             setMessage({
 //                                 ouvre: true,
 //                                 texte: "Votre adresse a été créée et sélectionnée avec succès.",
@@ -1702,7 +1723,7 @@ export default FormAdresse;
 //     //                     refAdresse: null,
 //     //                     description: descriptionAdresse,
 //     //                 },
-//     //                 adresseFacturation: utiliserFacturationDifferent ? 
+//     //                 adresseFacturation: utiliserFacturationDifferent ?
 //     //                     (showNewBillingAddressForm ? {
 //     //                         ...donneesFacturation,
 //     //                         estAdresseExistante: false,
@@ -1729,7 +1750,7 @@ export default FormAdresse;
 //     //                     refAdresse: adresseSelectionnee.id,
 //     //                     description: descriptionAdresse || adresseSelectionnee.complement,
 //     //                 },
-//     //                 adresseFacturation: utiliserFacturationDifferent ? 
+//     //                 adresseFacturation: utiliserFacturationDifferent ?
 //     //                     (showNewBillingAddressForm ? {
 //     //                         ...donneesFacturation,
 //     //                         estAdresseExistante: false,
@@ -1757,14 +1778,14 @@ export default FormAdresse;
 //     //                 if (panier.length > 0) {
 //     //                     const commandeExiste = localStorage.getItem('RefCommande');
 //     //                     let refCommandeNettoyee = null;
-                        
+
 //     //                     if (commandeExiste) {
 //     //                         try {
 //     //                             refCommandeNettoyee = JSON.parse(commandeExiste);
 //     //                         } catch (e) {
 //     //                             refCommandeNettoyee = commandeExiste;
 //     //                         }
-                            
+
 //     //                         if (typeof refCommandeNettoyee === 'string') {
 //     //                             refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, '');
 //     //                         }
@@ -1779,20 +1800,20 @@ export default FormAdresse;
 //     //                             adresse: donneesAdresse,
 //     //                             refCommande: refCommandeNettoyee
 //     //                         };
-                            
+
 //     //                         const response = await updateCommandePanier(dataCommandeUpdate);
-                            
+
 //     //                         if (response.data) {
 //     //                             console.log("Commande mis à jour avec succès:", response.data);
 //     //                             localStorage.setItem('RefCommande', response.data.refCommande);
 //     //                             localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+
 //     //                             // CORRECTION : Si une nouvelle adresse a été créée, recharger la liste et la sélectionner automatiquement
 //     //                             if (showNewAddressForm || showNewBillingAddressForm) {
 //     //                                 const nouvellesAdresses = await getAdresses();
 //     //                                 if (nouvellesAdresses && nouvellesAdresses.length > 0) {
 //     //                                     const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                        
+
 //     //                                     if (showNewAddressForm) {
 //     //                                         setAdresseSelectionnee(nouvelleAdresse);
 //     //                                     }
@@ -1801,10 +1822,10 @@ export default FormAdresse;
 //     //                                     }
 //     //                                 }
 //     //                             }
-                                
+
 //     //                             setShowNewAddressForm(false);
 //     //                             setShowNewBillingAddressForm(false);
-                                
+
 //     //                             setMessage({
 //     //                                 ouvre: true,
 //     //                                 texte: "Votre commande a été mis à jour avec succès.",
@@ -1826,20 +1847,20 @@ export default FormAdresse;
 //     //                         const dataCommandeCreate = {
 //     //                             adresse: donneesAdresse
 //     //                         };
-                            
+
 //     //                         const response = await createCommandePanier(dataCommandeCreate);
-                            
+
 //     //                         if (response.data) {
 //     //                             console.log("Commande créée avec succès:", response.data);
 //     //                             localStorage.setItem('RefCommande', response.data.refCommande);
 //     //                             localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+
 //     //                             // CORRECTION : Si une nouvelle adresse a été créée, recharger la liste et la sélectionner automatiquement
 //     //                             if (showNewAddressForm || showNewBillingAddressForm) {
 //     //                                 const nouvellesAdresses = await getAdresses();
 //     //                                 if (nouvellesAdresses && nouvellesAdresses.length > 0) {
 //     //                                     const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                        
+
 //     //                                     if (showNewAddressForm) {
 //     //                                         setAdresseSelectionnee(nouvelleAdresse);
 //     //                                     }
@@ -1848,10 +1869,10 @@ export default FormAdresse;
 //     //                                     }
 //     //                                 }
 //     //                             }
-                                
+
 //     //                             setShowNewAddressForm(false);
 //     //                             setShowNewBillingAddressForm(false);
-                                
+
 //     //                             setMessage({
 //     //                                 ouvre: true,
 //     //                                 texte: "Votre commande a été créée avec succès.",
@@ -1898,10 +1919,10 @@ export default FormAdresse;
 
 //     const handleSubmit = async (e) => {
 //         e.preventDefault();
-       
+
 //         if (validate()) {
 //             let donneesAdresse;
-            
+
 //             // Construction des données d'adresse (identique)
 //             if (showNewAddressForm) {
 //                 donneesAdresse = {
@@ -1911,7 +1932,7 @@ export default FormAdresse;
 //                         refAdresse: null,
 //                         description: descriptionAdresse,
 //                     },
-//                     adresseFacturation: utiliserFacturationDifferent ? 
+//                     adresseFacturation: utiliserFacturationDifferent ?
 //                         (showNewBillingAddressForm ? {
 //                             ...donneesFacturation,
 //                             estAdresseExistante: false,
@@ -1937,7 +1958,7 @@ export default FormAdresse;
 //                         refAdresse: adresseSelectionnee.id,
 //                         description: descriptionAdresse || adresseSelectionnee.complement,
 //                     },
-//                     adresseFacturation: utiliserFacturationDifferent ? 
+//                     adresseFacturation: utiliserFacturationDifferent ?
 //                         (showNewBillingAddressForm ? {
 //                             ...donneesFacturation,
 //                             estAdresseExistante: false,
@@ -1957,24 +1978,24 @@ export default FormAdresse;
 //                     AdresseDifferent: utiliserFacturationDifferent
 //                 };
 //             }
-            
+
 //             setLoading(true);
 //             console.log("Validation de commande:", donneesAdresse);
-            
+
 //             if (IsChangedData(donneesAdresse, initialData)) {
 //                 try {
 //                     const panier = JSON.parse(localStorage.getItem("panier")) || items;
 //                     if (panier.length > 0) {
 //                         const commandeExiste = localStorage.getItem('RefCommande');
 //                         let refCommandeNettoyee = null;
-                        
+
 //                         if (commandeExiste) {
 //                             try {
 //                                 refCommandeNettoyee = JSON.parse(commandeExiste);
 //                             } catch (e) {
 //                                 refCommandeNettoyee = commandeExiste;
 //                             }
-                            
+
 //                             if (typeof refCommandeNettoyee === 'string') {
 //                                 refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, '');
 //                             }
@@ -1991,18 +2012,18 @@ export default FormAdresse;
 //                             };
 //                             console.log("Commande à modifier:", dataCommandeUpdate);
 //                             const response = await updateCommandePanier(dataCommandeUpdate);
-                            
+
 //                             if (response.data) {
 //                                 console.log("Commande mis à jour avec succès:", response.data);
 //                                 localStorage.setItem('RefCommande', response.data.refCommande);
 //                                 localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+
 //                                 // Si une nouvelle adresse a été créée, recharger la liste et la sélectionner automatiquement
 //                                 if (showNewAddressForm || showNewBillingAddressForm) {
 //                                     const nouvellesAdresses = await getAdresses();
 //                                     if (nouvellesAdresses && nouvellesAdresses.length > 0) {
 //                                         const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                        
+
 //                                         if (showNewAddressForm) {
 //                                             setAdresseSelectionnee(nouvelleAdresse);
 //                                         }
@@ -2011,17 +2032,17 @@ export default FormAdresse;
 //                                         }
 //                                     }
 //                                 }
-                                
+
 //                                 setShowNewAddressForm(false);
 //                                 setShowNewBillingAddressForm(false);
-                                
+
 //                                 setMessage({
 //                                     ouvre: true,
 //                                     texte: "Votre commande a été mis à jour avec succès.",
 //                                     statut: "success",
 //                                 });
 //                                 setOpen(true);
-//                                 onSubmitSuccess(donneesAdresse); 
+//                                 onSubmitSuccess(donneesAdresse);
 //                             } else {
 //                                 console.log("Erreur de commande: ", response.error);
 //                                 setMessage({
@@ -2036,20 +2057,20 @@ export default FormAdresse;
 //                             const dataCommandeCreate = {
 //                                 adresse: donneesAdresse
 //                             };
-                            
+
 //                             const response = await createCommandePanier(dataCommandeCreate);
-                            
+
 //                             if (response.data) {
 //                                 console.log("Commande créée avec succès:", response.data);
 //                                 localStorage.setItem('RefCommande', response.data.refCommande);
 //                                 localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+
 //                                 // Si une nouvelle adresse a été créée, recharger la liste et la sélectionner automatiquement
 //                                 if (showNewAddressForm || showNewBillingAddressForm) {
 //                                     const nouvellesAdresses = await getAdresses();
 //                                     if (nouvellesAdresses && nouvellesAdresses.length > 0) {
 //                                         const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
-                                        
+
 //                                         if (showNewAddressForm) {
 //                                             setAdresseSelectionnee(nouvelleAdresse);
 //                                         }
@@ -2058,10 +2079,10 @@ export default FormAdresse;
 //                                         }
 //                                     }
 //                                 }
-                                
+
 //                                 setShowNewAddressForm(false);
 //                                 setShowNewBillingAddressForm(false);
-                                
+
 //                                 setMessage({
 //                                     ouvre: true,
 //                                     texte: "Votre commande a été créée avec succès.",
@@ -2119,7 +2140,7 @@ export default FormAdresse;
 //             </div>
 //             <form onSubmit={handleSubmit}>
 //                 <div className="flex w-full flex-col px-1">
-                    
+
 //                     {/* Section Adresse de Livraison */}
 //                     <div className="mb-6 flex items-center justify-center gap-4 text-xl">
 //                         <MdLocationOn className="text-accent" />
@@ -2132,7 +2153,7 @@ export default FormAdresse;
 //                                 {/* Affichage par défaut : liste des adresses existantes */}
 //                                 {!showNewAddressForm ? (
 //                                     <div className="w-full">
-//                                         {chargementAdresses ? ( 
+//                                         {chargementAdresses ? (
 //                                             <div className="flex justify-center py-4">
 //                                                 <div className="loading loading-spinner loading-xl text-accent"></div>
 //                                                 <span className="ml-2">Récupération de vos adresses...</span>
@@ -2180,7 +2201,7 @@ export default FormAdresse;
 //                                                                 Créer votre première adresse
 //                                                             </button>
 //                                                         </div>
-                                                       
+
 //                                                     </div>
 //                                         )}
 //                                     </div>
@@ -2191,7 +2212,7 @@ export default FormAdresse;
 //                                             <MdLocationOn className="text-accent" />
 //                                             <span className="font-gothic text-black opacity-70 dark:text-white">Nouvelle Adresse de Livraison</span>
 //                                         </div>
-                                        
+
 //                                         <InputValidate
 //                                             IconComponent={MdLocationOn}
 //                                             type="text"
@@ -2244,7 +2265,7 @@ export default FormAdresse;
 //                                             helperText={errors.quartier}
 //                                             ClassIcone="text-accent"
 //                                         />
-                                       
+
 //                                         <InputValidate
 //                                             IconComponent={MdLocationOn}
 //                                             type="text"
@@ -2286,7 +2307,7 @@ export default FormAdresse;
 //                                                 Annuler
 //                                             </button>
 //                                             <button
-//                                                 type="button" 
+//                                                 type="button"
 //                                                 className="btn btn-success"
 //                                                 disabled={loading}
 //                                                 onClick={handleCreateAddress}
@@ -2379,7 +2400,7 @@ export default FormAdresse;
 //                                                                 Créer une adresse de facturation
 //                                                             </button>
 //                                                         </div>
-                                                       
+
 //                                                     </div>
 //                                                 )}
 //                                             </div>
@@ -2390,7 +2411,7 @@ export default FormAdresse;
 //                                                     <MdLocationOn className="text-accent" />
 //                                                     <span className="font-bold text-black opacity-80 dark:text-white">Nouvelle Adresse de Facturation</span>
 //                                                 </div>
-                                               
+
 //                                                 <InputValidate
 //                                                     IconComponent={MdLocationOn}
 //                                                     type="text"
@@ -2443,7 +2464,7 @@ export default FormAdresse;
 //                                                     helperText={erreursFacturation.quartier}
 //                                                     ClassIcone="text-accent"
 //                                                 />
-                                               
+
 //                                                 <InputValidate
 //                                                     IconComponent={MdLocationOn}
 //                                                     type="text"
@@ -2486,7 +2507,7 @@ export default FormAdresse;
 //                                                     </button>
 //                                                     <button
 //                                                        type="button" // IMPORTANT: type="button" pour éviter la soumission du formulaire principal
-//                                                        onClick={handleCreateAddress} // Utiliser handleCreateAddress au lieu de handleSubmit                   
+//                                                        onClick={handleCreateAddress} // Utiliser handleCreateAddress au lieu de handleSubmit
 //                                                         className="btn btn-success"
 //                                                         disabled={loading}
 //                                                     >
@@ -2516,7 +2537,7 @@ export default FormAdresse;
 //                                 className="btn btn-accent btn-outline btn-wide"
 //                                 disabled={loading}
 //                             >
-//                                 {loading ? ( 
+//                                 {loading ? (
 //                                     <div className="flex flex-row justify-center items-center gap-2">
 //                                         <span className="loading loading-spinner text-accent"></span>
 //                                         <span>Validation en cours...</span>
@@ -2527,7 +2548,7 @@ export default FormAdresse;
 //                             </button>
 //                         </div>
 //                     )}
-                    
+
 //                 </div>
 //             </form>
 //         </div>
@@ -2535,18 +2556,6 @@ export default FormAdresse;
 // };
 
 // export default FormAdresse;
-
-
-
-
-
-
-
-
-
-
-
-
 
 // // import React, { useEffect, useRef, useState } from "react";
 // // import Alert from "@mui/material/Alert";
@@ -2565,28 +2574,28 @@ export default FormAdresse;
 // // // Fonction de comparaison de valeur initial et la valeur modifier
 // // function IsChangedData(current, initial) {
 // //     if (!current || !initial) return true;
-    
+
 // //     const livraisonCurent = current.adresseLivraison || {};
 // //     const facturationCurent = current.adresseFacturation || {};
 // //     const livraisonInitial = initial.adresseLivraison || {};
 // //     const facturationInitial = initial.adresseFacturation || {};
-    
+
 // //     const compare = (curr, init) => {
 // //         if (!curr && !init) return false;
 // //         if (!curr || !init) return true;
-        
+
 // //         return (
 // //             curr.id !== init.id ||
 // //             curr.codePostal !== init.codePostal ||
-// //             (curr.labelle || curr.LabelleAdresse) !== (init.labelle || init.LabelleAdresse) || 
+// //             (curr.labelle || curr.LabelleAdresse) !== (init.labelle || init.LabelleAdresse) ||
 // //             curr.complement !== init.complement ||
 // //             curr.description !== init.description ||
 // //             curr.lot !== init.lot ||
 // //             curr.quartier !== init.quartier ||
-// //             curr.ville !== init.ville 
-// //         ); 
+// //             curr.ville !== init.ville
+// //         );
 // //     };
-    
+
 // //     return compare(livraisonCurent, livraisonInitial) || compare(facturationCurent, facturationInitial);
 // // }
 
@@ -2594,16 +2603,16 @@ export default FormAdresse;
 // //     const { user, isAuthenticated } = useAuth();
 // //     const [loading, setLoading] = useState(false);
 // //     const { items } = usePanier();
-    
+
 // //     // États pour les nouvelles adresses (toujours vides au début)
 // //     const [data, setData] = useState({});
 // //     const [donneesFacturation, setDonneesFacturation] = useState({});
-    
+
 // //     const [errors, setErrors] = useState({});
 // //     const [errorInfos, setErrorInfos] = useState(null);
 // //     const [open, setOpen] = useState(false);
 // //     const initial = useRef(initialData);
-    
+
 // //     const [descriptionAdresse, setDescriptionAdresse] = useState("");
 // //     const [adressesClient, setAdressesClient] = useState([]);
 // //     const [chargementAdresses, setChargementAdresses] = useState(false);
@@ -2639,7 +2648,7 @@ export default FormAdresse;
 // //         if (initialData && adressesClient.length > 0) {
 // //             // Initialiser l'adresse de livraison depuis les données initiales
 // //             if (initialData.adresseLivraison?.estAdresseExistante && initialData.adresseLivraison?.id) {
-// //                 const adresseTrouvee = adressesClient.find(adresse => 
+// //                 const adresseTrouvee = adressesClient.find(adresse =>
 // //                     adresse.id === initialData.adresseLivraison.id
 // //                 );
 // //                 if (adresseTrouvee) {
@@ -2649,7 +2658,7 @@ export default FormAdresse;
 
 // //             // Initialiser l'adresse de facturation depuis les données initiales
 // //             if (initialData.adresseFacturation?.estAdresseExistante && initialData.adresseFacturation?.id) {
-// //                 const adresseFacturationTrouvee = adressesClient.find(adresse => 
+// //                 const adresseFacturationTrouvee = adressesClient.find(adresse =>
 // //                     adresse.id === initialData.adresseFacturation.id
 // //                 );
 // //                 if (adresseFacturationTrouvee) {
@@ -2667,13 +2676,13 @@ export default FormAdresse;
 // //                 const listeAdresses = reponseAdresses.adresse;
 // //                 if (listeAdresses && listeAdresses.length > 0) {
 // //                     setAdressesClient(listeAdresses);
-                    
+
 // //                     // Si pas de données initiales, sélectionner la première adresse par défaut
 // //                     if (!initialData && listeAdresses.length > 0) {
 // //                         setAdresseSelectionnee(listeAdresses[0]);
 // //                         setAdresseFacturationSelectionnee(listeAdresses[0]);
 // //                     }
-                    
+
 // //                     setChargementAdresses(false);
 // //                 } else {
 // //                     setAdressesClient([]);
@@ -2701,7 +2710,7 @@ export default FormAdresse;
 // //             if (response) {
 // //                 // Mettre à jour la liste des adresses
 // //                 await getAdresses();
-                
+
 // //                 // Mettre à jour la sélection si l'adresse modifiée est actuellement sélectionnée
 // //                 if (adresseSelectionnee && adresseSelectionnee.id === editedAddress.id) {
 // //                     setAdresseSelectionnee(editedAddress);
@@ -2709,7 +2718,7 @@ export default FormAdresse;
 // //                 if (adresseFacturationSelectionnee && adresseFacturationSelectionnee.id === editedAddress.id) {
 // //                     setAdresseFacturationSelectionnee(editedAddress);
 // //                 }
-                
+
 // //                 setMessage({
 // //                     ouvre: true,
 // //                     texte: "Adresse modifiée avec succès",
@@ -2870,7 +2879,7 @@ export default FormAdresse;
 // //     // Ajoutez cette fonction utilitaire pour comparer les adresses
 // // const findNewAddress = (oldList, newList) => {
 // //     if (!oldList || !newList || newList.length <= oldList.length) return null;
-    
+
 // //     // Trouver l'adresse qui n'était pas dans l'ancienne liste
 // //     for (let newAddr of newList) {
 // //         const existsInOld = oldList.some(oldAddr => oldAddr.id === newAddr.id);
@@ -2889,7 +2898,7 @@ export default FormAdresse;
 // //         // Trouver et sélectionner la nouvelle adresse créée
 // //         const nouvelleAdresse = findNewAddress(anciennesAdresses, nouvellesAdresses) || nouvellesAdresses[0];
 // //         setAdresseSelectionnee(nouvelleAdresse);
-        
+
 // //         // Si on n'utilise pas d'adresse de facturation différente, mettre à jour aussi l'adresse de facturation
 // //         if (!utiliserFacturationDifferent) {
 // //             setAdresseFacturationSelectionnee(nouvelleAdresse);
@@ -2911,10 +2920,10 @@ export default FormAdresse;
 
 // //     const handleSubmit = async (e) => {
 // //         e.preventDefault();
-       
+
 // //         if (validate()) {
 // //             let donneesAdresse;
-            
+
 // //             // Construction des données d'adresse
 // //             if (showNewAddressForm) {
 // //                 // Utiliser la nouvelle adresse créée
@@ -2925,7 +2934,7 @@ export default FormAdresse;
 // //                         refAdresse: null,
 // //                         description: descriptionAdresse,
 // //                     },
-// //                     adresseFacturation: utiliserFacturationDifferent ? 
+// //                     adresseFacturation: utiliserFacturationDifferent ?
 // //                         (showNewBillingAddressForm ? {
 // //                             ...donneesFacturation,
 // //                             estAdresseExistante: false,
@@ -2952,7 +2961,7 @@ export default FormAdresse;
 // //                         refAdresse: adresseSelectionnee.id,
 // //                         description: descriptionAdresse || adresseSelectionnee.complement,
 // //                     },
-// //                     adresseFacturation: utiliserFacturationDifferent ? 
+// //                     adresseFacturation: utiliserFacturationDifferent ?
 // //                         (showNewBillingAddressForm ? {
 // //                             ...donneesFacturation,
 // //                             estAdresseExistante: false,
@@ -2972,24 +2981,24 @@ export default FormAdresse;
 // //                     AdresseDifferent: utiliserFacturationDifferent
 // //                 };
 // //             }
-            
+
 // //             setLoading(true);
 // //             console.log("Données adresse à envoyer:", donneesAdresse);
-            
+
 // //             if (IsChangedData(donneesAdresse, initialData)) {
 // //                 try {
 // //                     const panier = JSON.parse(localStorage.getItem("panier")) || items;
 // //                     if (panier.length > 0) {
 // //                         const commandeExiste = localStorage.getItem('RefCommande');
 // //                         let refCommandeNettoyee = null;
-                        
+
 // //                         if (commandeExiste) {
 // //                             try {
 // //                                 refCommandeNettoyee = JSON.parse(commandeExiste);
 // //                             } catch (e) {
 // //                                 refCommandeNettoyee = commandeExiste;
 // //                             }
-                            
+
 // //                             if (typeof refCommandeNettoyee === 'string') {
 // //                                 refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, '');
 // //                             }
@@ -3001,14 +3010,14 @@ export default FormAdresse;
 // //                                 adresse: donneesAdresse,
 // //                                 refCommande: refCommandeNettoyee
 // //                             };
-                            
+
 // //                             const response = await updateCommandePanier(dataCommandeUpdate);
-                            
+
 // //                             if (response.data) {
 // //                                 console.log("Commande mis à jour avec succès:", response.data);
 // //                                 localStorage.setItem('RefCommande', response.data.refCommande);
 // //                                 localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+
 // //                                 //  Si une nouvelle adresse a été créée, recharger la liste et la sélectionner automatiquement
 // //                                 if (showNewAddressForm) {
 // //                                     await getAdresses();
@@ -3018,7 +3027,7 @@ export default FormAdresse;
 // //                                 if (showNewBillingAddressForm) {
 // //                                     setShowNewBillingAddressForm(false);
 // //                                 }
-                                
+
 // //                                 setMessage({
 // //                                     ouvre: true,
 // //                                     texte: "Votre commande a été mis à jour avec succès.",
@@ -3040,21 +3049,21 @@ export default FormAdresse;
 // //                             const dataCommandeCreate = {
 // //                                 adresse: donneesAdresse
 // //                             };
-                            
+
 // //                             const response = await createCommandePanier(dataCommandeCreate);
-                            
+
 // //                             if (response.data) {
 // //                                 console.log("Commande créée avec succès:", response.data);
 // //                                 localStorage.setItem('RefCommande', response.data.refCommande);
 // //                                 localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+
 // //                                 // Si une nouvelle adresse a été créée, recharger la liste
 // //                                 if (showNewAddressForm || showNewBillingAddressForm) {
 // //                                     await getAdresses();
 // //                                     setShowNewAddressForm(false);
 // //                                     setShowNewBillingAddressForm(false);
 // //                                 }
-                                
+
 // //                                 setMessage({
 // //                                     ouvre: true,
 // //                                     texte: "Votre commande a été créée avec succès.",
@@ -3112,7 +3121,7 @@ export default FormAdresse;
 // //             </div>
 // //             <form onSubmit={handleSubmit}>
 // //                 <div className="flex w-full flex-col px-1">
-                    
+
 // //                     {/* Section Adresse de Livraison */}
 // //                     <div className="mb-6 flex items-center justify-center gap-4 text-xl">
 // //                         <MdLocationOn className="text-accent" />
@@ -3125,7 +3134,7 @@ export default FormAdresse;
 // //                                 {/* Affichage par défaut : liste des adresses existantes */}
 // //                                 {!showNewAddressForm ? (
 // //                                     <div className="w-full">
-// //                                         {chargementAdresses ? ( 
+// //                                         {chargementAdresses ? (
 // //                                             <div className="flex justify-center py-4">
 // //                                                 <div className="loading loading-spinner loading-xl text-accent"></div>
 // //                                                 <span className="ml-2">Récupération de vos adresses...</span>
@@ -3179,7 +3188,7 @@ export default FormAdresse;
 // //                                             <MdLocationOn className="text-accent" />
 // //                                             <span className="font-gothic text-black opacity-70 dark:text-white">Nouvelle Adresse de Livraison</span>
 // //                                         </div>
-                                        
+
 // //                                         <InputValidate
 // //                                             IconComponent={MdLocationOn}
 // //                                             type="text"
@@ -3232,7 +3241,7 @@ export default FormAdresse;
 // //                                             helperText={errors.quartier}
 // //                                             ClassIcone="text-accent"
 // //                                         />
-                                       
+
 // //                                         <InputValidate
 // //                                             IconComponent={MdLocationOn}
 // //                                             type="text"
@@ -3372,7 +3381,7 @@ export default FormAdresse;
 // //                                                     <MdLocationOn className="text-accent" />
 // //                                                     <span className="font-bold text-black opacity-80 dark:text-white">Nouvelle Adresse de Facturation</span>
 // //                                                 </div>
-                                               
+
 // //                                                 <InputValidate
 // //                                                     IconComponent={MdLocationOn}
 // //                                                     type="text"
@@ -3425,7 +3434,7 @@ export default FormAdresse;
 // //                                                     helperText={erreursFacturation.quartier}
 // //                                                     ClassIcone="text-accent"
 // //                                                 />
-                                               
+
 // //                                                 <InputValidate
 // //                                                     IconComponent={MdLocationOn}
 // //                                                     type="text"
@@ -3497,7 +3506,7 @@ export default FormAdresse;
 // //                                 className="btn btn-accent btn-outline btn-wide"
 // //                                 disabled={loading}
 // //                             >
-// //                                 {loading ? ( 
+// //                                 {loading ? (
 // //                                     <div className="flex flex-row justify-center items-center gap-2">
 // //                                         <span className="loading loading-spinner text-accent"></span>
 // //                                         <span>Validation en cours...</span>
@@ -3508,7 +3517,7 @@ export default FormAdresse;
 // //                             </button>
 // //                         </div>
 // //                     )}
-                    
+
 // //                 </div>
 // //             </form>
 // //         </div>
@@ -3516,13 +3525,6 @@ export default FormAdresse;
 // // };
 
 // // export default FormAdresse;
-
-
-
-
-
-
-
 
 // // import React, { useEffect, useRef, useState } from "react";
 // // import Alert from "@mui/material/Alert";
@@ -3541,28 +3543,28 @@ export default FormAdresse;
 // // // Fonction de comparaison de valeur initial et la valeur modifier
 // // function IsChangedData(current, initial) {
 // //     if (!current || !initial) return true;
-    
+
 // //     const livraisonCurent = current.adresseLivraison || {};
 // //     const facturationCurent = current.adresseFacturation || {};
 // //     const livraisonInitial = initial.adresseLivraison || {};
 // //     const facturationInitial = initial.adresseFacturation || {};
-    
+
 // //     const compare = (curr, init) => {
 // //         if (!curr && !init) return false;
 // //         if (!curr || !init) return true;
-        
+
 // //         return (
 // //             curr.id !== init.id ||
 // //             curr.codePostal !== init.codePostal ||
-// //             (curr.labelle || curr.LabelleAdresse) !== (init.labelle || init.LabelleAdresse) || 
+// //             (curr.labelle || curr.LabelleAdresse) !== (init.labelle || init.LabelleAdresse) ||
 // //             curr.complement !== init.complement ||
 // //             curr.description !== init.description ||
 // //             curr.lot !== init.lot ||
 // //             curr.quartier !== init.quartier ||
-// //             curr.ville !== init.ville 
-// //         ); 
+// //             curr.ville !== init.ville
+// //         );
 // //     };
-    
+
 // //     return compare(livraisonCurent, livraisonInitial) || compare(facturationCurent, facturationInitial);
 // // }
 
@@ -3570,16 +3572,16 @@ export default FormAdresse;
 // //     const { user, isAuthenticated } = useAuth();
 // //     const [loading, setLoading] = useState(false);
 // //     const { items } = usePanier();
-    
+
 // //     // CORRECTION: Initialiser avec des objets vides pour les nouvelles adresses
 // //     const [data, setData] = useState({});
 // //     const [donneesFacturation, setDonneesFacturation] = useState({});
-    
+
 // //     const [errors, setErrors] = useState({});
 // //     const [errorInfos, setErrorInfos] = useState(null);
 // //     const [open, setOpen] = useState(false);
 // //     const initial = useRef(initialData);
-    
+
 // //     const [descriptionAdresse, setDescriptionAdresse] = useState("");
 // //     const [adressesClient, setAdressesClient] = useState([]);
 // //     const [chargementAdresses, setChargementAdresses] = useState(false);
@@ -3614,7 +3616,7 @@ export default FormAdresse;
 // //         if (initialData && adressesClient.length > 0) {
 // //             // Initialiser l'adresse de livraison
 // //             if (initialData.adresseLivraison?.estAdresseExistante && initialData.adresseLivraison?.id) {
-// //                 const adresseTrouvee = adressesClient.find(adresse => 
+// //                 const adresseTrouvee = adressesClient.find(adresse =>
 // //                     adresse.id === initialData.adresseLivraison.id
 // //                 );
 // //                 if (adresseTrouvee) {
@@ -3630,7 +3632,7 @@ export default FormAdresse;
 
 // //             // Initialiser l'adresse de facturation
 // //             if (initialData.adresseFacturation?.estAdresseExistante && initialData.adresseFacturation?.id) {
-// //                 const adresseFacturationTrouvee = adressesClient.find(adresse => 
+// //                 const adresseFacturationTrouvee = adressesClient.find(adresse =>
 // //                     adresse.id === initialData.adresseFacturation.id
 // //                 );
 // //                 if (adresseFacturationTrouvee) {
@@ -3653,14 +3655,14 @@ export default FormAdresse;
 // //                 const listeAdresses = reponseAdresses.adresse;
 // //                 if (listeAdresses && listeAdresses.length > 0) {
 // //                     setAdressesClient(listeAdresses);
-                    
+
 // //                     // CORRECTION: Ne pas automatiquement sélectionner la première adresse
 // //                     // Laisser l'utilisateur choisir ou créer une nouvelle adresse
 // //                     if (!initialData) {
 // //                         setUtiliserAdresseExistante(true);
 // //                         // Ne pas auto-sélectionner, laisser l'utilisateur choisir
 // //                     }
-                    
+
 // //                     setChargementAdresses(false);
 // //                 } else {
 // //                     setAdressesClient([]);
@@ -3690,7 +3692,7 @@ export default FormAdresse;
 // //             if (response) {
 // //                 // Mettre à jour la liste des adresses
 // //                 await getAdresses();
-                
+
 // //                 // Mettre à jour la sélection si l'adresse modifiée est actuellement sélectionnée
 // //                 if (adresseSelectionnee && adresseSelectionnee.id === editedAddress.id) {
 // //                     setAdresseSelectionnee(editedAddress);
@@ -3698,7 +3700,7 @@ export default FormAdresse;
 // //                 if (adresseFacturationSelectionnee && adresseFacturationSelectionnee.id === editedAddress.id) {
 // //                     setAdresseFacturationSelectionnee(editedAddress);
 // //                 }
-                
+
 // //                 setMessage({
 // //                     ouvre: true,
 // //                     texte: "Adresse modifiée avec succès",
@@ -3842,10 +3844,10 @@ export default FormAdresse;
 
 // //     const handleSubmit = async (e) => {
 // //         e.preventDefault();
-       
+
 // //         if (validate()) {
 // //             let donneesAdresse;
-            
+
 // //             if (utiliserAdresseExistante && adresseSelectionnee) {
 // //                 donneesAdresse = {
 // //                     adresseLivraison: {
@@ -3854,7 +3856,7 @@ export default FormAdresse;
 // //                         refAdresse: adresseSelectionnee.id,
 // //                         description: descriptionAdresse || adresseSelectionnee.complement,
 // //                     },
-// //                     adresseFacturation: utiliserFacturationDifferent ? 
+// //                     adresseFacturation: utiliserFacturationDifferent ?
 // //                         (utiliserAdresseFacturationExistante && adresseFacturationSelectionnee ? {
 // //                             ...adresseFacturationSelectionnee,
 // //                             estAdresseExistante: true,
@@ -3894,26 +3896,26 @@ export default FormAdresse;
 // //                     AdresseDifferent: utiliserFacturationDifferent
 // //                 };
 // //             }
-            
+
 // //             setLoading(true);
 // //             console.log("livraison current: ", donneesAdresse);
 // //             console.log("livraison initial: ", initialData);
 // //             console.log("Donnes Changer :", IsChangedData(donneesAdresse, initialData));
-            
+
 // //             if (IsChangedData(donneesAdresse, initialData)) {
 // //                 try {
 // //                     const panier = JSON.parse(localStorage.getItem("panier")) || items;
 // //                     if (panier.length > 0) {
 // //                         const commandeExiste = localStorage.getItem('RefCommande');
 // //                         let refCommandeNettoyee = null;
-                        
+
 // //                         if (commandeExiste) {
 // //                             try {
 // //                                 refCommandeNettoyee = JSON.parse(commandeExiste);
 // //                             } catch (e) {
 // //                                 refCommandeNettoyee = commandeExiste;
 // //                             }
-                            
+
 // //                             if (typeof refCommandeNettoyee === 'string') {
 // //                                 refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, '');
 // //                             }
@@ -3925,20 +3927,20 @@ export default FormAdresse;
 // //                                 adresse: donneesAdresse,
 // //                                 refCommande: refCommandeNettoyee
 // //                             };
-                            
+
 // //                             console.log('donnee modifier : ', dataCommandeUpdate);
 // //                             const response = await updateCommandePanier(dataCommandeUpdate);
-                            
+
 // //                             if (response.data) {
 // //                                 console.log("Commande mis à jour avec succès:", response.data);
 // //                                 localStorage.setItem('RefCommande', response.data.refCommande);
 // //                                 localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+
 // //                                 // CORRECTION: Recharger les adresses après création d'une nouvelle adresse
 // //                                 if (!utiliserAdresseExistante || (utiliserFacturationDifferent && !utiliserAdresseFacturationExistante)) {
 // //                                     await getAdresses();
 // //                                 }
-                                
+
 // //                                 setMessage({
 // //                                     ouvre: true,
 // //                                     texte: "Votre commande a été mis à jour avec succès.",
@@ -3960,18 +3962,18 @@ export default FormAdresse;
 // //                             const dataCommandeCreate = {
 // //                                 adresse: donneesAdresse
 // //                             };
-                            
+
 // //                             console.log("donnee créer :", dataCommandeCreate);
 // //                             const response = await createCommandePanier(dataCommandeCreate);
-                            
+
 // //                             if (response.data) {
 // //                                 console.log("Commande créée avec succès:", response.data);
 // //                                 localStorage.setItem('RefCommande', response.data.refCommande);
 // //                                 localStorage.setItem('DataAdresse', JSON.stringify(donneesAdresse));
-                                
+
 // //                                 // CORRECTION: Recharger les adresses après création d'une nouvelle adresse
 // //                                 await getAdresses();
-                                
+
 // //                                 setMessage({
 // //                                     ouvre: true,
 // //                                     texte: "Votre commande a été créée avec succès.",
@@ -4029,7 +4031,7 @@ export default FormAdresse;
 // //             </div>
 // //             <form onSubmit={handleSubmit}>
 // //                 <div className="flex w-full flex-col px-1">
-                    
+
 // //                     {/* Section Adresse de Livraison */}
 // //                     <div className="mb-6 flex items-center justify-center gap-4 text-xl">
 // //                         <MdLocationOn className="text-accent" />
@@ -4061,7 +4063,7 @@ export default FormAdresse;
 
 // //                                         {utiliserAdresseExistante && (
 // //                                             <div className="mx-8 mt-3">
-// //                                                 {chargementAdresses ? ( 
+// //                                                 {chargementAdresses ? (
 // //                                                     <div className="flex justify-center py-4">
 // //                                                         <div className="loading loading-spinner loading-xl text-accent"></div>
 // //                                                         <span className="ml-2">Récuperation de vos adresses...</span>
@@ -4117,7 +4119,7 @@ export default FormAdresse;
 // //                                 <MdLocationOn className="text-accent" />
 // //                                 <span className="font-gothic text-black opacity-70 dark:text-white">Nouvelle Adresse de Livraison</span>
 // //                             </div>
-                            
+
 // //                             <InputValidate
 // //                                 IconComponent={MdLocationOn}
 // //                                 type="text"
@@ -4170,7 +4172,7 @@ export default FormAdresse;
 // //                                 helperText={errors.quartier}
 // //                                 ClassIcone="text-accent"
 // //                             />
-                           
+
 // //                             <InputValidate
 // //                                 IconComponent={MdLocationOn}
 // //                                 type="text"
@@ -4302,7 +4304,7 @@ export default FormAdresse;
 // //                                         <MdLocationOn className="text-accent" />
 // //                                         <span className="font-bold text-black opacity-80 dark:text-white">Nouvelle Adresse de Facturation</span>
 // //                                     </div>
-                                   
+
 // //                                     <InputValidate
 // //                                         IconComponent={MdLocationOn}
 // //                                         type="text"
@@ -4355,7 +4357,7 @@ export default FormAdresse;
 // //                                         helperText={erreursFacturation.quartier}
 // //                                         ClassIcone="text-accent"
 // //                                     />
-                                   
+
 // //                                     <InputValidate
 // //                                         IconComponent={MdLocationOn}
 // //                                         type="text"
@@ -4398,7 +4400,7 @@ export default FormAdresse;
 // //                             className="btn btn-accent btn-outline btn-wide"
 // //                             disabled={loading}
 // //                         >
-// //                             {loading ? ( 
+// //                             {loading ? (
 // //                                 <div className="flex flex-row justify-center items-center gap-2">
 // //                                     <span className="loading loading-spinner text-accent"></span>
 // //                                     <span>Validation en cours...</span>
@@ -4408,7 +4410,7 @@ export default FormAdresse;
 // //                             )}
 // //                         </button>
 // //                     </div>
-                    
+
 // //                 </div>
 // //             </form>
 // //         </div>

@@ -16,7 +16,6 @@ class Panier
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-     // ✅ CORRECTION : REFERENCER LA BONNE COLONNE PRIMAIRE DE COMMANDE
      #[ORM\ManyToOne(targetEntity: Commande::class, inversedBy: 'paniers')]
      #[ORM\JoinColumn(name: 'ref_commande', referencedColumnName: 'ref_commande', nullable: false)]
      private ?Commande $commande = null;
@@ -33,7 +32,10 @@ class Panier
     {
         return $this->commande;
     }
-
+    public function getIdPanier():  ?int
+    {
+        return $this->id;
+    }
     public function setCommande(?Commande $commande): static
     {
         $this->commande = $commande;

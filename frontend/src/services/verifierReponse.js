@@ -25,8 +25,8 @@ export async function verifierReponse(urlAxios) {
             return { data: null, error: 'Le format json envoyé est invalid' || response.data?.error?.message, statut : response.data.error.status };
         }
         
-        if (response.status === 500 && response.data?.error?.message) {
-            return { data: null, error: " Une erreur serveur s'est produit! " . response.data?.error?.message  };
+        if (response.status === 500) {
+            return { data: null, error: " Une erreur serveur s'est produit! " . response  };
           }
 
           if (response.status === 409 && response.data?.error?.message) {

@@ -48,13 +48,18 @@ export const DeleteClient = async (refClient) => {
 };
 
 
-export const createCommandePanier = async (dataCommande) => {
+export const createCommande = async (dataCommande) => {
   return await verifierReponse(() =>  api.post('/api/client/initialeCommande', dataCommande));
     
 };
 
+export const updateCommandeAdresse = async (dataCommande) => {
+  return await verifierReponse(() =>  api.put('/api/client/updateAdresseCommande', dataCommande));
+    
+};
+
 export const updateCommandePanier = async (dataCommande) => {
-  return await verifierReponse(() =>  api.put('/api/client/updateCommande', dataCommande));
+  return await verifierReponse(() =>  api.put('/api/client/updatePanierCommande', dataCommande));
     
 };
 

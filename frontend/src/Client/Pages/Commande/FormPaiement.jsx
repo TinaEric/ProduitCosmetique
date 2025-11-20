@@ -1,67 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { Typography, Alert } from "@mui/material";
+import { FaCircleInfo, FaInfo } from "react-icons/fa6";
+import { MdInfoOutline } from "react-icons/md";
 
 const FormPaiement = ({ initialData, onSubmitSuccess }) => {
     const [formData, setFormData] = useState({
-        methodeLivraison: '',
-        methodePaiement: '',
-        ...initialData
+        methodeLivraison: "",
+        methodePaiement: "",
+        ...initialData,
     });
 
     const [errors, setErrors] = useState({});
 
     // Options pour les méthodes de livraison
     const methodesLivraison = [
-        { value: '', label: 'Choisissez une méthode de livraison', disabled: true },
-        { value: 'standard', label: 'Livraison Standard (3-5 jours) - Gratuit', prix: 0.00 },
-        { value: 'express', label: 'Livraison Express (24h) - 9.99€', prix: 9.99 },
-        { value: 'point-relais', label: 'Point Relais (2-3 jours) - Gratuit', prix: 0.00 },
-        { value: 'drive', label: 'Retrait en Drive - Gratuit', prix: 0.00 }
+        { value: "", label: "Choisissez une méthode de livraison", disabled: true },
+        { value: "standard", label: "Livraison à Standard (3-5 jours) - 2000.0 Ar", prix: 2000.0 },
+        { value: "express", label: "Livraison Express (24h) - 5000.0 Ar", prix: 5000.0 },
+        { value: "mangasin", label: "Point de vente - Gratuit", prix: 0.0 },
     ];
 
     // Options pour les méthodes de paiement
     const methodesPaiement = [
-        { value: '', label: 'Choisissez une méthode de paiement', disabled: true },
-        { value: 'carte', label: 'Carte Bancaire' },
-        { value: 'paypal', label: 'PayPal' },
-        { value: 'virement', label: 'Virement Bancaire' },
-        { value: 'especes', label: 'Paiement en espèces à la livraison' }
+        { value: "", label: "Choisissez une méthode de paiement", disabled: true },
+        { value: "mvola", label: "MVola Avance" },
+        { value: "paypal", label: "PayPal" },
+        { value: "especes", label: "Paiement en espèces à la livraison" },
     ];
 
     useEffect(() => {
         if (initialData) {
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
-                ...initialData
+                ...initialData,
             }));
         }
     }, [initialData]);
 
     const handleChange = (field) => (event) => {
         const value = event.target.value;
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            [field]: value
+            [field]: value,
+            fraisLivraison: getPrixLivraison(),
         }));
 
         // Effacer l'erreur du champ modifié
         if (errors[field]) {
-            setErrors(prev => ({
+            setErrors((prev) => ({
                 ...prev,
-                [field]: ''
+                [field]: "",
             }));
         }
     };
+    
 
     const validateForm = () => {
         const newErrors = {};
 
         if (!formData.methodeLivraison) {
-            newErrors.methodeLivraison = 'Veuillez sélectionner une méthode de livraison';
+            newErrors.methodeLivraison = "Veuillez sélectionner une méthode de livraison";
         }
 
         if (!formData.methodePaiement) {
-            newErrors.methodePaiement = 'Veuillez sélectionner une méthode de paiement';
+            newErrors.methodePaiement = "Veuillez sélectionner une méthode de paiement";
         }
 
         setErrors(newErrors);
@@ -70,153 +72,153 @@ const FormPaiement = ({ initialData, onSubmitSuccess }) => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        
+
         if (validateForm()) {
             // Sauvegarder les données dans le localStorage
-            localStorage.setItem('methodeLivraison', formData.methodeLivraison);
-            localStorage.setItem('methodePaiement', formData.methodePaiement);
-            
+            localStorage.setItem("methodeLivraison", formData.methodeLivraison);
+            localStorage.setItem("methodePaiement", formData.methodePaiement);
+            console.log("formData : ",formData)
             onSubmitSuccess(formData);
         }
     };
 
     const getPrixLivraison = () => {
-        const methode = methodesLivraison.find(m => m.value === formData.methodeLivraison);
+        const methode = methodesLivraison.find((m) => m.value === formData.methodeLivraison);
         return methode ? methode.prix : 0;
     };
 
     const getLabelLivraison = () => {
-        const methode = methodesLivraison.find(m => m.value === formData.methodeLivraison);
-        return methode ? methode.label : '';
+        const methode = methodesLivraison.find((m) => m.value === formData.methodeLivraison);
+        return methode ? methode.label : "";
     };
 
     const getLabelPaiement = () => {
-        const methode = methodesPaiement.find(m => m.value === formData.methodePaiement);
-        return methode ? methode.label : '';
+        const methode = methodesPaiement.find((m) => m.value === formData.methodePaiement);
+        return methode ? methode.label : "";
     };
 
     return (
-        <div className="p-4 bg-transparent dark:bg-gray-800">
+        <div className="bg-transparent p-4">
             <div className="">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form
+                    onSubmit={handleSubmit}
+                    className="space-y-6"
+                >
                     {/* Méthode de Livraison */}
-                    <div className="form-control w-full">
-                        <label className="label">
-                            <span className="label-text font-semibold text-gray-700 dark:text-gray-300">
+                        <fieldset className="fieldset mb-6 w-full">
+                            <legend
+                                className={`fieldset-legend text-gray-900 dark:text-slate-300`}
+                            >
                                 Méthode de Livraison
-                            </span>
-                        </label>
-                        
-                        <select 
-                            className={`select bg-transparent select-bordered w-full ${errors.methodeLivraison ? 'select-error' : ''}`}
-                            value={formData.methodeLivraison}
-                            onChange={handleChange('methodeLivraison')}
-                        >
-                            {methodesLivraison.map((methode) => (
-                                <option 
-                                    key={methode.value} 
+                            </legend>
+                            <select
+                                 value={formData.methodeLivraison}
+                                 onChange={handleChange("methodeLivraison")}
+                                className={`select border border-slate-400 ${errors.methodeLivraison ? "select-error" : ""} text-black dark:text-white mt-2 w-full  bg-transparent dark:border-slate-500 dark:bg-[#0F172A]`}
+                            >
+                                {methodesLivraison.map((methode) => (
+                                <option
+                                    key={methode.value}
                                     value={methode.value}
                                     disabled={methode.disabled}
                                 >
                                     {methode.label}
                                 </option>
                             ))}
-                        </select>
-                        
-                        {errors.methodeLivraison && (
+                            </select>
+                            {errors.methodeLivraison && (
                             <label className="label">
                                 <span className="label-text-alt text-error">{errors.methodeLivraison}</span>
                             </label>
                         )}
-                    </div>
+                        </fieldset>
+                  
 
                     {/* Méthode de Paiement */}
-                    <div className="form-control w-full">
-                        <label className="label">
-                            <span className="label-text font-semibold text-gray-700 dark:text-gray-300">
+                    <fieldset className="fieldset mb-6 w-full">
+                            <legend
+                                className={`fieldset-legend text-gray-900 dark:text-slate-300`}
+                            >
                                 Méthode de Paiement
-                            </span>
-                        </label>
-                        
-                        <select 
-                            className={`select bg-transparent select-bordered w-full ${errors.methodePaiement ? 'select-error' : ''}`}
-                            value={formData.methodePaiement}
-                            onChange={handleChange('methodePaiement')}
-                        >
-                            {methodesPaiement.map((methode) => (
-                                <option 
-                                    key={methode.value} 
+                            </legend>
+                            <select
+                                 value={formData.methodePaiement}
+                                 onChange={handleChange("methodePaiement")}
+                                className={`select border border-slate-400 ${errors.methodePaiement ? "select-error" : ""} text-black dark:text-white mt-2 w-full  bg-transparent dark:border-slate-500 dark:bg-[#0F172A]`}
+                            >
+                                {methodesPaiement.map((methode) => (
+                                <option
+                                    key={methode.value}
                                     value={methode.value}
                                     disabled={methode.disabled}
                                 >
                                     {methode.label}
                                 </option>
                             ))}
-                        </select>
-                        
-                        {errors.methodePaiement && (
+                            </select>
+                            {errors.methodePaiement && (
                             <label className="label">
                                 <span className="label-text-alt text-error">{errors.methodePaiement}</span>
                             </label>
                         )}
-                    </div>
+                        </fieldset>
 
-                    {/* Informations supplémentaires selon la méthode de paiement */}
-                    {formData.methodePaiement === 'especes' && (
-                        <div className="alert alert-info shadow-lg">
-                            <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                                <span>Veuillez préparer le montant exact pour le livreur.</span>
+                    {formData.methodePaiement === "mvola" && ( // bg-slate-50 dark:bg-transparent"
+                        <div className="flex flex-col  p-4 shadow-xl dark:shadow-slate-950 rounded-xl  text-blue-800 bg-blue-50  dark:text-blue-500 dark:bg-blue-800/5 " >
+                            <div className="mb-2 space-x-1 flex items-center justify-center">
+                                 <MdInfoOutline size={20}/>
+                                <span className=" font-semibold ">Informations sur nos compte Mvola</span>
+                            </div>
+
+                            <div className="mb-2 flex items-center justify-between">
+                                    <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Téléphone du Gestionnaire:</span>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">038 23 612 23</span>
+                            </div>
+                            <div className="mb-2 flex items-center justify-between">
+                                    <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Nom du compte Mvola du Gestionnaire:</span>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">RAKOTONJANAHARY Tina Eric</span>
+                            </div>
+                            <div className="flex justify-center items-center p-2">
+                                <p className="italic text-center dark:text-blue-500/80 font-gothic">"Nous vous envoyerons un message de confirmation à votre compte Email ou  à votre numéro téléphone une fois la transaction est reçue et terminé avec succès."</p>
                             </div>
                         </div>
                     )}
-
-                    {formData.methodePaiement === 'virement' && (
-                        <div className="alert alert-info shadow-lg">
-                            <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span>Les coordonnées bancaires vous seront communiquées après validation de la commande.</span>
-                            </div>
+                    {/* Informations supplémentaires selon la méthode de paiement */}
+                    {formData.methodePaiement === "especes" && (
+                        <div className="mt-4 rounded-lg flex justify-center p-3 space-x-1 text-blue-800 bg-blue-50  dark:text-blue-500 dark:bg-blue-800/5">
+                                <MdInfoOutline size={20}/>
+                                <span>Veuillez préparer le montant exact pour le livreur.</span>
                         </div>
                     )}
 
                     {/* Résumé des sélections */}
                     {(formData.methodeLivraison || formData.methodePaiement) && (
-                        <div className="bg-transparent rounded-lg p-4 dark:bg-gray-700">
-                            <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Résumé de vos sélections :</h4>
-                            
+                        <div className=" bg-slate-50 px-6 py-4 dark:bg-slate-800 shadow-xl dark:shadow-slate-950 rounded-xl dark:bg-transparent">
+                            <div className="py-2 flex items-center justify-center">
+                                <span className="font-semibold text-gray-700  dark:text-gray-300">Résumé de vos sélections</span>
+                            </div>
                             {formData.methodeLivraison && (
-                                <div className="flex justify-between items-center mb-2">
+                                <div className="mb-2 flex items-center justify-between">
                                     <span className="text-sm text-gray-600 dark:text-gray-400">Livraison :</span>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        {getLabelLivraison()}
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{getLabelLivraison()}</span>
                                 </div>
                             )}
-                            
+
                             {formData.methodePaiement && (
-                                <div className="flex justify-between items-center">
+                                <div className="flex items-center justify-between">
                                     <span className="text-sm text-gray-600 dark:text-gray-400">Paiement :</span>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        {getLabelPaiement()}
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{getLabelPaiement()}</span>
                                 </div>
                             )}
 
                             {/* Frais de livraison supplémentaires */}
                             {formData.methodeLivraison && getPrixLivraison() > 0 && (
-                                <div className="mt-3 pt-2 border-t border-gray-300 dark:border-gray-600">
-                                    <div className="flex justify-between items-center">
+                                <div className="mt-3 border-t border-gray-300 pt-2 dark:border-gray-600">
+                                    <div className="flex items-center justify-between">
                                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                             Frais de livraison supplémentaires :
                                         </span>
-                                        <span className="text-sm font-bold text-primary">
-                                            +{getPrixLivraison()}€
-                                        </span>
+                                        <span className="text-sm font-bold text-primary">+{getPrixLivraison()}€</span>
                                     </div>
                                 </div>
                             )}
@@ -224,17 +226,24 @@ const FormPaiement = ({ initialData, onSubmitSuccess }) => {
                     )}
 
                     {/* Boutons de navigation */}
-                    <div className="flex justify-end mt-8">
-                       
-                        
+                    <div className="mt-8 flex justify-end">
                         <button
                             type="submit"
-                            className="btn btn-primary"
+                            className="btn btn-outline btn-wide btn-accent disabled:text-gray-400 disabled:btn-ghost "
                             disabled={!formData.methodeLivraison || !formData.methodePaiement}
                         >
                             Continuer
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="ml-2 h-5 w-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                />
                             </svg>
                         </button>
                     </div>
@@ -245,7 +254,6 @@ const FormPaiement = ({ initialData, onSubmitSuccess }) => {
 };
 
 export default FormPaiement;
-
 
 // import React, { useState, useEffect } from 'react';
 // import {
@@ -327,12 +335,12 @@ export default FormPaiement;
 
 //     const handleSubmit = (event) => {
 //         event.preventDefault();
-        
+
 //         if (validateForm()) {
 //             // Sauvegarder les données dans le localStorage
 //             localStorage.setItem('methodeLivraison', formData.methodeLivraison);
 //             localStorage.setItem('methodePaiement', formData.methodePaiement);
-            
+
 //             onSubmitSuccess(formData);
 //         }
 //     };
@@ -429,7 +437,7 @@ export default FormPaiement;
 //                     >
 //                         Retour
 //                     </Button>
-                    
+
 //                     <Button
 //                         type="submit"
 //                         variant="contained"

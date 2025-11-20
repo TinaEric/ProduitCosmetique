@@ -24,6 +24,7 @@ const CategoriePage = () => {
     const [vide, setVide] = useState(CatTab.filter((product) => product.nbrProduit === 0).length);
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [checked, setChecked] = useState(false);
     const [message, setMessage] = useState({
         ouvre: false,
         texte: "vide",
@@ -211,6 +212,14 @@ const CategoriePage = () => {
         closeDrawer();
     };
 
+    const toggleSelectAll = (e) => {
+        setChecked(e.target.checked);
+        if (e.target.checked) {
+          setChekTab(CatTab.map(item => item.codeCategorie || item.id));
+        } else {
+          setChekTab([]);
+        }
+      };
     return (
         <div className="drawer drawer-end min-h-screen">
             <input
@@ -287,8 +296,8 @@ const CategoriePage = () => {
                                             <input
                                                 type="checkbox"
                                                 defaultChecked
-                                                // checked={checked}
-                                                // onChange={(e) => setIsChecked(e.target.checked)}
+                                                checked={checked}
+                                                onChange={toggleSelectAll}
                                                 className="checkbox-secondary checkbox"
                                             />
                                         </th>

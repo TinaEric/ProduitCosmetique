@@ -12,18 +12,30 @@ class CommandeRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Commande::class);
     }
-
-    // Vous pouvez ajouter ici des méthodes de recherche spécifiques à l'entité Client
-    // Exemple : Trouver un client par son ID_USERS (la clé étrangère)
-    /*
-    public function findOneByUser(User $user): ?Client
+    public function findAllWithDetails()
     {
         return $this->createQueryBuilder('c')
-            ->andWhere('c.user = :user')
-            ->setParameter('user', $user)
+            ->leftJoin('c.client', 'client')
+            ->leftJoin('c.adresseLivraison', 'adresseLiv')
+            ->leftJoin('c.adresseFacturation', 'adresseFact')
+            ->leftJoin('c.paniers', 'paniers')
+            ->addSelect('client')
+            ->addSelect('adresseLiv')
+            ->addSelect('adresseFact')
+            ->addSelect('paniers')
+            ->orderBy('c.dateCommande', 'DESC')
             ->getQuery()
-            ->getOneOrNullResult()
-        ;
+            ->getResult();
     }
-    */
+
+    public function findByStatus(string $status)
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.client', 'client')
+            ->andWhere('c.statutCommande = :status')
+            ->setParameter('status', $status)
+            ->orderBy('c.dateCommande', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Stepper, Step, StepLabel, StepContent, Button, Box, Typography, Paper } from "@mui/material";
 import FormAdresse from "./FormAdresse";
 import FormInfosPersonnel from "./FormInfosPersonnel";
-import { createCommandePanier } from "@/services/ClientService";
+import { updateCommandePanier } from "@/services/ClientService";
 import FormPaiement from "./FormPaiement"; // Note: changement de nom
 import { useAuth } from "../../../hook/useAuth";
 import Alert from "@mui/material/Alert";
@@ -10,15 +10,16 @@ import Snackbar from "@mui/material/Snackbar";
 import { usePanier } from "@/Client/context/PanierContext";
 import { MdCloseFullscreen, MdOutlineClose, MdRemoveShoppingCart } from "react-icons/md";
 
-
 const steps = ["Informations Personnels", "Adresse de Livraison et Facturation", "Service Livraison et Paiement", "Validation Finale"];
 
 export default function CommandeEtape() {
     const { isAuthenticated, user } = useAuth();
-    const {items, ajouteAuPanier,PlusQuantite,MoinsQuantite , setItems, supprimerDuPanier} = usePanier();
+    const { items, setItems } = usePanier();
     const initialStep = isAuthenticated ? 0 : 0;
+    const [loading, setLoading] = useState(false);
     const [activeStep, setActiveStep] = React.useState(initialStep);
     const [open, setOpen] = useState(false);
+    const [coutLiv, setCoutLiv] = useState(0);
     const [message, setMessage] = useState({
         ouvre: false,
         texte: "vide",
@@ -42,7 +43,7 @@ export default function CommandeEtape() {
         },
         etape2: {
             AdresseDifferent: false,
-            adresseLivraison : {
+            adresseLivraison: {
                 codePostal: "",
                 complement: "",
                 description: "",
@@ -54,7 +55,7 @@ export default function CommandeEtape() {
                 refAdresse: "",
                 ville: "",
             },
-            adresseFacturation : {
+            adresseFacturation: {
                 codePostal: "",
                 complement: "",
                 description: "",
@@ -66,30 +67,34 @@ export default function CommandeEtape() {
                 refAdresse: "",
                 ville: "",
             },
-            
         },
-        etape3: { 
+        etape3: {
             methodeLivraison: "",
             methodePaiement: "",
-            transactionId: "" 
+            fraisLivraison: "",
         },
     });
 
-    // Charger le panier depuis le localStorage
-    // useEffect(() => {
-    //     const chargerPanier = () => {
-    //         const panierStorage = JSON.parse(localStorage.getItem("panier")) || [];
-    //         setPanier(panierStorage);
-    //     };
-
-    //     chargerPanier();
-    // }, []);
-
-    // Calculer le total du panier
     const calculerTotal = () => {
         return items.reduce((total, item) => {
-            return total + (item.prix * item.quantite);
+            return total + item.prix * item.quantite;
         }, 0);
+    };
+
+    const NetPayer = () => {
+        return calculerTotal() + prixlivr(formData.etape3.methodeLivraison);
+    };
+    const prixlivr = (valeur) => {
+        switch (valeur) {
+            case "standard":
+                return 2000;
+            case "express":
+                return 5000;
+            case "mangasin":
+                return 0;
+            default:
+                return 0;
+        }
     };
 
     useEffect(() => {
@@ -107,26 +112,26 @@ export default function CommandeEtape() {
                     password: "",
                 },
             }));
-            const valAdresse = JSON.parse(localStorage.getItem('DataAdresse'))
-            const refCommande = localStorage.getItem('RefCommande')
-            if(valAdresse && refCommande){
+            const valAdresse = JSON.parse(localStorage.getItem("DataAdresse"));
+            const refCommande = localStorage.getItem("RefCommande");
+            if (valAdresse && refCommande) {
                 setFormData((prevData) => ({
                     ...prevData,
                     etape2: {
                         AdresseDifferent: valAdresse.AdresseDifferent,
-                        adresseLivraison : {
+                        adresseLivraison: {
                             codePostal: valAdresse.adresseLivraison.codePostal,
                             complement: valAdresse.adresseLivraison.complement,
                             description: valAdresse.adresseLivraison.description,
-                            estAdresseExistante:  valAdresse.adresseLivraison.estAdresseExistante,
+                            estAdresseExistante: valAdresse.adresseLivraison.estAdresseExistante,
                             id: valAdresse.adresseLivraison.id,
-                            labelle: valAdresse.adresseLivraison?.labelle || valAdresse.adresseLivraison?.LabelleAdresse || "" ,
+                            labelle: valAdresse.adresseLivraison?.labelle || valAdresse.adresseLivraison?.LabelleAdresse || "",
                             lot: valAdresse.adresseLivraison.lot,
                             quartier: valAdresse.adresseLivraison.quartier,
                             refAdresse: valAdresse.adresseLivraison.refAdresse,
                             ville: valAdresse.adresseLivraison.ville,
                         },
-                        adresseFacturation : {
+                        adresseFacturation: {
                             codePostal: valAdresse.adresseFacturation.codePostal,
                             complement: valAdresse.adresseFacturation.complement,
                             description: valAdresse.adresseFacturation.description,
@@ -138,7 +143,18 @@ export default function CommandeEtape() {
                             refAdresse: valAdresse.adresseFacturation.refAdresse,
                             ville: valAdresse.adresseFacturation.ville,
                         },
-                        
+                    },
+                }));
+            }
+            const methLivr = localStorage.getItem("methodeLivraison");
+            const methPaiement = localStorage.getItem("methodePaiement");
+            if (methLivr && methPaiement && refCommande) {
+                setFormData((prevData) => ({
+                    ...prevData,
+                    etape3: {
+                        methodeLivraison: methLivr,
+                        methodePaiement: methPaiement,
+                        fraisLivraison: prixlivr(methLivr),
                     },
                 }));
             }
@@ -187,7 +203,7 @@ export default function CommandeEtape() {
             },
             etape2: {
                 AdresseDifferent: false,
-                adresseLivraison : {
+                adresseLivraison: {
                     codePostal: "",
                     complement: "",
                     description: "",
@@ -198,7 +214,7 @@ export default function CommandeEtape() {
                     refAdresse: "",
                     ville: "",
                 },
-                adresseFacturation : {
+                adresseFacturation: {
                     codePostal: "",
                     complement: "",
                     description: "",
@@ -209,16 +225,107 @@ export default function CommandeEtape() {
                     refAdresse: "",
                     ville: "",
                 },
-                
             },
-            etape3: { 
+            etape3: {
                 methodeLivraison: "",
                 methodePaiement: "",
-                transactionId: "" 
+                fraisLivraison: "",
             },
         });
     };
 
+    const commandeMisAJour = async () => {
+        
+        setLoading(true);
+        try {
+            const panier = JSON.parse(localStorage.getItem("panier")) || items;
+            if (panier.length > 0) {
+                const commandeExiste = localStorage.getItem("RefCommande");
+                let refCommandeNettoyee = null;
+                const formatPanier = panier.map(item => {
+                    return {
+                        produit : item.id,
+                        quantite : item.quantite
+                    }
+                })
+                if (commandeExiste) {
+                    try {
+                        refCommandeNettoyee = JSON.parse(commandeExiste);
+                    } catch (e) {
+                        refCommandeNettoyee = commandeExiste;
+                    }
+
+                    if (typeof refCommandeNettoyee === "string") {
+                        refCommandeNettoyee = refCommandeNettoyee.replace(/^"+|"+$/g, "");
+                    }
+                }
+
+                if (refCommandeNettoyee) {
+                    const dataCommandeUpdate = {
+                        panier: formatPanier,
+                        methodeLivraison: formData.etape3.methodeLivraison,
+                        methodePaiement: formData.etape3.methodePaiement,
+                        fraisLivraison: formData.etape3.fraisLivraison, 
+                        refCommande: refCommandeNettoyee,
+                    };
+                    console.log("Data: ",dataCommandeUpdate)
+                    const response = await updateCommandePanier(dataCommandeUpdate);
+
+                    if (response.data) {
+                        console.log("Resultat: ", response.data)
+                        setMessage({
+                            ouvre: true,
+                            texte: "Votre commande a été passé avec succès.En attente de vos paiement",
+                            statut: "success",
+                        });
+                        setOpen(true);
+                        localStorage.removeItem('panier');
+                        localStorage.removeItem('RefCommande');
+                        localStorage.removeItem('DataAdresse');
+                        localStorage.removeItem('methodeLivraison');
+                        localStorage.removeItem('methodePaiement');
+                        setItems([]);
+                        handleNext();
+                    } else {
+                        console.log("Erruer Backend: ",response.error)
+                        setMessage({
+                            ouvre: true,
+                            texte: "Une erreur s'est produit lors du validation de vos commande. Veuillez Attendre quelque minute.",
+                            statut: "error",
+                        });
+                        setOpen(true);
+                    }
+                } else {
+                    console.log("Commande n'existe pas dans localstorage")
+                        setMessage({
+                            ouvre: true,
+                            texte: "Vous n'avez pas de commande à créer!. Veuillez séléctionner vos produit à commander.",
+                            statut: "error",
+                        });
+                        setOpen(true);
+                }
+            } else {
+                setMessage({
+                    ouvre: true,
+                    texte: "Votre panier est vide , Veuillez selectionner votre produit commander.",
+                    statut: "warning",
+                });
+                setOpen(true);
+            }
+            setLoading(false);
+        } catch (error) {
+            console.error("Erreur création commande:", error);
+            setMessage({
+                ouvre: true,
+                texte: "Erreur lors de la création de la commande. Veuillez réessayer.",
+                statut: "error",
+            });
+            setOpen(true);
+            setLoading(false);
+        } finally {
+            setLoading(false);
+        }
+    };
     const handleStepSubmit = (stepKey, stepData) => {
         let normalizedData = stepData;
         if (stepKey === "etape1") {
@@ -344,7 +451,7 @@ export default function CommandeEtape() {
                 <Box className="my-4 w-full rounded-xl bg-transparent p-8 shadow-2xl dark:shadow-black lg:w-2/3">
                     <Typography
                         variant="h4"
-                        className="mb-6 text-center font-bold dark:text-white"
+                        className="mb-6 text-center font-bold text-gray-500 dark:text-white"
                     >
                         Processus de Commande
                     </Typography>
@@ -370,11 +477,18 @@ export default function CommandeEtape() {
                                             <Button
                                                 variant="contained"
                                                 color="primary"
-                                                onClick={handleNext}
+                                                onClick={commandeMisAJour}
                                                 className="bg-green-600 text-white hover:bg-green-700"
                                                 disabled={commandeExistante}
                                             >
-                                                Terminer la Commande
+                                              {loading ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="loading loading-spinner"></span>
+                                                        Vérification de vos informations...
+                                                    </div>
+                                                ) : (
+                                                    "Passer à la caisse"
+                                                )} 
                                             </Button>
                                         )}
 
@@ -413,36 +527,35 @@ export default function CommandeEtape() {
                 <Box className="sticky top-48 my-4 h-fit w-full rounded-2xl bg-transparent p-6 shadow-2xl dark:shadow-slate-950 lg:w-1/3">
                     <Typography
                         variant="h5"
-                        className="mb-4 border-b border-gray-200 pb-2 font-bold dark:border-gray-700 dark:text-white"
+                        className="mb-4 flex justify-center border-b border-gray-200 pb-2 font-bold text-gray-500 dark:border-gray-700 dark:text-white"
                     >
-                        Résumé du Panier
+                        <span> Résumé du Panier</span>
                     </Typography>
 
-                    {panier.length === 0 ? (
-                       <div className="w-full flex-col flex h-[400px] text-slate-500 space-y-4 dark:text-slate-400 justify-center items-center">
-                            <MdRemoveShoppingCart  className="text-[70px] "/>
-                            <p className=" text-xl ">Votre panier est vide</p>
+                    {items.length === 0 ? (
+                        <div className="flex h-[400px] w-full flex-col items-center justify-center space-y-4 text-slate-500 dark:text-slate-400">
+                            <MdRemoveShoppingCart className="text-[70px]" />
+                            <p className="text-xl">Votre panier est vide</p>
                         </div>
                     ) : (
                         <Box className="space-y-4">
                             {/* Liste des articles */}
                             {items.map((item, index) => (
-                                <Box key={index} className="flex items-center justify-between border-b border-gray-200 pb-3 dark:border-gray-700">
+                                <Box
+                                    key={index}
+                                    className="flex items-center justify-between border-b border-gray-200 pb-3 dark:border-gray-700"
+                                >
                                     <Box className="flex items-center space-x-3 pt-2">
                                         {item.image && (
-                                            <img 
-                                                src={`/image/${item.image}`} 
+                                            <img
+                                                src={`/image/${item.image}`}
                                                 alt={item.nom}
                                                 className="h-12 w-12 rounded object-cover"
                                             />
                                         )}
                                         <Box>
-                                            <Typography className="font-medium text-gray-700 dark:text-gray-200">
-                                                {item.nom}
-                                            </Typography>
-                                            <Typography className="text-sm text-gray-500 dark:text-gray-400">
-                                                Quantité: {item.quantite}
-                                            </Typography>
+                                            <Typography className="font-medium text-gray-700 dark:text-gray-200">{item.nom}</Typography>
+                                            <Typography className="text-sm text-gray-500 dark:text-gray-400">Quantité: {item.quantite}</Typography>
                                         </Box>
                                     </Box>
                                     <Typography className="font-medium text-gray-700 dark:text-gray-200">
@@ -454,19 +567,19 @@ export default function CommandeEtape() {
                             {/* Sous-total */}
                             <Box className="border-t border-gray-200 pt-3 dark:border-gray-700">
                                 <Box className="flex justify-between">
-                                    <Typography className="text-gray-600 dark:text-gray-300">Sous-total:</Typography>
+                                    <Typography className="text-gray-600 dark:text-gray-300">Total :</Typography>
                                     <Typography className="text-gray-600 dark:text-gray-300">{calculerTotal().toFixed(2)} €</Typography>
                                 </Box>
-                                
+
                                 {/* Méthodes sélectionnées */}
                                 {formData.etape3.methodeLivraison && (
-                                    <Box className="flex justify-between mt-2">
+                                    <Box className="mt-2 flex justify-between">
                                         <Typography className="text-sm text-gray-500 dark:text-gray-400">
                                             Livraison ({formData.etape3.methodeLivraison}):
                                         </Typography>
                                         <Typography className="text-sm text-gray-500 dark:text-gray-400">
-                                            {/* Ajouter le prix de livraison si disponible */}
-                                            +0.00 Ar
+                                            {/* Ajouter le prix de livraison si disponible */}+{" "}
+                                            {prixlivr(formData.etape3.methodeLivraison).toFixed(2)} Ar
                                         </Typography>
                                     </Box>
                                 )}
@@ -478,28 +591,22 @@ export default function CommandeEtape() {
                                     variant="h6"
                                     className="flex justify-between font-bold text-black dark:text-white"
                                 >
-                                    <span>Total:</span>
-                                    <span>{calculerTotal().toFixed(2)} Ar</span>
+                                    <span>Net à payer:</span>
+                                    <span>{NetPayer().toFixed(2)} Ar</span>
                                 </Typography>
                             </Box>
 
                             {/* Informations de livraison sélectionnées */}
                             {(formData.etape3.methodeLivraison || formData.etape3.methodePaiement) && (
-                                <Box className="mt-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/30">
-                                    <Typography className="font-medium text-blue-700 dark:text-blue-300">
-                                        Options sélectionnées:
-                                    </Typography>
+                                <div className="mt-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/30">
+                                    <div className="flex justify-center font-bold text-blue-700 dark:text-blue-300">Options sélectionnées:</div>
                                     {formData.etape3.methodeLivraison && (
-                                        <Typography className="text-sm text-blue-600 dark:text-blue-400">
-                                            Livraison: {formData.etape3.methodeLivraison}
-                                        </Typography>
+                                        <div className="text-sm text-blue-600 dark:text-blue-400">Livraison: {formData.etape3.methodeLivraison}</div>
                                     )}
                                     {formData.etape3.methodePaiement && (
-                                        <Typography className="text-sm text-blue-600 dark:text-blue-400">
-                                            Paiement: {formData.etape3.methodePaiement}
-                                        </Typography>
+                                        <div className="text-sm text-blue-600 dark:text-blue-400">Paiement: {formData.etape3.methodePaiement}</div>
                                     )}
-                                </Box>
+                                </div>
                             )}
                         </Box>
                     )}
@@ -507,9 +614,7 @@ export default function CommandeEtape() {
                     {/* Message commande existante */}
                     {commandeExistante && (
                         <Box className="mt-4 rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/30">
-                            <Typography className="font-medium text-yellow-700 dark:text-yellow-300">
-                                ⚠️ Commande existante
-                            </Typography>
+                            <Typography className="font-medium text-yellow-700 dark:text-yellow-300">⚠️ Commande existante</Typography>
                             <Typography className="text-xs text-yellow-600 dark:text-yellow-400">
                                 Vous avez déjà une commande en cours de traitement.
                             </Typography>
@@ -520,10 +625,6 @@ export default function CommandeEtape() {
         </div>
     );
 }
-
-
-
-
 
 // import React, { useEffect, useState, useRef } from "react";
 // import { Stepper, Step, StepLabel, StepContent, Button, Box, Typography, Paper } from "@mui/material";
@@ -588,7 +689,7 @@ export default function CommandeEtape() {
 //                 refAdresse: "",
 //                 ville: "",
 //             },
-            
+
 //         },
 //         etape3: { transactionId: "" },
 //     });
@@ -749,7 +850,7 @@ export default function CommandeEtape() {
 //                             refAdresse: valAdresse.adresseFacturation.refAdresse,
 //                             ville: valAdresse.adresseFacturation.ville,
 //                         },
-                        
+
 //                     },
 //                 }));
 //             }
@@ -820,12 +921,12 @@ export default function CommandeEtape() {
 //                     refAdresse: "",
 //                     ville: "",
 //                 },
-                
+
 //             },
-//             etape3: { 
+//             etape3: {
 //                 methodeLivraison: "",
 //                 methodePaiement: "",
-//                 transactionId: "" 
+//                 transactionId: ""
 //             },
 //         });
 //     };
@@ -1089,4 +1190,3 @@ export default function CommandeEtape() {
 //         </div>
 //     );
 // }
-

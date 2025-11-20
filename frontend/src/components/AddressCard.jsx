@@ -77,7 +77,7 @@ const AddressCard = ({ address, isSelected, onSelect, onEdit }) => {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <MdBusiness className="text-blue-500" />
-                        <span className="font-semibold">{address.labelle}</span>
+                        <span className="font-semibold text-slate-600 dark:text-slate-200">{address.labelle}</span>
                     </div>
                     <button
                         onClick={handleEditClick}

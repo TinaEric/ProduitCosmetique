@@ -1,20 +1,22 @@
 import Dialogue from "@/Admin/components/Dialogue";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
-import { ProduitGroupe,suppProduit,UpdateProduit } from "@/services/produitService";
+import { ProduitGroupe, suppProduit, UpdateProduit } from "@/services/produitService";
 import { CategorieListe } from "../../../services/CategorieService";
+import { HiOutlineChevronDoubleRight } from "react-icons/hi";
 import { cn } from "../../utils/cn";
 import Card from "../../../components/Card";
 import { useSearch } from "../../contexts/SearchContext";
-import { InputText } from '@/components/InputGrp';
-import { UploadImage } from '@/components/UploadImage';
+import { InputText } from "@/components/InputGrp";
+import { UploadImage } from "@/components/UploadImage";
 import React, { useEffect, useState, useCallback } from "react";
-import { Construction,SquarePen ,NotepadText} from "lucide-react";
+import { Construction, SquarePen, NotepadText } from "lucide-react";
 import { FaSackDollar } from "react-icons/fa6";
 import { RiNumbersFill } from "react-icons/ri";
 import { MdOutlineStar } from "react-icons/md";
 import { BiSolidCategoryAlt } from "react-icons/bi";
 import { AiOutlineProduct } from "react-icons/ai";
+import ListeSimple from "@/components/ListeSimple";
 const Filtres = {
     TOUS: "Tous",
     DERNIER_A_JOUR: "Dernier à Jour",
@@ -23,7 +25,7 @@ const Filtres = {
 };
 
 const ProduitPage = () => {
-    const { searchTerm, filterValue,setFilterValue,setSearchTerm } = useSearch();
+    const { searchTerm, setFiltreCat, filtreCat, filterValue, setFilterValue, setSearchTerm, filtreStock,setFiltreStock } = useSearch();
     const [totalFiltre, setTotalFiltre] = useState(0);
     const [ProduitTab, setProduitTab] = useState([]);
     const [categorieTab, setCategorieTab] = useState([]);
@@ -41,18 +43,19 @@ const ProduitPage = () => {
     });
 
     var titre = "";
-     //Donner ampidirana am le formulaire Drawer
-     const [produitModifier, setProduitModifier] = useState(null);
-     const [numProduct, setNumProduct] = useState("");
-     const [nomProduct, setNomProduct] = useState("");
-     const [stockPoduct, setStockPoduct] = useState("");
-     const [descriptionProduct, setDescriptionProduct] = useState("");
-     const [prixProduct,setPrixProduct] = useState("");
-     const [imageProduct,setImageProduct] = useState(null);
-     const [codePromosProduct, setCodePromosProduct] =useState("");
-     const [codeCategorie, setCodeCategorie] = useState("");
- 
-     // chargement des produit
+    //Donner ampidirana am le formulaire Drawer
+    const [produitModifier, setProduitModifier] = useState(null);
+    const [numProduct, setNumProduct] = useState("");
+    const [filtreCategorie, setFiltreCategorie] = useState([]);
+    const [nomProduct, setNomProduct] = useState("");
+    const [stockPoduct, setStockPoduct] = useState("");
+    const [descriptionProduct, setDescriptionProduct] = useState("");
+    const [prixProduct, setPrixProduct] = useState("");
+    const [imageProduct, setImageProduct] = useState(null);
+    const [codePromosProduct, setCodePromosProduct] = useState("");
+    const [codeCategorie, setCodeCategorie] = useState("");
+
+    // chargement des produit
     const fetchProduits = useCallback(async () => {
         setLoading(true);
         try {
@@ -66,39 +69,40 @@ const ProduitPage = () => {
                 statut: "error",
             });
         } finally {
-            setLoading(false); 
+            setLoading(false);
         }
     }, []);
 
     //chargement de categorie
     const fetchCategories = useCallback(async () => {
-            
         setLoadCategorie(true);
-            try {
-                const donnes = await CategorieListe();
-                if (donnes.data){
-                    setCategorieTab(donnes.data);
-                }else{
-                    setCategorieTab([])
-                }
-            } catch (error) {
-                console.error("Erreur de récupération :", error);
-                setMessage({
-                    ouvre: true,
-                    texte: error.message,
-                    statut: "error",
-                });
-            } finally {
-                setLoadCategorie(false); 
+        try {
+            const donnes = await CategorieListe();
+            if (donnes.data) {
+                setCategorieTab(donnes.data);
+                setFiltreCategorie(donnes.data);
+            } else {
+                setCategorieTab([]);
+                setFiltreCategorie([]);
             }
-        }, []);
+        } catch (error) {
+            console.error("Erreur de récupération :", error);
+            setMessage({
+                ouvre: true,
+                texte: error.message,
+                statut: "error",
+            });
+        } finally {
+            setLoadCategorie(false);
+        }
+    }, []);
 
     // useEffect pour le chargement de produit et categorie
     useEffect(() => {
         fetchProduits();
         fetchCategories();
-        setSearchTerm('');
-        setFilterValue('Tous');
+        setSearchTerm("");
+        setFilterValue("Tous");
     }, []);
 
     // filtrage d'affichage (recherche et triage)
@@ -114,13 +118,18 @@ const ProduitPage = () => {
                     const produitsFiltres = categorie.produits.filter(
                         (produit) => produit.nom.toLowerCase().includes(terme), // includes(): nom produit mis an lay terme
                     );
-                    
+
                     return {
                         ...categorie,
                         produits: produitsFiltres,
                     };
                 })
                 .filter((vide) => vide.produits.length > 0); //ignorer les catergorie qui n'ont pas de produit associer
+        }
+
+        if (filtreCat && filtreCat !== Filtres.TOUS) {
+            // Filtre par code catégorie
+            resultat = resultat.filter((categorie) => categorie.codeCategorie === filtreCat);
         }
 
         if (filterValue === Filtres.TOUS || filterValue === Filtres.ALPHABETIQUE || filterValue === Filtres.DERNIER_A_JOUR) {
@@ -149,9 +158,9 @@ const ProduitPage = () => {
             }
             finalProduitsAffiches = [
                 {
-                    codeCategorie: 'Tsisy ee',
+                    codeCategorie: "Tsisy ee",
                     libelle: libelleAffiche,
-                    produits: produitsNonGroupés
+                    produits: produitsNonGroupés,
                 },
             ];
         } else {
@@ -163,60 +172,85 @@ const ProduitPage = () => {
             finalProduitsAffiches = resultatTri;
         }
 
+
+        if (filtreStock && filtreStock !== "Tous"){
+            let resultats = resultat
+                .map((categorie) => {
+                    const produitsFiltres = categorie.produits.filter(
+                        (produit) =>{
+                            switch (filtreStock) {
+                                case "enStock":
+                                    return produit.stock > 0;
+                                case "rupture":
+                                    return produit.stock === 0;
+                                case "alerte":
+                                    produit.stock <= 10 && produit.stock > 0;
+                                default:
+                                    return true;
+                            }
+                        }, 
+                    );
+
+                    return {
+                        ...categorie,
+                        produits: produitsFiltres,
+                    };
+                });
+                resultat = resultats.filter((vide) => vide.produits.length > 0);
+                console.log("filtreStock: ",resultat)
+        }
+
         const nouveauTotal = finalProduitsAffiches.reduce((total, groupe) => {
             return total + groupe.produits.length;
         }, 0);
-
         setProduitFiltres(finalProduitsAffiches);
         setTotalFiltre(nouveauTotal);
-        
-    }, [ProduitTab, searchTerm, filterValue]);
+    }, [ProduitTab, searchTerm, filterValue, filtreCat,filtreStock]);
 
     //fonctoin preparation pour le modal suppression
     const supprimer = (idProduit, nomProduit) => {
         setproduitASupprimer({ id: idProduit, nom: nomProduit });
         document.getElementById("all").showModal();
     };
-    
+
     //fonction preparation pour le formulaire drawer
-    const modiifier = (cat,prod) => {
+    const modiifier = (cat, prod) => {
         titre = prod.nom;
-        setNumProduct(prod.id)
-        setNomProduct(prod.nom)
-        setStockPoduct(prod.stock)
-        setPrixProduct(prod.prix)
-        setDescriptionProduct(prod.description)
-        setImageProduct(prod.image)
-        setCodePromosProduct(prod.codePromo)
-        setCodeCategorie(prod.idCategory.codeCategorie)
+        setNumProduct(prod.id);
+        setNomProduct(prod.nom);
+        setStockPoduct(prod.stock);
+        setPrixProduct(prod.prix);
+        setDescriptionProduct(prod.description);
+        setImageProduct(prod.image);
+        setCodePromosProduct(prod.codePromo);
+        setCodeCategorie(prod.idCategory.codeCategorie);
 
         setProduitModifier({
-            id : numProduct,
+            id: numProduct,
             nom: nomProduct,
             stock: stockPoduct,
             prix: prixProduct,
             description: descriptionProduct,
             image: imageProduct,
             codePromo: codePromosProduct,
-            codeCategory:codeCategorie
+            codeCategory: codeCategorie,
         });
-        document.getElementById('edit-drawer').checked = true;
+        document.getElementById("edit-drawer").checked = true;
     };
 
     // supression direct makany am BD
     const SupprimerProduit = async () => {
-        
-        if(!produitASupprimer) return;
+        if (!produitASupprimer) return;
         const id = produitASupprimer.id;
         const nom = produitASupprimer.nom;
         try {
-            const donnes = await suppProduit(id,nom);
+            const donnes = await suppProduit(id, nom);
             await fetchProduits();
             setMessage({
                 ouvre: true,
                 texte: `Le produit "${nom}" a été supprimé avec succès.`,
                 statut: "success",
-           });
+            });
             setOpen(true);
         } catch (error) {
             console.error("Erreur de suppression :", error);
@@ -224,7 +258,7 @@ const ProduitPage = () => {
                 ouvre: true,
                 texte: `Erreur lors de la suppression du produit "${nom}".`,
                 statut: "error",
-           });
+            });
         } finally {
             setproduitASupprimer(null);
             setOpen(true);
@@ -235,24 +269,31 @@ const ProduitPage = () => {
     const ModifierProduitDB = async (e) => {
         e.preventDefault();
 
-        if (numProduct === "" || nomProduct === "" || stockPoduct === "" ||
-            prixProduct === "" || descriptionProduct === "" || imageProduct === "" ||
-            codePromosProduct === "" || codeCategorie === ""){
-                setMessage({
-                    ouvre: true,
-                    texte: "Le Champ vide n'est pas autorisé",
-                    statut: "warning",
-                })
+        if (
+            numProduct === "" ||
+            nomProduct === "" ||
+            stockPoduct === "" ||
+            prixProduct === "" ||
+            descriptionProduct === "" ||
+            imageProduct === "" ||
+            codePromosProduct === "" ||
+            codeCategorie === ""
+        ) {
+            setMessage({
+                ouvre: true,
+                texte: "Le Champ vide n'est pas autorisé",
+                statut: "warning",
+            });
         }
         const Produit = {
-            id : numProduct,
+            id: numProduct,
             nom: nomProduct,
             stock: stockPoduct,
             prix: prixProduct,
             description: descriptionProduct,
             image: imageProduct,
             codePromo: codePromosProduct,
-            codeCategory:codeCategorie
+            codeCategory: codeCategorie,
         };
         console.log(Produit);
         try {
@@ -263,7 +304,7 @@ const ProduitPage = () => {
                 texte: donnes.message,
                 statut: donnes.statut,
             });
-            console.log(donnes.produit)
+            console.log(donnes.produit);
             setOpen(true);
             await fetchProduits();
         } catch (error) {
@@ -292,6 +333,26 @@ const ProduitPage = () => {
         setProduitModifier(null);
     };
 
+    const AffcheProduit = (codeCategorie) => {
+        setFiltreCat(codeCategorie);
+    };
+
+    const getItemStyle = (code) => {
+        const isSelected = filtreCat === code;
+        return {
+            className: `
+                list-row m-2 flex w-full cursor-pointer items-center justify-start gap-6 p-2 
+                transition-all duration-300 ease-in-out
+                hover:bg-blue-50 hover:dark:bg-blue-900/20 
+                ${
+                    isSelected
+                        ? "bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 text-sm text-blue-600 dark:text-blue-400  font-bold"
+                        : "hover:divide-y hover:divide-y-reverse"
+                }
+            `,
+        };
+    };
+
     return (
         <div className="drawer drawer-end min-h-screen">
             {/* Checbox qui gerer la fermeture de Drawer */}
@@ -307,9 +368,10 @@ const ProduitPage = () => {
                     <Dialogue
                         id="all"
                         titre="Suppression"
-                        texte={produitASupprimer 
-                            ? `Voulez-vous vraiment supprimer le produit "${produitASupprimer.nom}" définitivement ?`
-                            : "Êtes-vous sûr de vouloir supprimer cet élément ?"
+                        texte={
+                            produitASupprimer
+                                ? `Voulez-vous vraiment supprimer le produit "${produitASupprimer.nom}" définitivement ?`
+                                : "Êtes-vous sûr de vouloir supprimer cet élément ?"
                         }
                         onDelete={SupprimerProduit}
                     />
@@ -332,61 +394,106 @@ const ProduitPage = () => {
                 </div>
 
                 {/* contenu de la page */}
-                <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
-                    { totalFiltre > 0 ? (
-                         produitsFiltres.map((ParCat) => (
-                            <div
-                                key={ParCat.libelle}
-                                className={cn("sidebar-group")}
+                <div className="flex w-full justify-between">
+                    <div className="w-1/5 gap-y-4 overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:_thin]">
+                        <ul className="list bg-transparent text-black dark:text-white">
+                            {/* Élément "Tous" */}
+                            <li
+                                key="tous"
+                                onClick={() => AffcheProduit("Tous")}
+                                {...getItemStyle("Tous")}
                             >
-                                <p className="overflow-hidden text-ellipsis text-sm font-medium text-slate-600 dark:text-slate-400">
-                                    {ParCat.libelle} ({ (filterValue === "Categorie") ? (ParCat.produits.length) : totalFiltre})
-                                </p>
-                                <div className="grid grid-cols-1 place-items-center gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                                    {ParCat.produits.map((data) => (
-                                        <div key={data.id} 
-                                        >
-                                            <Card
-                                                id={data.id}
-                                                img={data.image}
-                                                titre={data.nom}
-                                                stock={data.stock}
-                                                prix={data.prix}
-                                                categorie={ParCat}
-                                                produit={data}
-                                                onDelete={supprimer}
-                                                onUpdate={modiifier}
+                                <div>
+                                    <HiOutlineChevronDoubleRight />
+                                </div>
+                                <div className={filtreCat === "Tous" ? "text-lg transition-all duration-300" : ""}>Tous</div>
+                            </li>
+
+                            {loadCategorie ? (
+                                <li
+                                    key="charge"
+                                    className="flex space-x-2 p-2"
+                                >
+                                    <span className="loading-xl loading loading-dots text-blue-600"></span>
+                                    <span>Chargement...</span>
+                                </li>
+                            ) : (
+                                filtreCategorie
+                                    .filter((liste) => liste.nbrProduit > 0)
+                                    .map((liste) => (
+                                        <ListeSimple
+                                            key={liste.codeCategorie}
+                                            labelle={liste.libelleCategorie}
+                                            categorie={liste}
+                                            AffcheProduit={AffcheProduit}
+                                            isSelected={filtreCat === liste.codeCategorie}
+                                        />
+                                    ))
+                            )}
+                        </ul>
+                    </div>
+                    <div className="flex w-4/5 flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:_thin]">
+                        {totalFiltre > 0 ? (
+                            produitsFiltres.map((ParCat) => (
+                                <div
+                                    key={ParCat.libelle}
+                                    className={cn("sidebar-group")}
+                                >
+                                    <p className="overflow-hidden text-ellipsis text-sm font-medium text-slate-600 dark:text-slate-400">
+                                        {ParCat.libelle} ({filterValue === "Categorie" ? ParCat.produits.length : totalFiltre})
+                                    </p>
+                                    <div className="overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:_thin]">
+                                        <div className="grid grid-cols-1 place-items-center gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                                            {ParCat.produits.map((data) => (
+                                                <div key={data.id}>
+                                                    <Card
+                                                        id={data.id}
+                                                        img={data.image}
+                                                        titre={data.nom}
+                                                        stock={data.stock}
+                                                        prix={data.prix}
+                                                        categorie={ParCat}
+                                                        produit={data}
+                                                        onDelete={supprimer}
+                                                        onUpdate={modiifier}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex h-screen flex-col items-center justify-center p-5 text-gray-500 dark:text-gray-500">
+                                {loading ? (
+                                    <div className="flex flex-row items-center justify-center gap-2">
+                                        <span className="loading-xl loading loading-dots text-blue-600"></span>
+                                        <span>Chargement des Produits...</span>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <Construction
+                                                strokeWidth={1}
+                                                className="h-40 w-40"
                                             />
                                         </div>
-                                    ))}
-                                </div>
+                                        <p className="text-sm">
+                                            {searchTerm ? (
+                                                <p>
+                                                    {" "}
+                                                    Aucun Produit correspond à <span className="font-bold">{searchTerm}</span>{" "}
+                                                </p>
+                                            ) : (
+                                                `Aucun Produit trouvé pour le moment.`
+                                            )}
+                                        </p>
+                                    </>
+                                )}
                             </div>
-                        ))
-                    ) : (
-                        <div className="flex flex-col items-center h-screen justify-center p-5 text-gray-500 dark:text-gray-500">
-                            {loading ? (
-                                <div className="flex flex-row items-center justify-center gap-2">
-                                    <span className="loading-xl loading loading-dots text-blue-600"></span>
-                                    <span>Chargement des Produits...</span>
-                                </div>
-                            ) : (
-                                <> 
-                                    <div>
-                                        
-                                        <Construction
-                                            strokeWidth={1}
-                                            className="h-40 w-40"
-                                        />
-                                    </div>
-                                    <p className="text-sm">
-                                        {searchTerm ? <p> Aucun Produit correspond à <span className="font-bold">{searchTerm}</span> </p>  : `Aucun Produit trouvé pour le moment.`}
-                                    </p>
-                                </>
-                             )} 
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-
             </div>
             {/* Drawer:  Formulaire de modification */}
             <div className="drawer-side z-50">
@@ -395,39 +502,38 @@ const ProduitPage = () => {
                     aria-label="close sidebar"
                     className="drawer-overlay"
                 ></label>
-                <div className="min-h-full w-[400px] bg-slate-50 dark:bg-base-100  p-6 text-base-content">
+                <div className="min-h-full w-[400px] bg-slate-50 p-6 text-base-content dark:bg-base-100">
                     {produitModifier ? (
                         <form onSubmit={ModifierProduitDB}>
-                            <h2 className="mb-3 text-xl font-bold flex flex-row justify-center items-center gap-2 text-accent">
-                                <AiOutlineProduct /> 
+                            <h2 className="mb-3 flex flex-row items-center justify-center gap-2 text-xl font-bold text-accent">
+                                <AiOutlineProduct />
                                 <span>Modification d'un Produit</span>
                             </h2>
                             <div className="mb-6">
-
-                                <InputText 
+                                <InputText
                                     IconComponent={NotepadText}
-                                    placeholder='Nom du produit...'
+                                    placeholder="Nom du produit..."
                                     limite="Caractre speciaux n'est pas autorisé"
-                                    title='Labelle'
+                                    title="Labelle"
                                     value={nomProduct}
                                     onChange={setNomProduct}
                                 />
-                                <div className="flex flex-row justify-start items-center gap-6">
-                                    <InputText 
+                                <div className="flex flex-row items-center justify-start gap-6">
+                                    <InputText
                                         type="number"
                                         IconComponent={RiNumbersFill}
-                                        placeholder='100...'
+                                        placeholder="100..."
                                         limite="Valeur positif"
-                                        title='Stock'
+                                        title="Stock"
                                         value={stockPoduct}
                                         onChange={setStockPoduct}
                                     />
-                                    <InputText 
+                                    <InputText
                                         type="number"
                                         IconComponent={FaSackDollar}
-                                        placeholder='8000....'
+                                        placeholder="8000...."
                                         limite="Valeur positif"
-                                        title='Prix'
+                                        title="Prix"
                                         value={prixProduct}
                                         onChange={setPrixProduct}
                                     />
@@ -443,39 +549,38 @@ const ProduitPage = () => {
                                         placeholder="Décrire plus d'information sur ce produit..."
                                     ></textarea>
                                 </label>
-                                <div className="flex flex-row justify-start items-center gap-6 p-3 mb-3">
+                                <div className="mb-3 flex flex-row items-center justify-start gap-6 p-3">
                                     <UploadImage
                                         img={imageProduct}
                                         onImageChange={(file) => {
                                             setImageProduct(file.name);
-                                            console.log("Taloha : ", imageProduct)
-                                            console.log("Vaovao : ", file.name)
+                                            console.log("Taloha : ", imageProduct);
+                                            console.log("Vaovao : ", file.name);
                                         }}
                                     />
-                                    
-                                    <div className="flex flex-col items-center gap-2 justify-start">
-                                        <InputText 
+
+                                    <div className="flex flex-col items-center justify-start gap-2">
+                                        <InputText
                                             type="text"
                                             IconComponent={MdOutlineStar}
-                                            placeholder='JP202...'
+                                            placeholder="JP202..."
                                             limite="Valeur positif"
-                                            title='Code Promos'
+                                            title="Code Promos"
                                             value={codePromosProduct}
                                             onChange={setCodePromosProduct}
                                         />
-                                            <InputText 
+                                        <InputText
                                             type="text"
                                             IconComponent={BiSolidCategoryAlt}
-                                            placeholder='CAT000...'
+                                            placeholder="CAT000..."
                                             limite="Valeur positif"
-                                            title='Code Catégorie'
+                                            title="Code Catégorie"
                                             active="true"
                                             disabled
                                             saufTitre
                                             value={codeCategorie}
                                             onChange={setCodeCategorie}
                                         />
-
                                     </div>
                                 </div>
                                 <fieldset className="fieldset">
@@ -483,28 +588,30 @@ const ProduitPage = () => {
                                     <select
                                         value={codeCategorie}
                                         onChange={(e) => setCodeCategorie(e.target.value)}
-                                        className="
-                                            select mt-2 w-full border-slate-300 dark:border-slate-500
-                                          bg-white dark:bg-[rgb(15,19,31)] text-black dark:text-white 
-                                        ">
-                                            {categorieTab.map((grp) => (
-                                                <option key={grp.codeCategorie} value={grp.codeCategorie}>{grp.libelleCategorie}</option>
-                                            ))}
+                                        className="select mt-2 w-full border-slate-300 bg-white text-black dark:border-slate-500 dark:bg-[rgb(15,19,31)] dark:text-white"
+                                    >
+                                        {categorieTab.map((grp) => (
+                                            <option
+                                                key={grp.codeCategorie}
+                                                value={grp.codeCategorie}
+                                            >
+                                                {grp.libelleCategorie}
+                                            </option>
+                                        ))}
                                     </select>
                                 </fieldset>
-                                
                             </div>
                             <div className="mt-6 flex w-full flex-row justify-end gap-4 px-2">
                                 <button
                                     type="button"
                                     onClick={closeDrawer}
-                                    className="btn btn-outline btn-error w-1/2"
+                                    className="btn btn-error btn-outline w-1/2"
                                 >
                                     Annuler
                                 </button>
                                 <button
                                     type="submit"
-                                    className="btn btn-outline btn-accent w-1/2"
+                                    className="btn btn-accent btn-outline w-1/2"
                                 >
                                     Enregistrer
                                 </button>

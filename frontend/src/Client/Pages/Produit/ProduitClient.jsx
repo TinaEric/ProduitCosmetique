@@ -11,7 +11,7 @@ import { InputText } from '@/components/InputGrp';
 import { UploadImage } from '@/components/UploadImage';
 import React, { useEffect, useState, useCallback ,useRef} from "react";
 import { Construction,SquarePen ,NotepadText} from "lucide-react";
-import { FaSackDollar } from "react-icons/fa6";
+import { FaSackDollar,FaCartShopping } from "react-icons/fa6";
 import { RiNumbersFill } from "react-icons/ri";
 import { MdOutlineStar } from "react-icons/md";
 import { BiSolidCategoryAlt } from "react-icons/bi";
@@ -37,6 +37,8 @@ const ProduitClient = () => {
     const [vide, setVide] = useState(ProduitTab.filter((product) => product.stockProduit === 0).length);
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [produitDetail, setProduitDetail] = useState(null);
+    const [openDetail, setOpenDetail] = useState(false);
     const [loadCategorie, setLoadCategorie] = useState(false);
     const [message, setMessage] = useState({
         ouvre: false,
@@ -119,7 +121,7 @@ const ProduitClient = () => {
         setFilterValue('Tous');
     }, []);
 
-    // filtrage d'affichage (recherche et triage)
+  // filtrage d'affichage (recherche et triage)
     useEffect(() => {
         let resultat = [...ProduitTab];
         let finalProduitsAffiches;
@@ -130,7 +132,7 @@ const ProduitClient = () => {
             resultat = resultat
                 .map((categorie) => {
                     const produitsFiltres = categorie.produits.filter(
-                        (produit) => produit.nom.toLowerCase().includes(terme), // includes(): nom produit mis an lay terme
+                        (produit) => produit.nom.toLowerCase().includes(terme),
                     );
                     
                     return {
@@ -138,13 +140,22 @@ const ProduitClient = () => {
                         produits: produitsFiltres,
                     };
                 })
-                .filter((vide) => vide.produits.length > 0); //ignorer les catergorie qui n'ont pas de produit associer
+                .filter((vide) => vide.produits.length > 0);
         }
 
-        if (filterValue === Filtres.TOUS || filterValue === Filtres.ALPHABETIQUE || filterValue === Filtres.DERNIER_A_JOUR) {
+        // Filtre par catégorie spécifique
+        if (filterValue && filterValue !== Filtres.TOUS && filterValue !== Filtres.ALPHABETIQUE && filterValue !== Filtres.DERNIER_A_JOUR) {
+            // Filtre par code catégorie
+            resultat = resultat.filter(categorie => 
+                categorie.codeCategorie === filterValue
+            );
+        }
+
+        // Application des tris
+        if (filterValue === Filtres.ALPHABETIQUE || filterValue === Filtres.DERNIER_A_JOUR || filterValue === Filtres.TOUS) {
             let produitsNonGroupés = resultat.flatMap((groupe) => groupe.produits);
             let libelleAffiche = "Tous les produits";
-
+            
             switch (filterValue) {
                 case Filtres.ALPHABETIQUE:
                     produitsNonGroupés.sort((a, b) => a.nom.localeCompare(b.nom));
@@ -165,14 +176,16 @@ const ProduitClient = () => {
                     produitsNonGroupés.sort((a, b) => a.nom.localeCompare(b.nom));
                     break;
             }
+            
             finalProduitsAffiches = [
                 {
-                    codeCategorie: 'Tsisy ee',
+                    codeCategorie: 'tous',
                     libelle: libelleAffiche,
                     produits: produitsNonGroupés
                 },
             ];
         } else {
+            // Pour le filtrage par catégorie, on garde la structure groupée
             let resultatTri = resultat.map((groupe) => {
                 let produitsTriés = [...groupe.produits];
                 produitsTriés.sort((a, b) => a.nom.localeCompare(b.nom));
@@ -189,11 +202,10 @@ const ProduitClient = () => {
         setTotalFiltre(nouveauTotal);
         
     }, [ProduitTab, searchTerm, filterValue]);
-
-   
+    
     const afficheInfoProduit = (prod) => {
-        console.log("Infod :", prod);
-        
+        ouvrirDetailProduit(prod);
+        console.log("produitDetail :",prod)
     };
 
     const AjouterPanier = (prod) => {
@@ -219,7 +231,20 @@ const ProduitClient = () => {
         document.getElementById("info-drawer").checked = false;
         setProduitModifier(null);
     };
+        
+    // Fonction pour ouvrir le dialogue de détails
+    const ouvrirDetailProduit = (prod) => {
+        setProduitDetail(prod);
+        
+        setOpenDetail(true);
+       
+    };
 
+    // Fonction pour fermer le dialogue
+    const fermerDetailProduit = () => {
+        setOpenDetail(false);
+        setProduitDetail(null);
+    };
     return (
         <div className="drawer drawer-end min-h-screen">
             {/* Checbox qui gerer la fermeture de Drawer */}
@@ -232,15 +257,143 @@ const ProduitClient = () => {
             <div className="drawer-content flex flex-col gap-1">
                 {/* Modale et bouton flottant */}
                 <div>
-                    {/* <Dialogue
-                        id="all"
-                        titre="Suppression"
-                        texte={produitASupprimer 
-                            ? `Voulez-vous vraiment supprimer le produit "${produitASupprimer.nom}" définitivement ?`
-                            : "Êtes-vous sûr de vouloir supprimer cet élément ?"
-                        }
-                        // onDelete={SupprimerProduit}
-                    /> */}
+                   {/* Dialogue de détails du produit */}
+                    {openDetail && produitDetail && (
+                        <div className="modal modal-open">
+                            <div className="modal-box max-w-4xl max-h-[90vh] bg-slate-200 dark:bg-gray-800 overflow-y-auto">
+                                {/* Header du dialogue */}
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                                        Détails du Produit
+                                    </h3>
+                                    <button 
+                                        onClick={fermerDetailProduit}
+                                        className="btn btn-sm btn-circle btn-ghost"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+
+                                {/* Contenu du dialogue */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Image du produit */}
+                                    <div className="flex flex-col items-center">
+                                        <img 
+                                            src={`/image/${produitDetail.image}`} 
+                                            alt={produitDetail.nom}
+                                            className="w-full h-64 object-cover rounded-lg shadow-lg"
+                                        />
+                                        <div className="mt-4 flex gap-2">
+                                            <span className={`badge ${produitDetail.stock > 5 ? 'badge-success' : produitDetail.stock > 0 ? 'badge-warning' : 'badge-error'}`}>
+                                                {produitDetail.stock > 5 ? 'En stock' : produitDetail.stock > 0 ? 'Stock faible' : 'Rupture'}
+                                            </span>
+                                            <span className="badge badge-info">
+                                                {produitDetail.stock} unités
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Informations détaillées */}
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                                {produitDetail.nom}
+                                            </h4>
+                                            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                                {produitDetail.prix?.toLocaleString()} Ar
+                                            </p>
+                                        </div>
+
+                                        {/* Description */}
+                                        <div>
+                                            <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                Description
+                                            </h5>
+                                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                                                {produitDetail.description || "Aucune description disponible pour ce produit."}
+                                            </p>
+                                        </div>
+
+                                        {/* Caractéristiques */}
+                                        {/* <div className="grid grid-cols-2 gap-4 w-full">
+                                            <div>
+                                                <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                                    Catégorie
+                                                </h5>
+                                                <p className="text-gray-600 dark:text-gray-400 text-sm w-full">
+                                                    <span className="font-bold">{produitDetail.idCategory?.libelleCategorie || "Non spécifiée"} :</span> 
+                                                    <span className="italic ml-2 w-full">{produitDetail.idCategory?.descriptionCategorie || "Non spécifiée" }</span>
+                                                </p>
+                                            </div>
+                                         */}
+                                        {/* </div> */}
+                                        {/* Caractéristiques */}
+                                    <div className="w-full">
+                                        <div className="mb-4">
+                                            <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                Catégorie
+                                            </h5>
+                                            <div className="w-full">
+                                                <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 w-full">
+                                                <span className="font-bold">{produitDetail.idCategory?.libelleCategorie || "Non spécifiée"} : </span> {produitDetail.idCategory?.descriptionCategorie || "Aucune description de catégorie disponible"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                        {/* Dernière mise à jour */}
+                                        {produitDetail.dateMisAJourProduit && (
+                                            <div>
+                                                <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                                    Dernière mise à jour
+                                                </h5>
+                                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                                    {new Date(produitDetail.dateMisAJourProduit).toLocaleDateString('fr-FR')}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Actions */}
+                                        <div className="flex gap-3 pt-4">
+                                            <button
+                                                onClick={() => {
+                                                    AjouterPanier(produitDetail);
+                                                    fermerDetailProduit();
+                                                }}
+                                                disabled={produitDetail.stock === 0}
+                                                className={`btn flex-1 gap-2  ${
+                                                    produitDetail.stock === 0 
+                                                        ? 'btn-disabled' 
+                                                        : 'btn-accent'
+                                                }`}
+                                            >
+                                                <FaCartShopping
+                                                    className=""
+                                                    size={20}
+                                                />
+                                                <span>
+                                                    {produitDetail.stock === 0 ? 'Rupture de stock' : 'Ajouter au panier'}
+                                                </span>
+                                                
+                                            </button>
+                                            <button
+                                                onClick={fermerDetailProduit}
+                                                className="btn btn-outline btn-error"
+                                            >
+                                                Fermer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Overlay pour fermer en cliquant à l'extérieur */}
+                            <div 
+                                className="modal-backdrop" 
+                                onClick={fermerDetailProduit}
+                            ></div>
+                        </div>
+                    )}
                     {message.ouvre && (
                         <Snackbar
                             open={open}
@@ -260,17 +413,18 @@ const ProduitClient = () => {
                 </div>
 
                 {/* contenu de la page */}
-                <div className="flex w-full flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-3 [scrollbar-width:_thin]">
+                <div className="flex w-full flex-col gap-y-1 overflow-y-auto overflow-x-hidden [scrollbar-width:_thin]">
                     { totalFiltre > 0 ? (
                          produitsFiltres.map((ParCat) => (
                             <div
                                 key={ParCat.libelle}
-                                className={cn("sidebar-group")}
+                                className="sidebar-group"
+                                // className={cn("sidebar-group")}
                             >
-                                <p className="overflow-hidden text-ellipsis text-sm font-medium text-slate-600 dark:text-slate-400">
+                                {/* <p className="overflow-hidden text-ellipsis text-sm font-medium text-slate-600 dark:text-slate-400">
                                     {ParCat.libelle} ({ (filterValue === "Categorie") ? (ParCat.produits.length) : totalFiltre})
-                                </p>
-                                <div className="grid grid-cols-1 place-items-center gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                                </p> */}
+                                <div className="grid grid-cols-1 place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                                     {ParCat.produits.map((data) => (
                                         <div key={data.id} 
                                         >

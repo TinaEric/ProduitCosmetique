@@ -546,7 +546,7 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                                         IconComponent={RiKeyFill}
                                         type="password"
                                         largeur="2/3"
-                                        placeholder="Entrez votre mot de passe..."
+                                        placeholder="Créez votre mot de passe..."
                                         title="Mot de Passe"
                                         value={data.password || ""}
                                         onChange={(val) => handleChange({ target: { name: "password", value: val } })}

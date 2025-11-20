@@ -1,6 +1,10 @@
 import api from './api';
+import { useUsers } from "@/Client/context/UserContext";
+
+ 
 
 class AuthService {
+  
   // Login
   async login(email, password) {
     try {
@@ -8,9 +12,10 @@ class AuthService {
         email: email.trim(),
         password: password
       });
+      // const {setClient} = useUsers(); 
       console.log( 'Réponse login:', response.data);
       if (response.data.token) {
-
+        
         if (response.data.token && response.data.token !== 'undefined') {
           localStorage.setItem('token', response.data.token);
         }
@@ -46,13 +51,12 @@ class AuthService {
   async register(userData) {
     try {
       const response = await api.post('/api/auth/register', userData);
-      
+      // const {setClient} = useUsers(); 
       console.log( 'Réponse Register:', response.data);
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
@@ -72,12 +76,13 @@ getStoredUser() {
       return JSON.parse(user); 
   } catch (error) {
       console.error('Erreur lors du parsing du user depuis localStorage:', error);
-      localStorage.removeItem('user');
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       localStorage.removeItem('panier');
       localStorage.removeItem('RefCommande');
       localStorage.removeItem('DataAdresse');
-      
+      localStorage.removeItem('methodeLivraison');
+      localStorage.removeItem('methodePaiement');
       return null;
   }
 }
@@ -107,12 +112,13 @@ getStoredUser() {
   }
   // Logout
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('panier');
-    localStorage.removeItem('adresse');
-    localStorage.removeItem('RefCommande');
-    localStorage.removeItem('DataAdresse');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('panier');
+      localStorage.removeItem('RefCommande');
+      localStorage.removeItem('DataAdresse');
+      localStorage.removeItem('methodeLivraison');
+      localStorage.removeItem('methodePaiement');
   }
 
   // Get token

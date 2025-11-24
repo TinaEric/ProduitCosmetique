@@ -9,6 +9,7 @@ import ProduitPage from "../Pages/Produit/ProduitPage";
 import Commande from "../Pages/Commande/Commande";
 import Paiement from "../Pages/Commande/Paiement";
 import { Command } from "lucide-react";
+import FicheCommande from "../Pages/Commande/FicheCommande";
 
 const RouteBack = () => {
     return (
@@ -34,9 +35,14 @@ const RouteBack = () => {
                 />
                 <Route path="categorie"  element={<CategoriePage />}
                 />
+                <Route
+                path="ficheCommande"
+                element={<FicheCommande />}
+            />
                 <Route  path="Profil" element={<h1 className="title">verified-customers</h1>}
                 />
             </Route>
+            
             <Route
                 path="*"
                 element={<NotFound />}

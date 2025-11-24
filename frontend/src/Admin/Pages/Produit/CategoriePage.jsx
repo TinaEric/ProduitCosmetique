@@ -16,7 +16,7 @@ const Filtres = {
 };
 const CategoriePage = () => {
     const [CatTab, setCatTab] = useState([]);
-    const { searchTerm, filterValue, setFilterValue, setSearchTerm } = useSearch();
+    const { searchTerm, filterValue, setFilterValue, setSearchTerm ,setFilterStatus,filterStatus} = useSearch();
     const [totalFiltre, setTotalFiltre] = useState(0);
     const [produitsFiltres, setProduitFiltres] = useState([]);
     const [chekTab, setChekTab] = useState([]);
@@ -69,7 +69,20 @@ const CategoriePage = () => {
     useEffect(() => {
         let resultat = [...CatTab];
 
-        //filtre par Recherche
+        if (filterStatus && filterStatus !== "Tous") {
+            switch (filterStatus) {
+                case "inactive":
+                    resultat = resultat.filter((cat) => cat.nbrProduit === 0);
+                    break;
+                case "à enrichir":
+                    resultat = resultat.filter((cat) => cat.nbrProduit > 0 && cat.nbrProduit <= 10);
+                    break;
+                case "standard":
+                    resultat = resultat.filter((cat) => cat.nbrProduit > 10);
+                    break;
+            }
+        }
+
         if (searchTerm) {
             const terme = searchTerm.toLowerCase();
             resultat = resultat.filter(
@@ -90,7 +103,8 @@ const CategoriePage = () => {
 
         setProduitFiltres(resultat);
         setTotalFiltre(resultat.length);
-    }, [CatTab, searchTerm, filterValue]);
+
+    }, [CatTab, searchTerm, filterValue,filterStatus]);
 
     const catSelectionner = (cat) => {
         setChekTab((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
@@ -220,6 +234,10 @@ const CategoriePage = () => {
           setChekTab([]);
         }
       };
+      const handleFilterChange = (e) => {
+        setFilterValue(e.target.value);
+    };
+
     return (
         <div className="drawer drawer-end min-h-screen">
             <input
@@ -228,22 +246,37 @@ const CategoriePage = () => {
                 className="drawer-toggle"
             />
 
-            <div className="drawer-content flex flex-col gap-5">
-                <div className="flex flex-row justify-between">
-                    <div className="flex flex-row justify-start gap-5">
-                        <div className="flex gap-2 rounded-lg border border-slate-300 bg-white p-2 text-info transition-colors dark:border-slate-700 dark:bg-slate-900">
-                            <span className="font-bold">Total :</span>
-                            <span>{CatTab.length}</span>
-                        </div>
-                        <div className="flex gap-2 rounded-lg border border-slate-300 bg-white p-2 text-warning transition-colors dark:border-slate-700 dark:bg-slate-900">
-                            <span className="font-bold">A rembourser :</span>
-                            <span>{rupture}</span>
-                        </div>
-                        <div className="flex gap-2 rounded-lg border border-slate-300 bg-white p-2 text-error transition-colors dark:border-slate-700 dark:bg-slate-900">
-                            <span className="font-bold"> Vide :</span>
-                            <span>{vide}</span>
-                        </div>
+            <div className="drawer-content flex flex-col gap-1">
+                <div className=" flex justify-between rounded-lg transition-colors bg-white dark:bg-slate-900 py-2 px-4 shadow">
+                    <div className="flex  flex-row  items-center w-full gap-4">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Trié par  :</span>
+                        {["tous", "inactive","à enrichir", "standard"].map((status) => (
+                        <button
+                            key={status}
+                            onClick={() => setFilterStatus(status)}
+                            className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                                filterStatus === status ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 text-gray-700 hover:bg-gray-300"
+                            }`}
+                        >
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </button>
+                         ))}
                     </div>
+                    <div className="flex justify-end items-center gap-4 w-full text-slate-950 dark:text-gray-200">
+                            <label className="label">
+                                <span className="label-text  text-slate-950 dark:text-gray-200">Trié par :</span>
+                            </label>
+                            <select
+                                className="select select-sm rounded-xl border border-slate-300 bg-[#FfFfFf] dark:border-slate-700 dark:bg-slate-950"
+                                value={filterValue}
+                                onChange={handleFilterChange}
+                            >
+                                <option value={Filtres.TOUS}>{Filtres.TOUS}</option>
+                                <option value={Filtres.ALPHABETIQUE}>{Filtres.ALPHABETIQUE}</option>
+                                <option value={Filtres.DERNIER_A_JOUR}>{Filtres.DERNIER_A_JOUR}</option>
+                            </select>
+                    </div>
+                </div>
                     <div>
                         {chekTab.length > 0 && (
                             <button
@@ -265,30 +298,30 @@ const CategoriePage = () => {
                             onDelete={SupprimerTab}
                             tab={chekTab}
                         />
+                        {message.ouvre && (
+                            <Snackbar
+                                open={open}
+                                autoHideDuration={5000}
+                                onClose={handleClose}
+                            >
+                                <Alert
+                                    onClose={handleClose}
+                                    severity={message.statut}
+                                    variant="filled"
+                                    sx={{ width: "100%" }}
+                                >
+                                    {message.texte}
+                                </Alert>
+                            </Snackbar>
+                        )}
                     </div>
-                </div>
-                {message.ouvre && (
-                    <Snackbar
-                        open={open}
-                        autoHideDuration={5000}
-                        onClose={handleClose}
-                    >
-                        <Alert
-                            onClose={handleClose}
-                            severity={message.statut}
-                            variant="filled"
-                            sx={{ width: "100%" }}
-                        >
-                            {message.texte}
-                        </Alert>
-                    </Snackbar>
-                )}
+                
                 <div className="card">
                     <div className="card-header">
                         <p className="card-title font-bold">Liste de catégorie des produits</p>
                     </div>
                     <div className="card-body p-0">
-                        <div className="relative h-[480px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
+                        <div className="relative h-[415px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
                             <table className="table">
                                 <thead className="table-header">
                                     <tr className="table-row text-gray-500 dark:text-gray-400">
@@ -402,7 +435,6 @@ const CategoriePage = () => {
                         </div>
                     </div>
                 </div>
-                <Footer />
             </div>
 
             <div className="drawer-side z-50">

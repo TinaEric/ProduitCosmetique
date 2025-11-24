@@ -4,6 +4,7 @@ const PanierContext = createContext();
 
 export function PanierProvider({children}){
     const [items, setItems] = useState([])
+     const [Ismessage, setIsMessage] = useState(false);
     
     useEffect(() => {
         const panier = JSON.parse(localStorage.getItem('panier')) || []
@@ -30,16 +31,20 @@ export function PanierProvider({children}){
         })
     }
     
-    const PlusQuantite = (id) => {
-        setItems((prev) => {
-            const newItems = prev.map((item) => 
-                item.id === id 
-                ? {...item, quantite: item.quantite + 1}
-                : item
-            )
-            localStorage.setItem('panier', JSON.stringify(newItems))
-            return newItems
-        })
+    const PlusQuantite = (id,stock,quantite) => {
+        if (quantite < stock){
+            setItems((prev) => {
+                const newItems = prev.map((item) => 
+                    item.id === id 
+                    ? {...item, quantite: item.quantite + 1} 
+                    : item
+                )
+                localStorage.setItem('panier', JSON.stringify(newItems))
+                return newItems
+            })
+        }else{
+            setIsMessage(true)
+        }
     }
     
     const MoinsQuantite = (id) => {
@@ -63,12 +68,14 @@ export function PanierProvider({children}){
         })
     }
     const value = {
+        Ismessage,
         items,
         setItems,
         PlusQuantite,
         MoinsQuantite,
         ajouteAuPanier,
-        supprimerDuPanier
+        supprimerDuPanier,
+        setIsMessage
     }
     return (
         <PanierContext.Provider value={value}>

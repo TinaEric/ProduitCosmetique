@@ -36,7 +36,7 @@ class Produit
     private ?int $stockProduit = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
-    #[Groups(['product:read'])]
+    #[Groups(['product:read',"commande:read"])]
     private ?string $imageUrlProduit = null;
     
     #[ORM\Column(name: 'description_produit', type: Types::STRING, length: 255, nullable: true)]

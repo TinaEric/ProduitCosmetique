@@ -1,16 +1,14 @@
-// import Dialogue from "@/Admin/components/Dialogue";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
-import { ProduitGroupe,suppProduit,UpdateProduit } from "@/services/produitService";
+import { ProduitGroupe } from "@/services/produitService";
 import { CategorieListe } from "../../../services/CategorieService";
-import { cn } from "../../../Admin/utils/cn";
 import CardClient from "../../../components/CardClient";
 import { useNavbar } from "../../context/NavbarContext";
 import { usePanier } from "@/Client/context/PanierContext";
 import { InputText } from '@/components/InputGrp';
 import { UploadImage } from '@/components/UploadImage';
 import React, { useEffect, useState, useCallback ,useRef} from "react";
-import { Construction,SquarePen ,NotepadText} from "lucide-react";
+import { Construction ,NotepadText} from "lucide-react";
 import { FaSackDollar,FaCartShopping } from "react-icons/fa6";
 import { RiNumbersFill } from "react-icons/ri";
 import { MdOutlineStar } from "react-icons/md";
@@ -27,7 +25,7 @@ const Filtres = {
 
 const ProduitClient = () => {
     const { searchTerm, filterValue,setFilterValue,setSearchTerm} = useNavbar();
-    const {ajouteAuPanier,items} = usePanier()
+    const {ajouteAuPanier,items,Ismessage,setIsMessage} = usePanier()
     const [totalFiltre, setTotalFiltre] = useState(0);
     const [ProduitTab, setProduitTab] = useState([]);
     const [categorieTab, setCategorieTab] = useState([]);
@@ -77,7 +75,7 @@ const ProduitClient = () => {
             console.error("Erreur de récupération :", error);
             setMessage({
                 ouvre: true,
-                texte: error.message,
+                texte: "Une erreur s'est produit , veuillez attendre quelque minute",
                 statut: "error",
             });
         } finally {
@@ -96,8 +94,8 @@ const ProduitClient = () => {
                 }else{
                     setMessage({
                         ouvre: true,
-                        texte: donnes.error,
-                        statut: donnes.statut,
+                        texte: "Une probleme de récuperation s'est produit",
+                        statut: "warning",
                     });
                     setOpen(true);
                 }
@@ -105,7 +103,7 @@ const ProduitClient = () => {
                 console.error("Erreur de récupération :", error);
                 setMessage({
                     ouvre: true,
-                    texte: error.message,
+                    texte: "Une erreur s'est produit , veuillez attendre quelque minute",
                     statut: "error",
                 });
             } finally {
@@ -212,11 +210,27 @@ const ProduitClient = () => {
         ajouteAuPanier(prod)
         setMessage({
             ouvre: true,
-            texte: `Un produit est ajouté à votre paner`,
+            texte: `Un produit est ajouté à votre panier`,
             statut: "info",
         });
         setOpen(true);
     }
+
+    useEffect(()=> {
+        const afficheMessage = () => {
+            if(Ismessage){
+                setMessage({
+                    ouvre: true,
+                    texte: `Vous ne pouvons pas commander un produit superieur au stock `,
+                    statut: "warning",
+                });
+                setOpen(true);
+                setIsMessage(false)
+            }
+        }
+
+        afficheMessage();
+    }, [Ismessage])
 
     //fonction fermeture Modal
     const handleClose = (event, reason) => {
@@ -340,7 +354,11 @@ const ProduitClient = () => {
                                             </div>
                                         </div>
                                     </div>
-
+                                    <div className="w-full">
+                                        <p className="text-gray-600 dark:text-gray-400 text-sm mt-2 w-full">
+                                             {produitDetail.idCategory?.descriptionCategorie || "Aucune description de catégorie disponible"}
+                                        </p>
+                                    </div>
                                         {/* Dernière mise à jour */}
                                         {produitDetail.dateMisAJourProduit && (
                                             <div>

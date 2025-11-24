@@ -1,9 +1,10 @@
 import { Outlet } from "react-router-dom";
-import { SearchProvider } from '../contexts/SearchContext';
+import { SearchProvider} from '../contexts/SearchContext';
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { useClickOutside } from "../hooks/use-click-outside";
 import { Sidebar } from "../layouts/sidebar";
 import { Header } from "../layouts/header";
+import {SideProduit} from "../layouts/sideProduit"
 import { cn } from "../utils/cn";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from 'react-router-dom';
@@ -25,6 +26,7 @@ const Layout = () => {
         }
     });
 
+ 
     return (
         <SearchProvider>
         <div className="min-h-screen bg-slate-100 transition-colors dark:bg-slate-950">
@@ -43,8 +45,15 @@ const Layout = () => {
                     collapsed={collapsed}
                     setCollapsed={setCollapsed}
                 />
-                <div className={`h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden ${currentPath !== '/admin/products' ? "p-5" : "px-1"}`}>
-                    <Outlet />
+                <div className="flex w-full">
+                    {currentPath === '/admin/products' && (
+                        <div className="w-1/4">
+                            <SideProduit />
+                        </div>
+                    )}
+                    <div className={` ${currentPath !== '/admin/ficheCommande' ? (currentPath !== '/admin/products' ? "p-3  w-full" : "px-0 h-[550px] w-3/4") : "h-[calc(100vh-60px)]  overflow-y-auto overflow-x-hidden w-full"}`}>
+                        <Outlet />
+                    </div>
                 </div>
             </div>
         </div>

@@ -201,21 +201,24 @@ class CommandeServices
 
         $this->entityManager->beginTransaction();
         try {
+
             foreach ($paniersAMettreAJour as $item) {
-                $produit = $item['produit'];
+                $produit =  $this->entityManager->getRepository(Produit::class)->findOneBy(['numProduit' => $item['produit']]);;
                 $quantite = $item['quantite'];
                 $panier = new Panier();
                 $panier->setCommande($commande);
                 $panier->setProduit($produit);
                 $panier->setQuantite($quantite);
                 $this->entityManager->persist($panier);
-                $nouveauStock = $produit->getStockProduit() - $quantite;
+                $stock = $produit->getStockProduit();
+                $nouveauStock = $stock - $quantite;
                 $produit->setStockProduit($nouveauStock);
                 
                 $produit->setDateMiseAJourProduit(new \DateTimeImmutable());
             }
             $commande->setMethodeLivraison($methodeLivraison);
             $commande->setFraisLivraison($fraisLivraison);
+            $commande->setMethodePaiement($methodePaiement);
             $commande->setStatutCommande('EN_ATTENTE_PAIEMENT');
             $commande->mettreAjourDate();
             $this->entityManager->flush();

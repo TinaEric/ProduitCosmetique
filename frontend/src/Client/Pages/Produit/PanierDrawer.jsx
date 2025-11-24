@@ -18,7 +18,7 @@ const PanierDrawer = ({children}) => {
     const total = items.reduce((acc,item)  => {
         return acc + item.prix * item.quantite;
     },0)
-    
+   
     useEffect(() => {
         if (panierRef.current) {
             panierRef.current.checked = openPanier;
@@ -87,7 +87,7 @@ const PanierDrawer = ({children}) => {
                                                             <div className="flex flex-row  justify-between items-center gap-5">
                                                                 <span className="text-yellow-600 dark:text-yellow-400  text-[13px] font-bold">X {item.quantite}</span>
                                                                 <div className=" flex items-center bg-slate-200 dark:bg-slate-800 rounded-full shadow-sm shadow-slate-500 dark:shadow-black justify-center gap-1 px-2">
-                                                                    <span onClick={() => PlusQuantite(item.id)} className="text-3xl rounded-full font-bold px-3 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700 text-green-700 dark:text-green-500 ">+</span>
+                                                                    <span onClick={() => PlusQuantite(item.id, item.stock,item.quantite)} className="text-3xl rounded-full font-bold px-3 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700 text-green-700 dark:text-green-500 ">+</span>
                                                                     <span onClick={() => MoinsQuantite(item.id)} className="text-4xl rounded-full font-bold px-3 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-700 text-red-700 dark:text-red-500">-</span>
                                                                 </div>
                                                             </div>

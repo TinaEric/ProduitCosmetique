@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 // Importe tes images de catalogue - remplace par tes vraies images
 import prod1 from "@/image/prod1.png";
 import prod2 from "@/image/prod2.png";
+import cerave from '@/image/cerave.png'
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false);
@@ -15,7 +16,7 @@ export default function Home() {
   const catalogueImages = [
     { src: prod1, title: "Soins Visage", description: "Naturels & Doux" },
     { src: prod2, title: "Maquillage", description: "Éclat Naturel" },
-    { src: prod1, title: "Corps & Bain", description: "Détente Absolue" },
+    { src: cerave, title: "Corps & Bain", description: "Détente Absolue" },
     { src: prod2, title: "Cheveux", description: "Brillance Naturelle" },
     { src: prod1, title: "Parfums", description: "Fragrances Uniques" },
     { src: prod2, title: "Accessoires", description: "Élégance & Style" },

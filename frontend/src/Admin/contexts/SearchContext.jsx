@@ -9,6 +9,7 @@ export const SearchProvider = ({ children }) => {
     const [filterValue, setFilterValue] = useState('Tous');
     const [filtreCat, setFiltreCat] = useState('Tous');
     const [filtreStock, setFiltreStock] = useState("Tous")
+    const [filterStatus,setFilterStatus] = useState('tous')
     const value = {
         searchTerm,
         setSearchTerm,
@@ -17,7 +18,9 @@ export const SearchProvider = ({ children }) => {
         filtreCat,
         setFiltreCat,
         filtreStock,
-        setFiltreStock
+        setFiltreStock,
+        filterStatus,
+        setFilterStatus
     };
 
     return (

@@ -14,7 +14,7 @@ const DashboardPage = () => {
     return (
         <div className="flex flex-col gap-y-4">
             <h1 className="title">Dashboard</h1>
-            {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                <div className="card">
                     <div className="card-header">
                         <div className="w-fit rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
@@ -172,8 +172,8 @@ const DashboardPage = () => {
                     </div>
                 </div>
             </div>
-            <div className="card"> */}
-                {/* <div className="card-header">
+            <div className="card"> 
+                 <div className="card-header">
                     <p className="card-title">Top Orders</p>
                 </div>
                 <div className="card-body p-0">
@@ -235,8 +235,8 @@ const DashboardPage = () => {
                             </tbody>
                         </table>
                     </div>
-                </div> */}
-            {/* </div> */}
+                 </div>
+            </div>
             <Footer />
         </div>
     );

@@ -45,6 +45,10 @@ class Commande
     #[Groups(['commande:read'])]
     private ?string $methodeLivraison = null;
 
+    #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
+    #[Groups(['commande:read'])]
+    private ?string $methodePaiement = null;
+
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Groups(['commande:read'])]
     private ?string $fraisLivraison = null;
@@ -158,6 +162,17 @@ public function getMethodeLivraison(): ?string
 public function setMethodeLivraison(?string $methodeLivraison): static
 {
     $this->methodeLivraison = $methodeLivraison;
+    return $this;
+}
+
+public function getMethodePaiement(): ?string
+{
+    return $this->methodePaiement;
+}
+
+public function setMethodePaiement(?string $methodePaiement): static
+{
+    $this->methodePaiement = $methodePaiement;
     return $this;
 }
 

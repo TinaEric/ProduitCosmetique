@@ -26,7 +26,6 @@ class Panier
      #[ORM\JoinColumn(name: 'num_produit', referencedColumnName: 'NUM_PRODUIT', nullable: false)]
      #[Groups(['commande:read'])]
      private ?Produit $produit = null;
- 
 
      #[ORM\Column(type: Types::INTEGER, nullable: true)]
      #[Groups(['commande:read'])]

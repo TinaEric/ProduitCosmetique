@@ -6,6 +6,7 @@ import { CategorieListe } from "../../services/CategorieService";
 import ListeSimple from "@/components/ListeSimple";
 import { useNavbar } from "../context/NavbarContext";
 import { HiOutlineChevronDoubleRight } from "react-icons/hi";
+import { BiSolidCategoryAlt } from "react-icons/bi";
 
 const SideBar = () => {
     const [collapsed, setCollapsed] = useState(false);
@@ -19,7 +20,7 @@ const SideBar = () => {
         texte: "vide",
         statut: "success",
     });
-    
+
     const fetchCategories = useCallback(async () => {
         setLoading(true);
         try {
@@ -62,21 +63,26 @@ const SideBar = () => {
         const isSelected = filterValue === code;
         return {
             className: `
-                list-row m-2 flex w-full cursor-pointer items-center justify-start gap-6 p-2 
-                transition-all duration-300 ease-in-out
-                hover:bg-blue-50 hover:dark:bg-blue-900/20 
-                ${isSelected ? 
-                    'bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 text-blue-600 dark:text-blue-400 font-bold scale-105' : 
-                    'hover:divide-y hover:divide-y-reverse'
+                flex items-center justify-between w-full p-4 mb-2 rounded-lg transition-all duration-300 ease-in-out
+                border-2 cursor-pointer
+                ${
+                    isSelected
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 shadow-md"
+                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-300 hover:shadow-sm"
                 }
-            `
+            `,
         };
     };
 
     return (
         <div className={`min-h-screen flex-col transition-[margin] duration-300 ${collapsed ? "w-[40px] pt-4" : "w-[280px] p-4"} text-white`}>
-            <div className={`flex flex-row items-center text-black dark:text-white ${collapsed ? "gap-10" : "mr-10 gap-6"} `}>
-                {!collapsed && <h1 className="text-lg font-bold">Filtrage par catégorie</h1>}
+            <div className={`flex flex-row justify-center items-center mb-2 space-x-4 text-black dark:text-white } `}>
+                {!collapsed && (
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                        <BiSolidCategoryAlt className="text-blue-500" />
+                        Catégories
+                    </h3>
+                )}
                 <button
                     className="btn-ghost size-10"
                     onClick={() => setCollapsed(!collapsed)}
@@ -84,42 +90,79 @@ const SideBar = () => {
                     <ChevronsLeft className={collapsed && "rotate-180"} />
                 </button>
             </div>
-            <div className="w-full">
+            <div className="w-full pr-16">
                 {!collapsed && (
-                    <ul className="list bg-transparent text-black dark:text-white">
-                        {/* Élément "Tous" */}
-                        <li
+                    <div className="space-y-2">
+                        <div
                             key="tous"
-                            onClick={() => AffcheProduit('Tous')} 
-                            {...getItemStyle('Tous')}
+                            onClick={() => AffcheProduit("Tous")}
+                            {...getItemStyle("Tous")}
                         >
-                            <div>
-                                <HiOutlineChevronDoubleRight />
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className={`rounded-full p-2 ${
+                                        filterValue === "Tous" ? "bg-blue-100 dark:bg-blue-800" : "bg-gray-100 dark:bg-gray-700"
+                                    }`}
+                                >
+                                    <HiOutlineChevronDoubleRight
+                                        className={filterValue === "Tous" ? "text-blue-600 dark:text-blue-300" : "text-gray-500 dark:text-gray-400"}
+                                    />
+                                </div>
+                                <span className="font-medium">Tous les produits</span>
                             </div>
-                            <div className={filterValue === 'Tous' ? 'text-lg transition-all duration-300' : ''}>
-                                Tous
-                            </div>
-                        </li>
-                        
+                            <span
+                                className={`rounded-full px-2 py-1 text-xs font-medium ${
+                                    filterValue === "Tous"
+                                        ? "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300"
+                                        : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                                }`}
+                            >
+                                {catTab.reduce((total, cat) => total + cat.nbrProduit, 0)}
+                            </span>
+                        </div>
+
                         {loading ? (
-                            <li key="charge" className="flex space-x-2 p-2">
-                                <span className="loading-xl loading loading-dots text-blue-600"></span>
-                                <span>Chargement...</span> 
-                            </li>
+                            <div className="flex items-center justify-center space-x-2 p-4">
+                                <span className="loading loading-dots text-blue-600"></span>
+                                <span className="text-gray-500 dark:text-gray-400">Chargement...</span>
+                            </div>
                         ) : (
                             catTab
-                                .filter(liste => liste.nbrProduit > 0)
+                                .filter((liste) => liste.nbrProduit > 0)
                                 .map((liste) => (
-                                    <ListeSimple
+                                    <div
                                         key={liste.codeCategorie}
-                                        labelle={liste.libelleCategorie}
-                                        categorie={liste}
-                                        AffcheProduit={AffcheProduit}
-                                        isSelected={filterValue === liste.codeCategorie}
-                                    />
+                                        onClick={() => AffcheProduit(liste.codeCategorie)}
+                                        {...getItemStyle(liste.codeCategorie)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className={`rounded-full p-2 ${
+                                                    filterValue === liste.codeCategorie
+                                                        ? "bg-blue-100 dark:bg-blue-800"
+                                                        : "bg-gray-100 dark:bg-gray-700"
+                                                }`}
+                                            >
+                                                <BiSolidCategoryAlt
+                                                    className={
+                                                        filterValue === liste.codeCategorie
+                                                            ? "text-blue-600 dark:text-blue-300"
+                                                            : "text-gray-500 dark:text-gray-400"
+                                                    }
+                                                />
+                                            </div>
+                                            <div>
+                                                <span className="block font-medium">{liste.libelleCategorie}</span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {liste.nbrProduit} produit{liste.nbrProduit > 1 ? "s" : ""}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {filterValue === liste.codeCategorie && <div className="h-2 w-2 rounded-full bg-blue-500"></div>}
+                                    </div>
                                 ))
                         )}
-                    </ul>
+                    </div>
                 )}
             </div>
             {message.ouvre && (

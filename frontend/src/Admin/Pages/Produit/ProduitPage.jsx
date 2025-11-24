@@ -1,5 +1,5 @@
-import Dialogue from "@/Admin/components/Dialogue";
 import Alert from "@mui/material/Alert";
+import Dialogue from "@/Admin/components/Dialogue";
 import Snackbar from "@mui/material/Snackbar";
 import { ProduitGroupe, suppProduit, UpdateProduit } from "@/services/produitService";
 import { CategorieListe } from "../../../services/CategorieService";
@@ -24,6 +24,15 @@ const Filtres = {
     ALPHABETIQUE: "Alphabetique",
     CATEGORIE: "Categorie",
 };
+
+const FiltreStockValues = {
+    TOUS: "Tous",
+    EN_STOCK: "enStock", 
+    RUPTURE: "rupture",
+    ALERTE: "alerte"
+};
+
+
 
 const ProduitPage = () => {
     const { searchTerm, setFiltreCat, filtreCat, filterValue, setFilterValue, setSearchTerm, filtreStock, setFiltreStock } = useSearch();
@@ -104,12 +113,12 @@ const ProduitPage = () => {
         setFilterValue("Tous");
     }, []);
 
+   
     // filtrage d'affichage (recherche et triage)
     useEffect(() => {
         let resultat = [...ProduitTab];
         let finalProduitsAffiches;
 
-        // Appliquer d'abord le filtre de stock si activé
         if (filtreStock && filtreStock !== "Tous") {
             resultat = resultat
                 .map((categorie) => {
@@ -118,11 +127,11 @@ const ProduitPage = () => {
                         
                         switch (filtreStock) {
                             case "enStock":
-                                return stock > 0;
+                                return stock >= 10;
                             case "rupture":
                                 return stock === 0;
                             case "alerte":
-                                return stock <= 10 && stock > 0;
+                                return stock < 10 && stock > 0;
                             default:
                                 return true;
                         }
@@ -203,6 +212,7 @@ const ProduitPage = () => {
         }, 0);
         setProduitFiltres(finalProduitsAffiches);
         setTotalFiltre(nouveauTotal);
+        
     }, [ProduitTab, searchTerm, filterValue, filtreCat, filtreStock]);
 
     //fonctoin preparation pour le modal suppression
@@ -350,6 +360,9 @@ const ProduitPage = () => {
         };
     };
 
+    const handleFilterChange = (e) => {
+        setFilterValue(e.target.value);
+    };
     return (
         <div className="drawer drawer-end min-h-screen">
             {/* Checbox qui gerer la fermeture de Drawer */}
@@ -389,107 +402,51 @@ const ProduitPage = () => {
                         </Snackbar>
                     )}
                 </div>
-
                 {/* contenu de la page */}
-                <div className="flex w-full justify-between">
-                    {/* Section Filtres Catégorie - NOUVELLE APPEARANCE */}
-                    <div className="w-1/5 gap-y-4 overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:_thin]">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                                <BiSolidCategoryAlt className="text-blue-500" />
-                                Catégories
-                            </h3>
-                            
-                            <div className="space-y-2">
-                                {/* Élément "Tous" */}
-                                <div
-                                    key="tous"
-                                    onClick={() => AffcheProduit("Tous")}
-                                    {...getItemStyle("Tous")}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-full ${
-                                            filtreCat === "Tous" 
-                                                ? "bg-blue-100 dark:bg-blue-800" 
-                                                : "bg-gray-100 dark:bg-gray-700"
-                                        }`}>
-                                            <HiOutlineChevronDoubleRight className={
-                                                filtreCat === "Tous" 
-                                                    ? "text-blue-600 dark:text-blue-300" 
-                                                    : "text-gray-500 dark:text-gray-400"
-                                            } />
-                                        </div>
-                                        <span className="font-medium">Tous les produits</span>
-                                    </div>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                        filtreCat === "Tous"
-                                            ? "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300"
-                                            : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
-                                    }`}>
-                                        {ProduitTab.reduce((total, cat) => total + cat.produits.length, 0)}
-                                    </span>
-                                </div>
-
-                                {loadCategorie ? (
-                                    <div className="flex items-center justify-center space-x-2 p-4">
-                                        <span className="loading loading-dots text-blue-600"></span>
-                                        <span className="text-gray-500 dark:text-gray-400">Chargement...</span>
-                                    </div>
-                                ) : (
-                                    filtreCategorie
-                                        .filter((liste) => liste.nbrProduit > 0)
-                                        .map((liste) => (
-                                            <div
-                                                key={liste.codeCategorie}
-                                                onClick={() => AffcheProduit(liste.codeCategorie)}
-                                                {...getItemStyle(liste.codeCategorie)}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`p-2 rounded-full ${
-                                                        filtreCat === liste.codeCategorie 
-                                                            ? "bg-blue-100 dark:bg-blue-800" 
-                                                            : "bg-gray-100 dark:bg-gray-700"
-                                                    }`}>
-                                                        <BiSolidCategoryAlt className={
-                                                            filtreCat === liste.codeCategorie 
-                                                                ? "text-blue-600 dark:text-blue-300" 
-                                                                : "text-gray-500 dark:text-gray-400"
-                                                        } />
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium block">{liste.libelleCategorie}</span>
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                            {liste.nbrProduit} produit{liste.nbrProduit > 1 ? 's' : ''}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                {filtreCat === liste.codeCategorie && (
-                                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                )}
-                                            </div>
-                                        ))
-                                )}
-                            </div>
-                        </div>
+                <div className="flex w-full flex-col  pt-2 pr-2 ">
+                <div className=" flex gap-6 justify-center rounded-lg transition-colors bg-white dark:bg-slate-900 py-2 px-2 shadow">
+                    <div className="flex  flex-row  items-center gap-4">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Trié par  :</span>
+                        {["Tous", "enStock","rupture", "alerte"].map((status) => (
+                        <button
+                            key={status}
+                            onClick={() =>  setFiltreStock(status)}
+                            className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                                filtreStock  === status ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 text-gray-700 hover:bg-gray-300"
+                            }`}
+                        >
+                            {status === "enStock" ? "En stock" : status.charAt(0).toUpperCase() + status.slice(1)}
+                        </button>
+                         ))}
                     </div>
-
-                    {/* Section Produits */}
-                    <div className="flex w-4/5 flex-col gap-y-4 overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:_thin]">
+                    <div className="flex justify-end items-center gap-4 text-slate-950 dark:text-gray-200">
+                            <label className="label">
+                                <span className="label-text  text-slate-950 dark:text-gray-200">Trié par :</span>
+                            </label>
+                            <select
+                                className="select select-sm rounded-xl border border-slate-300 bg-[#FfFfFf] dark:border-slate-700 dark:bg-slate-950"
+                                value={filterValue}
+                                onChange={handleFilterChange}
+                            >
+                                <option value={Filtres.TOUS}>{Filtres.TOUS}</option>
+                                <option value={Filtres.ALPHABETIQUE}>{Filtres.ALPHABETIQUE}</option>
+                                <option value={Filtres.DERNIER_A_JOUR}>{Filtres.DERNIER_A_JOUR}</option>
+                            </select>
+                    </div>
+                </div>
+                <div className="h-[500px] overflow-y-auto overflow-x-hidden [scrollbar-width:_thin]">
                         {totalFiltre > 0 ? (
                             produitsFiltres.map((ParCat) => (
                                 <div
                                     key={ParCat.libelle}
                                     className={cn("sidebar-group")}
                                 >
-                                    <div className="flex items-center justify-between mb-4">
-                                        <p className="text-lg font-semibold text-gray-800 dark:text-white">
-                                            {ParCat.libelle}
-                                        </p>
-                                        <span className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
-                                            {ParCat.produits.length} produit{ParCat.produits.length > 1 ? 's' : ''}
+                                    {/* <div className="flex items-center w-full justify-center mb-4">
+                                        <span className="bg-blue-100 w-full text-center text-blue-700 dark:bg-blue-900 dark:text-blue-300  rounded-full text-sm font-medium">
+                                            {ParCat.produits.length || 0} produit{ParCat.produits.length > 1 ? 's' : ''}
                                         </span>
-                                    </div>
-                                    <div className="overflow-y-auto overflow-x-hidden p-4 [scrollbar-width:_thin]">
+                                    </div> */}
+                                    <div className="overflow-y-auto overflow-x-hidden [scrollbar-width:_thin]">
                                         <div className="grid grid-cols-1 place-items-center gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                                             {ParCat.produits.map((data) => (
                                                 <div key={data.id}>
@@ -539,7 +496,7 @@ const ProduitPage = () => {
                                 )}
                             </div>
                         )}
-                    </div>
+                </div>
                 </div>
             </div>
 

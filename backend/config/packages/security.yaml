@@ -47,7 +47,7 @@ security:
         - { path: ^/api/products, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE] }
         - { path: ^/api/categorie, roles: PUBLIC_ACCESS, methods: [GET] }
         - { path: ^/api/categorie, roles: ROLE_ADMIN, methods: [POST, PUT, DELETE] }
-        - { path: ^/api/commande, roles: ROLE_USER, methods: [POST] }
+        - { path: ^/api/commandes, roles: ROLE_USER, methods: [GET] }
         - { path: ^/api/commande, roles: ROLE_ADMIN, methods: [GET] }
         - { path: ^/api/user, roles: ROLE_ADMIN }
 

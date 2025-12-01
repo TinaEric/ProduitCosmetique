@@ -4,6 +4,12 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\Client;
+use App\Entity\Commande;
+use App\Entity\Panier;
+use App\Entity\Produit;
+use App\Repository\CommandeRepository;
+use App\Repository\PanierRepository;
+use App\Repository\ProduitRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,44 +20,159 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 #[Route('/api/admin')]
 class AdminController extends AbstractController
 {
-    #[Route('/dashboard', name: 'admin_dashboard', methods: ['GET'])]
+    #[Route('/statHome', name: 'admin_dashboard', methods: ['GET'])]
     public function dashboard(EntityManagerInterface $em): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
-        
+        try {
         // Vérification de l'utilisateur connecté
         $currentUser = $this->getUser();
         if (!$currentUser) {
             return new JsonResponse([
-                'message' => 'Utilisateur non connecté ou non autorisé.'
+                'error' => [
+                    'code' => JsonResponse::HTTP_UNAUTHORIZED,
+                    'message' => 'Utilisateur non connecté ou non autorisé.',
+                    'status' => 'error'
+                ]
+               ,
             ], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
         // Vérification du type d'utilisateur
         if (!$currentUser instanceof User) {
             return new JsonResponse([
-                'message' => 'Utilisateur non valide ou non connecté.'
+                'error' => [
+                    'code' => JsonResponse::HTTP_UNAUTHORIZED,
+                    'message' => 'Utilisateur non valide ou non connecté.',
+                    'status' => 'error'
+                ]
             ], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
         // Statistiques pour le dashboard
-        $userCount = $em->getRepository(User::class)->count([]);
+        $commandeCount = $em->getRepository(Commande::class)->count([]);
         $clientCount = $em->getRepository(Client::class)->count([]);
+        $produitCount = $em->getRepository(Produit::class)->count([]);
+        $totalRevenus = $em->getRepository(Panier::class)->getTotalRevenus();
         
-        return new JsonResponse([
-            'message' => 'Bienvenue dans le dashboard admin',
-            'statistics' => [
-                'totalUsers' => $userCount,
-                'totalClients' => $clientCount,
-            ],
-            'admin' => [
-                'idUsers' => $currentUser->getIdUsers() ?? null,
-                'nomUsers' => $currentUser->getNomUsers() ?? null,
-                'emailUsers' => $currentUser->getEmailUsers() ?? null,
-            ]
-        ]);
+            return new JsonResponse([
+                'message' => 'ok, efa io aby',
+                'data' => [
+                    'totalProduit'  => $produitCount,
+                    'totalCommande'  => $commandeCount,
+                    'totalClient'  => $clientCount,
+                    'totalRevenus'  => $totalRevenus
+                ],
+                'status' => 'success'
+            ],200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne du serveur: ' . $e->getMessage(),
+                    'status' => 'error'
+                ]
+            ], 500);
+        }
     }
 
+    #[Route('/recentCommande', name: 'admnin_recentCommande', methods: ['GET'])]
+    public function recentCommande(CommandeRepository $cmd): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        try {
+        // Vérification de l'utilisateur connecté
+        $currentUser = $this->getUser();
+        if (!$currentUser) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => JsonResponse::HTTP_UNAUTHORIZED,
+                    'message' => 'Utilisateur non connecté ou non autorisé.',
+                    'status' => 'error'
+                ]
+               ,
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Vérification du type d'utilisateur
+        if (!$currentUser instanceof User) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => JsonResponse::HTTP_UNAUTHORIZED,
+                    'message' => 'Utilisateur non valide ou non connecté.',
+                    'status' => 'error'
+                ]
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+        $recentCommande = $cmd->recentCommande();
+
+        return new JsonResponse([
+            'message' => 'ok, efa io aby',
+            'data' => [
+                'recentCommande' => $recentCommande,
+            ],
+            'status' => 'success'
+        ],200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne du serveur: ' . $e->getMessage(),
+                    'status' => 'error'
+                ]
+            ], 500);
+        }
+    }
+
+    #[Route('/topProduit', name: 'admin_topProduit', methods: ['GET'])]
+    public function topProduit(ProduitRepository $produit): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        try {
+        // Vérification de l'utilisateur connecté
+        $currentUser = $this->getUser();
+        if (!$currentUser) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => JsonResponse::HTTP_UNAUTHORIZED,
+                    'message' => 'Utilisateur non connecté ou non autorisé.',
+                    'status' => 'error'
+                ]
+               ,
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Vérification du type d'utilisateur
+        if (!$currentUser instanceof User) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => JsonResponse::HTTP_UNAUTHORIZED,
+                    'message' => 'Utilisateur non valide ou non connecté.',
+                    'status' => 'error'
+                ]
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+       
+        $topProduit = $produit->findTopProduit(5);
+
+        return new JsonResponse([
+            'message' => 'ok, efa io aby',
+            'data' => [
+                'topProduit' => $topProduit,
+            ],
+            'status' => 'success'
+        ],200);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne du serveur: ' . $e->getMessage(),
+                    'status' => 'error'
+                ]
+            ], 500);
+        }
+    }
+    
     #[Route('/users', name: 'admin_users', methods: ['GET'])]
     public function getUsers(EntityManagerInterface $em): JsonResponse
     {

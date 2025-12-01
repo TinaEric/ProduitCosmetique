@@ -15,7 +15,11 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
-
+        
+    App\Test\:
+        resource: '../src/Test'
+        tags: ['console.command']
+        public: true
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
     App\EventListener\JWTResponseListener:
@@ -23,3 +27,4 @@ services:
             - '@doctrine.orm.entity_manager'
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onAuthenticationSuccess }
+        

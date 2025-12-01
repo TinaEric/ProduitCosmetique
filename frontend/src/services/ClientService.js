@@ -72,3 +72,21 @@ export const updateClientAddress = async (addressData) => {
       throw error;
   }
 };
+
+export const envoieEmail = async (emailData) => {
+  return await verifierReponse(() =>  api.post('/api/email/confirmation-commande', emailData));
+  
+}
+
+export const getCommandesByClient = async (refClient) => {
+  return await verifierReponse(() =>  api.get(`/api/commandes/client/${refClient}`));
+};
+
+export const getMesCommandes = async () => {
+  return await verifierReponse(() =>  api.get(`/api/commandes`));
+
+};
+
+export const getCommandeDetail = async (refCommande) => {
+  return await verifierReponse(() =>  api.get(`/api/commandes/${refCommande}`));
+};

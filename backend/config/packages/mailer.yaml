@@ -1,0 +1,18 @@
+framework:
+    mailer:
+        # dsn: '%env(MAILER_DSN)%'
+        dsn: 'file://%kernel.project_dir%/var/mail'
+        envelope:
+            sender: 'noreply@monsite.local'
+
+# framework:
+#     mailer:
+#         dsn: '%env(MAILER_DSN)%'
+        
+#         # Configuration pour Wamp (développement)
+#         transports:
+#             main: '%env(MAILER_DSN)%'
+        
+#         # Enveloppe par défaut
+#         envelope:
+#             sender: 'noreply@monsite.local'

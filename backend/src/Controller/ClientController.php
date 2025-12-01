@@ -501,7 +501,7 @@ final class ClientController extends AbstractController
             } else {
                 $commande->setAdresseFacturation($commande->getAdresseLivraison());
             }
-            $commande->setDateUpdate(new \DateTimeImmutable());
+            $commande->mettreAjourDate();
             $em->flush();
             
             return new JsonResponse([

@@ -216,6 +216,16 @@ const ProduitClient = () => {
         setOpen(true);
     }
 
+    const prodDispo = (titre) => {
+        console.log(`Le produit ${titre} est indisponible pour le moment!`)
+        setMessage({
+            ouvre: true,
+            texte: `Le produit ${titre} est indisponible pour le moment!`,
+            statut: "warning",
+        });
+        setOpen(true);
+    }
+
     useEffect(()=> {
         const afficheMessage = () => {
             if(Ismessage){
@@ -452,6 +462,7 @@ const ProduitClient = () => {
                                                 titre={data.nom}
                                                 stock={data.stock}
                                                 prix={data.prix}
+                                                onDispo={prodDispo}
                                                 categorie={ParCat}
                                                 produit={data}
                                                 onInfos={afficheInfoProduit}

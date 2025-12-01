@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Stepper, Step, StepLabel, StepContent, Button, Box, Typography, Paper } from "@mui/material";
 import FormAdresse from "./FormAdresse";
 import FormInfosPersonnel from "./FormInfosPersonnel";
-import { updateCommandePanier } from "@/services/ClientService";
+import { updateCommandePanier,envoieEmail } from "@/services/ClientService";
 import FormPaiement from "./FormPaiement"; // Note: changement de nom
 import { useAuth } from "../../../hook/useAuth";
 import Alert from "@mui/material/Alert";
@@ -28,7 +28,41 @@ export default function CommandeEtape() {
 
     const commandeDejaEnvoyee = useRef(false);
     const [commandeExistante, setCommandeExistante] = useState(false);
-    const [panier, setPanier] = useState(items); // État pour le panier
+    const [panier, setPanier] = useState(items); 
+
+    // Fonction pour envoyer l'email de confirmation
+    const envoyerEmailConfirmation = async (commandeData, clientEmail) => {
+        try {
+            const emailData = {
+                to: clientEmail,
+                subject: "Confirmation de votre commande",
+                commande: {
+                    reference: commandeData.refCommande,
+                    items: items,
+                    total: NetPayer(),
+                    livraison: formData.etape3.methodeLivraison,
+                    paiement: formData.etape3.methodePaiement,
+                    adresseLivraison: formData.etape2.adresseLivraison,
+                    client: {
+                        nom: formData.etape1.nom || formData.etape1.nomClient,
+                        prenom: formData.etape1.prenom || formData.etape1.prenomClient,
+                        email: formData.etape1.email
+                    }
+                }
+            };
+            const response = await envoieEmail(emailData);
+            if (!response.data) {
+                throw new Error('Erreur envoi email');
+            }
+
+            const result = await response.json();
+            console.log('Email de confirmation envoyé:', result);
+            return result;
+        } catch (error) {
+            console.error('Erreur envoi email confirmation:', error);
+            return { success: false, error: error.message };
+        }
+    };
 
     const [formData, setFormData] = React.useState({
         etape1: {
@@ -272,6 +306,25 @@ export default function CommandeEtape() {
                     const response = await updateCommandePanier(dataCommandeUpdate);
 
                     if (response.data) {
+                        // ENVOYER L'EMAIL DE CONFIRMATION
+                        const emailResult = await envoyerEmailConfirmation(
+                            { refCommande: refCommandeNettoyee },
+                            formData.etape1.email
+                        );
+
+                        let messageText = "Votre commande a été passée avec succès. En attente de votre paiement.";
+                        
+                        if (emailResult.success) {
+                            messageText += " Un email de confirmation vous a été envoyé.";
+                        } else {
+                            messageText += " (Note: L'email de confirmation n'a pas pu être envoyé)";
+                        }
+
+                        setMessage({
+                            ouvre: true,
+                            texte: messageText,
+                            statut: "success",
+                        });
                         console.log("Resultat: ", response.data)
                         setMessage({
                             ouvre: true,

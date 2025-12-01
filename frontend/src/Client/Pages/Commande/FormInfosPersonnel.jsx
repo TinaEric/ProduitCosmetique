@@ -43,17 +43,22 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
         setData(initialData);
     }, [initialData]);
 
+    const validateEmailFormat = (email) => {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    };
+    
     const isUserConnected = user && (user.emailUsers || user.email);
     
- 
-
     useEffect(() => {
         if (isUserConnected && user.client) {
             setProfil({
                 nom: user.client.nomClient,
                 prenom: user.client.prenomClient,
                 email: user.emailUsers,
-                telephone : user.client.telephoneClient
+                telephone : user.client.telephoneClient,
+                civilite : user.client.civiliteClient,
+                dateNaissance : user.client.dateNaissance
             });
             setIsProfil(true);
         }
@@ -142,7 +147,7 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                 tempErrors.password = "Le mot de passe mal formé n'est pas autorisé,ce champ est requis.";
                 isValid = false;
             }
-            if (!data.email || !/\S+@\S+\.\S+/.test(data.email)) {
+            if (!data.email || !validateEmailFormat(data.email)) {
                 tempErrors.email = "Une adresse email valide est requise.";
                 isValid = false;
             }
@@ -344,7 +349,20 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                             )}
                         </div>
                         
-                        <ProfilUser user={profil} />
+                        {/* <ProfilUser user={profil} /> */}
+                        <ProfilUser 
+                        user={profil}
+                        onEdit={(updatedData) => {
+                            if (updatedData) {
+                            // Mettre à jour le profil avec les nouvelles données
+                            setProfil(updatedData);
+                            // Optionnellement, mettre à jour l'utilisateur dans le contexte/auth
+                            console.log("Profil mis à jour:", updatedData);
+                            }
+                        }}
+                        size="large"
+                        showStatus={true}
+                        />
                         <div className="flex justify-center items-center  w-full ">
                             <button 
                                 className="btn btn-accent btn-outline btn-wide"

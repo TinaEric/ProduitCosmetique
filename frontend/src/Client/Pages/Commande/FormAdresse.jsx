@@ -10,6 +10,7 @@ import { MdLocationOn, MdAddLocation, MdHome, MdBusiness } from "react-icons/md"
 import { usePanier } from "@/Client/context/PanierContext";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import AddressCard from "@/components/AddressCard";
+import { MdInfoOutline } from "react-icons/md";
 import { Card, CardContent, Typography, Box, RadioGroup, FormControlLabel, Radio, Button, Checkbox } from "@mui/material";
 
 // Fonction de comparaison de valeur initial et la valeur modifier
@@ -797,8 +798,9 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                             </div>
                                         ) : (
                                             <div className="items-center justify-center space-y-2">
-                                                <div className="rounded-lg bg-yellow-50 p-4 text-center">
-                                                    <Typography className="mb-4 text-yellow-700">Vous n'avez pas d'adresse enregistrée.</Typography>
+                                                <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-blue-50 p-3 text-blue-800 dark:bg-blue-800/5 dark:text-blue-500">
+                                                    <MdInfoOutline size={20} />
+                                                    <span>Vous n'avez pas encore d'adresse enregistrée.</span>
                                                 </div>
                                                 <div className="flex w-full items-center justify-center">
                                                     <button
@@ -990,10 +992,9 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                                     </div>
                                                 ) : (
                                                     <div className="items-center justify-center space-y-2">
-                                                        <div className="rounded-lg bg-yellow-50 p-4 text-center">
-                                                            <Typography className="mb-4 text-yellow-700">
-                                                                Vous n'avez pas d'adresse enregistrée.
-                                                            </Typography>
+                                                        <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-blue-50 p-3 text-blue-800 dark:bg-blue-800/5 dark:text-blue-500">
+                                                            <MdInfoOutline size={20} />
+                                                            <span>Vous n'avez pas encore d'adresse enregistrée.</span>
                                                         </div>
                                                         <div className="flex w-full items-center justify-center">
                                                             <button
@@ -1151,7 +1152,7 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
                                         <span>Validation en cours...</span>
                                     </div>
                                 ) : (
-                                    "Valider la commande"
+                                    "Valider l'adresse"
                                 )}
                             </button>
                         </div>

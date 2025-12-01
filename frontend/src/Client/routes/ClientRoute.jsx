@@ -9,6 +9,7 @@ import NotFound from '../../layouts/NotFound';
 import Inscription from '../Pages/Profil/Inscription';
 import ProduitClient from '../Pages/Produit/ProduitClient';
 import CommandeEtape from '../Pages/Commande/CommandeEtape';
+import ProfilUser from '../Pages/Profil/ProfilUser';
 
 const AdminRoute = () => {
     return (
@@ -20,6 +21,7 @@ const AdminRoute = () => {
                 <Route path='inscription' element={<Inscription />}/>
                 <Route path='mesCommande' element={<MesCommande />}/>
                 <Route path='passerCommande' element={<CommandeEtape />}/>
+                <Route path='profilUser' element={<ProfilUser />}/>
             </Route>
             <Route path='*' element={<NotFound />}/>
         </Routes>

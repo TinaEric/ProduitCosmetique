@@ -24,7 +24,6 @@ const FormPaiement = ({ initialData, onSubmitSuccess }) => {
     const methodesPaiement = [
         { value: "", label: "Choisissez une méthode de paiement", disabled: true },
         { value: "mvola", label: "MVola Avance" },
-        { value: "paypal", label: "PayPal" },
         { value: "especes", label: "Paiement en espèces à la livraison" },
     ];
 

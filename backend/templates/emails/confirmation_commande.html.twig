@@ -1,0 +1,177 @@
+{# templates/emails/confirmation_commande.html.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de commande</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #f7f7f7; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+        }
+        .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 30px 20px; 
+            text-align: center; 
+        }
+        .content { 
+            padding: 30px; 
+        }
+        .section { 
+            margin-bottom: 25px; 
+            padding: 20px; 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+            border-left: 4px solid #667eea; 
+        }
+        .total-section { 
+            background: #e7f3ff; 
+            border-left: 4px solid #007bff; 
+            font-size: 18px; 
+            font-weight: bold; 
+        }
+        .product { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 15px; 
+            padding-bottom: 15px; 
+            border-bottom: 1px solid #dee2e6; 
+        }
+        .footer { 
+            background: #343a40; 
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+            font-size: 14px; 
+        }
+        .badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table td {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Merci pour votre commande !</h1>
+            <p>Votre commande a été confirmée et est en cours de traitement</p>
+        </div>
+        
+        <div class="content">
+            <!-- Référence commande -->
+            <div class="section" style="text-align: center;">
+                <h3>Référence: <strong>{{ commande.reference ?? 'N/A' }}</strong></h3>
+                <p>Date: {{ date|date('d/m/Y à H:i') }}</p>
+                <span class="badge">CONFIRMÉE</span>
+            </div>
+
+            <!-- Informations client -->
+            <div class="section">
+                <h3>👤 Informations client</h3>
+                <table>
+                    <tr>
+                        <td><strong>Nom:</strong></td>
+                        <td>{{ client.nom }} {{ client.prenom }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Email:</strong></td>
+                        <td>{{ client.email }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Téléphone:</strong></td>
+                        <td>{{ client.telephoneClient ?? 'Non spécifié' }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Articles commandés -->
+            <div class="section">
+                <h3>🛍️ Détails de la commande</h3>
+                {% for item in items %}
+                    <div class="product">
+                        <div style="flex: 2;">
+                            <strong>{{ item.nom }}</strong>
+                            <br>
+                            <small>Quantité: {{ item.quantite }} × {{ item.prix|number_format(0, ',', ' ') }} Ar</small>
+                        </div>
+                        <div style="flex: 1; text-align: right; font-weight: bold;">
+                            {{ (item.prix * item.quantite)|number_format(0, ',', ' ') }} Ar
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Livraison et paiement -->
+            <div class="section">
+                <h3>🚚 Livraison & Paiement</h3>
+                <table>
+                    <tr>
+                        <td><strong>Mode de livraison:</strong></td>
+                        <td>{{ commande.livraison|upper }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mode de paiement:</strong></td>
+                        <td>{{ commande.paiement|upper }}</td>
+                    </tr>
+                    {% if adresseLivraison.labelle %}
+                    <tr>
+                        <td><strong>Adresse de livraison:</strong></td>
+                        <td>{{ adresseLivraison.labelle }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+
+            <!-- Total -->
+            <div class="section total-section">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Total à payer:</span>
+                    <span>{{ total|number_format(0, ',', ' ') }} Ar</span>
+                </div>
+                {% if fraisLivraison > 0 %}
+                <div style="display: flex; justify-content: space-between; font-size: 14px; margin-top: 5px;">
+                    <span>Dont frais de livraison:</span>
+                    <span>+ {{ fraisLivraison|number_format(0, ',', ' ') }} Ar</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Message supplémentaire -->
+            <div class="section" style="text-align: center; background: #fff3cd; border-left-color: #ffc107;">
+                <h3>📦 Prochaines étapes</h3>
+                <p>Vous recevrez un email de confirmation lorsque votre commande sera expédiée.</p>
+                <p>Pour toute question, contactez notre service client.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Merci de votre confiance !</p>
+            <p>© {{ "now"|date('Y') }} Votre Boutique. Tous droits réservés.</p>
+            <p style="font-size: 12px; opacity: 0.8;">
+                Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

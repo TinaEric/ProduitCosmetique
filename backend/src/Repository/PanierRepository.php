@@ -13,17 +13,26 @@ class PanierRepository extends ServiceEntityRepository
         parent::__construct($registry, Panier::class);
     }
 
-    // Vous pouvez ajouter ici des méthodes de recherche spécifiques à l'entité Client
-    // Exemple : Trouver un client par son ID_USERS (la clé étrangère)
-    /*
-    public function findOneByUser(User $user): ?Client
+    public function getTotalRevenus()
     {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.user = :user')
-            ->setParameter('user', $user)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        $result = $this->createQueryBuilder('p')
+        ->join('p.produit','prod')
+        ->addSelect('SUM(p.quantite*prod.prixProduit) As totalRevenus')
+        ->getQuery()
+        ->getResult();
+        return $result;
     }
-    */
+    
+    public function findTopProduit(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('p') 
+            ->leftJoin('p.produit', 'prod')
+            ->select('prod')
+            ->addSelect('SUM(p.quantite) AS total_ventes')
+            ->groupBy('prod') 
+            ->orderBy('total_ventes', 'DESC')
+            ->setMaxResults($limit) 
+            ->getQuery()
+            ->getArrayResult(); 
+    }
 }

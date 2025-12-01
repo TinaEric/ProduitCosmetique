@@ -33,11 +33,11 @@ class Commande
     #[Groups(['commande:read'])]
     private ?Adresse $adresseFacturation = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     #[Groups(['commande:read'])]
     private ?\DateTimeInterface $dateCommande = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     #[Groups(['commande:read'])]
     private ?\DateTimeInterface $dateUpdate = null;
 

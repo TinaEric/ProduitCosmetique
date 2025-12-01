@@ -56,4 +56,16 @@ class ProduitRepository extends ServiceEntityRepository
     return array_values($grouped);
 }
 
+    public function findTopProduit(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('prod')
+            ->leftJoin('prod.paniers', 'p')
+            ->select('prod.numProduit, prod.nomProduit, prod.prixProduit, prod.stockProduit, prod.imageUrlProduit, prod.descriptionProduit')
+            ->addSelect('SUM(p.quantite) AS total_ventes')
+            ->groupBy('prod.numProduit')
+            ->orderBy('total_ventes', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

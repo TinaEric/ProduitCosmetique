@@ -1,14 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineSlack } from "react-icons/ai";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { FaSackDollar } from "react-icons/fa6";
 import { MdOutlineDeleteOutline } from "react-icons/md";
 import { FaCartShopping } from "react-icons/fa6";
+import Alert from "@mui/material/Alert";
+import Snackbar from "@mui/material/Snackbar";
 
-const CardClient = ({ id, img, titre, prix, addPanier, onInfos, categorie, produit }) => {
+const CardClient = ({ id, img, titre, prix,stock,onDispo, addPanier, onInfos, categorie, produit }) => {
     const imagePath = `/image/${img}`;
     const defaultImage = "/image/image.png";
-
     return (
             <div
                 data-aos="fade-up"
@@ -49,16 +50,28 @@ const CardClient = ({ id, img, titre, prix, addPanier, onInfos, categorie, produ
                     </div>
                 </div>
                 <div className=" flex justify-center items-center">
-                    <button
-                        onClick={() => addPanier(produit)}
-                        className="btn  btn-ghost p-2 m-2 text-slate-700 dark:text-slate-300 hover:text-slate-800 hover:bg-slate-300 dark:hover:bg-slate-800"
-                    >
-                        <FaCartShopping
-                            className=""
-                            size={15}
-                        />
-                        <span className= "text-[11px] font-gothic">Ajouter au panier</span>
-                    </button>
+                    {stock > 0 ? (
+                        <button
+                         onClick={() => addPanier(produit)}
+                         className="btn  btn-ghost p-2 m-2 text-slate-700 dark:text-slate-300 hover:text-slate-800 hover:bg-slate-300 dark:hover:bg-slate-800"
+                        >
+                         <FaCartShopping
+                             className=""
+                             size={15}
+                         />
+                         <span className= "text-[11px] font-gothic">Ajouter au panier</span>
+                     </button>
+                    ) : (
+                        <button 
+                          className=" flex rounded-lg gap-2 p-2 m-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20">
+                             <FaCartShopping
+                             size={15}
+                             onClick={() => onDispo(titre)}
+                         />
+                         <span className= "font-gothic">Indisponible</span>
+                        </button>
+                    )}
+                   
                 </div>
             </div>
     );

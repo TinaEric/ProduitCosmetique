@@ -75,6 +75,16 @@ const Commande = () => {
       }
   };
 
+  const ExtractionDate = (dateTimeString, extract) => {
+    const [date, fullTime] = dateTimeString.split('T');
+    const time = fullTime.split('+')[0];
+    if (extract === 'date') {
+        return new Date(date).toLocaleDateString('fr-FR');
+    } else if (extract === 'time') {
+        return time;
+    }
+  }
+
   const Transformestatut = (status) => {
     switch (status) {
         case "INITIALISE":
@@ -168,8 +178,8 @@ const Commande = () => {
                                                 <div className="text-sm text-gray-500">{commande.client.email}</div>
                                             </td>
                                             <td className="table-cell">
-                                                <div className="text-sm text-gray-900 dark:text-slate-50">{new Date(commande.dateCommande).toLocaleDateString()}</div>
-                                                <div className="text-sm text-gray-500">{new Date(commande.dateCommande).toLocaleTimeString()}</div>
+                                                <div className="text-sm text-gray-900 dark:text-slate-50">{ExtractionDate(commande.dateCommande,"date")}</div>
+                                                <div className="text-sm text-gray-500">{ExtractionDate(commande.dateCommande,"time")}</div>
                                             </td>
                                             <td className="table-cell">
                                                 <span className={getStatusBadgeClass(commande.statutCommande)}>{Transformestatut(commande.statutCommande)}</span>

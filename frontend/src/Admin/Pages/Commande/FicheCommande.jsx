@@ -13,6 +13,51 @@ const FicheCommande = () => {
     const retourVersCommande = () => {
         navigate("/admin/commande");
     };
+
+    const ExtractionDate = (dateTimeString, extract = "date", format = false) => {
+        const mois = [
+            'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+          ];
+        const [date, fullTime] = dateTimeString.split('T');
+        const time = fullTime.split('+')[0];
+        if (extract === 'date') {
+            if (format) {
+                const daty = new Date(dateTimeString);
+                const jour = String(daty.getDate()).padStart(2, '0');
+                const moisIndex = daty.getMonth();
+                const annee = daty.getFullYear();
+                return `${jour} ${mois[moisIndex]} ${annee}`;
+            }
+            return new Date(date).toLocaleDateString('fr-FR');
+
+        } else if (extract === 'time') {
+            return time;
+        }else{
+            return new Date(date).toLocaleDateString('fr-FR');
+        }
+
+      }
+
+      const Transformestatut = (status) => {
+        switch (status) {
+            case "INITIALISE":
+                return "Inititalise";
+            case "LIVREE":
+                return "Livrée";
+            case "EXPEDIEE":
+                return "Expédiée"; 
+            case "EN_COURS":
+                return"En cours";
+            case "ANNULER":
+                return "Annulée";
+            case "EN_ATTENTE_PAIEMENT":
+                return "En attente paiement";
+            default:
+                return "Tous";
+        }
+    };
+
     const prixlivr = (valeur) => {
         switch (valeur) {
             case "standard":
@@ -59,7 +104,7 @@ const FicheCommande = () => {
                         </div>
                         <div className="flex w-full items-center justify-between px-1 py-1">
                             <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Statut Commande</span>
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300"> {commande.statutCommande}</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300"> {Transformestatut(commande.statutCommande)}</span>
                         </div>
                         <div className="flex w-full items-center justify-between px-1 py-1">
                             <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Méthode de Livraison</span>
@@ -77,7 +122,7 @@ const FicheCommande = () => {
                         </div>
                         <div className="flex w-full items-center justify-between px-1 py-1">
                             <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Date Creation</span>
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300"> {commande.dateCommande}</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300"> {ExtractionDate(commande.dateCommande,"date",true) +  " / " + ExtractionDate(commande.dateCommande,"time")} </span>
                         </div>
                     </div>
                     <div className="flex w-full flex-col items-center justify-center rounded-xl border border-slate-200 p-2 dark:border-slate-800 md:w-full lg:w-1/2">
@@ -97,7 +142,7 @@ const FicheCommande = () => {
                         </div>
                         <div className="flex w-full items-center justify-between px-1 py-1">
                             <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Date de Naissance</span>
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{commande.client.dateNaissance}</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{ExtractionDate(commande.client.dateNaissance,"date",true)}</span>
                         </div>
                         <div className="flex w-full items-center justify-between px-1 py-1">
                             <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Téléphone</span>

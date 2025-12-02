@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, BarChart, Bar, CartesianGrid, Legend } from "recharts";
 import { useTheme } from "../../hooks/use-theme";
-import { Footer } from "../../layouts/footer";
 import { 
     CreditCard, 
-    DollarSign, 
+    DollarSign,
+    Construction, 
     Package, 
     Users, 
     ShoppingCart,
@@ -15,7 +15,7 @@ import {
     Calendar,
     Eye,
     Edit,
-    Trash2
+    Trash2,
 } from "lucide-react";
 import { 
     getDashboardStats, 
@@ -27,6 +27,8 @@ import {
 const DashboardPage = () => {
     const { theme } = useTheme();
     const [loading, setLoading] = useState(true);
+        const [produitDetail, setProduitDetail] = useState(null);
+        const [openDetail, setOpenDetail] = useState(false);
     const [stats, setStats] = useState({
             totalClient : 0,
             totalProduit : 0,
@@ -42,7 +44,12 @@ const DashboardPage = () => {
         
         // Si c'est une string au bon format
         if (typeof dateInput === 'string' && dateInput.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-            return dateInput;
+            return dateInput.toLocaleDateString('fr-FR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
         }
         
         // Si c'est un doctrine objet {date: "...", timezone: "...", timezone_type: 3}
@@ -54,9 +61,15 @@ const DashboardPage = () => {
         
         // Si c'est un timestamp ou autre format
         try {
-            const date = new Date(dateInput);
+            const date = new Date(dateInput)
             if (!isNaN(date.getTime())) {
-                return date.toISOString().replace('T', ' ').substring(0, 19);
+                let form = date.toISOString().replace('T', ' ').substring(0, 19);
+                return form.toLocaleDateString('fr-FR', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })
             }
         } catch (e) {
             console.warn("Erreur de conversion de date :", dateInput, e);
@@ -293,7 +306,6 @@ const DashboardPage = () => {
     };
 
     const formatDate = (dateString) => {
-      
         return new Date(dateString).toLocaleDateString('fr-FR', {
             day: '2-digit',
             month: '2-digit',
@@ -316,6 +328,39 @@ const DashboardPage = () => {
             default:
                 return 'badge-ghost';
         }
+    };
+
+    const getStatutNom = (status) => {
+        switch (status) {
+            case 'LIVREE':
+                return 'Livrée';
+            case 'EN_COURS':
+                return 'En cours';
+            case 'CONFIRME':
+                return 'Confirmé';
+            case 'EN_ATTENTE_PAIEMENT':
+                return 'En atente Paiement';
+            case 'ANNULEE':
+                return 'Annulé';
+            default:
+                return 'INVALIDE';
+        }
+    };
+
+    const afficheInfoProduit = (prod) => {
+        ouvrirDetailProduit(prod);
+        console.log("produitDetail :",prod)
+    };
+
+    const fermerDetailProduit = () => {
+        setOpenDetail(false);
+        setProduitDetail(null);
+    };
+
+    const ouvrirDetailProduit = (prod) => {
+        setProduitDetail(prod);
+        setOpenDetail(true);
+       
     };
 
     const getStockColor = (stock) => {
@@ -367,6 +412,90 @@ const DashboardPage = () => {
                     </span>
                 </div>
             </div>
+                         {openDetail && produitDetail && (
+                                                <div className="modal modal-open">
+                                                    <div className="modal-box max-w-2xl max-h-[60vh] bg-slate-200 dark:bg-gray-800 overflow-y-auto">
+                                                        {/* Header du dialogue */}
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                                                                Détails du Produit
+                                                            </h3>
+                                                            <button 
+                                                                onClick={fermerDetailProduit}
+                                                                className="btn btn-sm btn-circle btn-ghost"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                        
+                                                        {/* Contenu du dialogue */}
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ml-4">
+                                                            {/* Image du produit */}
+                                                            <div className="flex items-center">
+                                                                <img 
+                                                                    src={`/image/${produitDetail.imageUrlProduit}`} 
+                                                                    alt={produitDetail.nomProduit}
+                                                                    className="w-full h-64 object-cover rounded-lg shadow-lg"
+                                                                />
+                                                            </div>
+                        
+                                                            {/* Informations détaillées */}
+                                                            <div className="space-y-4">
+                                                                <div>
+                                                                    <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                                                                        {produitDetail.nomProduit}
+                                                                    </h4>
+                                                                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                                                        {produitDetail.prixProduit?.toLocaleString()} Ar
+                                                                    </p>
+                                                                </div>
+                        
+                                                                {/* Description */}
+                                                                <div>
+                                                                    <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                                        Description
+                                                                    </h5>
+                                                                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                                                                        {produitDetail.descriptionProduit || "Aucune description disponible pour ce produit."}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="mt-4 flex gap-2">
+                                                                    <span className={`badge ${produitDetail.stockProduit > 5 ? 'badge-success' : produitDetail.stockProduit > 0 ? 'badge-warning' : 'badge-error'}`}>
+                                                                        {produitDetail.stockProduit > 5 ? 'En stock' : produitDetail.stockProduit > 0 ? 'Stock faible' : 'Rupture'}
+                                                                    </span>
+                                                                    <span className="badge badge-info">
+                                                                        {produitDetail.stockProduit} unités
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Dernière mise à jour */}
+                                                                {produitDetail.dateMisAJourProduit && (
+                                                                    <div>
+                                                                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                                                            Dernière mise à jour
+                                                                        </h5>
+                                                                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                                                            {new Date(produitDetail.dateMisAJourProduit).toLocaleDateString('fr-FR')}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                                    <button
+                                                                        onClick={fermerDetailProduit}
+                                                                        className="btn btn-outline btn-error btn-wide"
+                                                                    >
+                                                                        Fermer
+                                                                    </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {/* Overlay pour fermer en cliquant à l'extérieur */}
+                                                    <div 
+                                                        className="modal-backdrop" 
+                                                        onClick={fermerDetailProduit}
+                                                    ></div>
+                                                </div>
+                                            )}
 
             {/* Cartes de statistiques */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -548,46 +677,56 @@ const DashboardPage = () => {
                             Commandes Récentes
                         </h3>
                         <div className="space-y-4 max-h-80 overflow-y-auto">
-                            {commandeRecent.map((order) => (
-                                <div key={order[0].refCommande} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="flex-shrink-0">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                                {(order[0].client.nomClient.split(' ').map(n => n[0]).join('')).toUpperCase() || " "} 
-                                                {(order[0].client.prenomClient.split(' ').map(n => n[0]).join('')).toUpperCase() || " "}
+                            {
+                            commandeRecent.length !== 0 ? ( 
+                                commandeRecent.map((order) => (
+                                    <div key={order[0].refCommande} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="flex-shrink-0">
+                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                                    {(order[0].client.nomClient.split(' ').map(n => n[0]).join('')).toUpperCase() || " "} 
+                                                    {(order[0].client.prenomClient.split(' ').map(n => n[0]).join('')).toUpperCase() || " "}
+                                                </div>
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                    {order[0].client.nomClient + " " + order[0].client.prenomClient  || " "}
+                                                </p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                                    {order[0].refCommande  || " "}
+                                                </p>
+                                                <div className="flex items-center gap-1 mt-1">
+                                                    <MapPin className="h-3 w-3 text-gray-400" />
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {order[0].adresseLivraison.ville || " "} - {order[0].adresseLivraison.quartier || " "}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                                {order[0].client.nomClient + " " + order[0].client.prenomClient  || " "}
+                                        <div className="text-right">
+                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {formatCurrency(totalPaye(parseFloat(order.montant),parseFloat(order[0].fraisLivraison)))}
                                             </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                                {order[0].refCommande  || " "}
-                                            </p>
-                                            <div className="flex items-center gap-1 mt-1">
-                                                <MapPin className="h-3 w-3 text-gray-400" />
-                                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                    {order[0].adresseLivraison.ville || " "} - {order[0].adresseLivraison.quartier || " "}
-                                                </span>
+                                            <div className={`badge badge-xs ${getStatusColor(order[0].statutCommande || "LIVREE")} mt-1`}>
+                                              {getStatutNom(order[0].statutCommande)}
                                             </div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 py-1 mt-1">
+                                                {formatDate(order[0].dateCommande.date)}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {formatCurrency(totalPaye(parseFloat(order.montant),parseFloat(order[0].fraisLivraison)))}
-                                        </p>
-                                        <div className={`badge badge-sm ${getStatusColor(order[0].statutCommande || "LIVREE")} mt-1`}>
-                                            {order[0].statutCommande}
-                                        </div>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            {
-                                            // formatDate(order[0].dateCommande)
-                                             console.log(order[0].dateCommande)}
-                                             androany
-                                        </p>
-                                    </div>
+                                ))
+                            ):(
+                                <div className="flex flex-col items-center justify-center  py-10">
+                                    <Construction
+                                        strokeWidth={1}
+                                        className="h-40 w-40"
+                                    />
+                                    <p className="text-gray-600 dark:text-gray-400">Aucune commande récente disponible.</p>
                                 </div>
-                            ))}
+                               
+                            )
+                            }
                         </div>
                     </div>
                 </div>
@@ -645,7 +784,7 @@ const DashboardPage = () => {
                                         </td>
                                         <td>
                                             <span className="font-medium text-gray-900 dark:text-white">
-                                                {product.total_ventes}
+                                                {product.total_ventes || 0}
                                             </span>
                                         </td>
                                         
@@ -656,14 +795,11 @@ const DashboardPage = () => {
                                         </td>
                                         <td>
                                             <div className="flex items-center gap-2">
-                                                <button className="btn btn-ghost btn-sm text-blue-600 hover:text-blue-700">
+                                                <button
+                                                    onClick={() => afficheInfoProduit(product)}
+                                                     className="btn btn-ghost btn-sm text-blue-600 items-center hover:text-blue-700">
                                                     <Eye className="h-4 w-4" />
-                                                </button>
-                                                <button className="btn btn-ghost btn-sm text-green-600 hover:text-green-700">
-                                                    <Edit className="h-4 w-4" />
-                                                </button>
-                                                <button className="btn btn-ghost btn-sm text-red-600 hover:text-red-700">
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <span>Détails</span>
                                                 </button>
                                             </div>
                                         </td>
@@ -679,6 +815,8 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
+
 // import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 // import { useTheme } from "../../hooks/use-theme";

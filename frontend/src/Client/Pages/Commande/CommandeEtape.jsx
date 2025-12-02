@@ -9,6 +9,7 @@ import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import { usePanier } from "@/Client/context/PanierContext";
 import { MdCloseFullscreen, MdOutlineClose, MdRemoveShoppingCart } from "react-icons/md";
+import FormValidationFinal from "./FormValidationFinal";
 
 const steps = ["Informations Personnels", "Adresse de Livraison et Facturation", "Service Livraison et Paiement", "Validation Finale"];
 
@@ -415,55 +416,15 @@ export default function CommandeEtape() {
                 return <FormPaiement {...commonProps} />; // Utilisation du nouveau composant
             case 3:
                 return (
-                    <Box className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-                        <Typography className="mb-2 font-medium dark:text-gray-300">Vérifiez vos informations :</Typography>
-                        <Typography
-                            variant="body2"
-                            className="dark:text-gray-400"
-                        >
-                            Nom: {formData.etape1.nom || formData.etape1.nomClient || "Non spécifié"}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            className="dark:text-gray-400"
-                        >
-                            Prénom: {formData.etape1.prenom || formData.etape1.prenomClient || "Non spécifié"}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            className="dark:text-gray-400"
-                        >
-                            Email: {formData.etape1.email || "Non spécifié"}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            className="dark:text-gray-400"
-                        >
-                            Adresse Livraison: {formData.etape2.adresseLivraison?.labelle || "Non spécifiée"}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            className="dark:text-gray-400"
-                        >
-                            Méthode Livraison: {formData.etape3.methodeLivraison || "Non spécifiée"}
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            className="dark:text-gray-400"
-                        >
-                            Méthode Paiement: {formData.etape3.methodePaiement || "Non spécifiée"}
-                        </Typography>
-
-                        {commandeExistante && (
-                            <Alert
-                                severity="info"
-                                className="mt-4"
-                            >
-                                Vous avez déjà une commande en cours de traitement.
-                            </Alert>
-                        )}
-                    </Box>
-                );
+                    <FormValidationFinal
+                      formData={formData}
+                      commandeExistante={commandeExistante}
+                      calculerTotal={calculerTotal}
+                      prixlivr={prixlivr}
+                      NetPayer={NetPayer}
+                      loading={loading}
+                    />
+                  );
             default:
                 return <Typography>Étape Inconnue</Typography>;
         }
@@ -531,7 +492,7 @@ export default function CommandeEtape() {
                                                 variant="contained"
                                                 color="primary"
                                                 onClick={commandeMisAJour}
-                                                className="bg-green-600 text-white hover:bg-green-700"
+                                                className="bg-blue-600 text-white hover:bg-blue-700"
                                                 disabled={commandeExistante}
                                             >
                                               {loading ? (

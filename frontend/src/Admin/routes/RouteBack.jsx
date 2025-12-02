@@ -2,7 +2,7 @@ import Layout from "./layout";
 import DashboardPage from "../Pages/dashboard/page";
 import { Routes, Route } from "react-router-dom";
 import NotFound from "../../layouts/NotFound";
-import ListUsers from "../Pages/User/ListUsers";
+import ClientPage from "../Pages/User/ClientPage";
 import CategoriePage from "../Pages/Produit/CategoriePage";
 import NewProduit from "../Pages/Produit/NewProduit";
 import ProduitPage from "../Pages/Produit/ProduitPage";
@@ -23,7 +23,7 @@ const RouteBack = () => {
                 />
                 <Route  path="Notification"  element={<h1 className="title">Notification</h1>}
                 />
-                <Route  path="Users"  element={<ListUsers />}
+                <Route  path="Users"  element={<ClientPage />}
                 />
                 <Route  path="commande"  element={<Commande/>}
                 />

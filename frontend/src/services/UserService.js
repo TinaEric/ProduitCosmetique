@@ -11,6 +11,15 @@ export const ListeCLient = async () => {
   export const UserListe = async () => {
     return await verifierReponse(() => api.get('/api/user/userAdmin'));
   }
+
+  export const ClientListe = async () => {
+    return await verifierReponse(() => api.get('/api/client'));
+  }
+  
+  export const suppClient = async (tabClient) => {
+    return await verifierReponse(() => api.post('/api/client/supprimer',{codes : tabClient}));
+  }
+  
   
 export const registerUser = async (userData) => {
   try {

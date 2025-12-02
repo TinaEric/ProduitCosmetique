@@ -58,31 +58,13 @@ class CommandeRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    // public function recentCommande(): array
-    // {
-    //     return $this->createQueryBuilder('c')
-    //         ->leftJoin('c.client', 'client')
-    //         ->leftJoin('c.adresseLivraison', 'adresseLiv')
-    //         ->leftJoin('App\Entity\Panier', 'p', 'WITH', 'p.commande = c.refCommande')
-    //         ->leftJoin('p.produit', 'prod')
-    //         ->addSelect('client')
-    //         ->addSelect('adresseLiv')
-    //         ->addSelect('COALESCE(SUM(p.quantite * prod.prixProduit), 0) as montant')
-    //         ->andWhere('c.statutCommande = :status')
-    //         ->setParameter('status', "EN_ATTENTE_PAIEMENT")
-    //         ->groupBy('c.refCommande, client.refClient, adresseLiv.refAdresse') 
-    //         ->orderBy('c.dateCommande', 'DESC')
-    //         ->setMaxResults(5)
-    //         ->getQuery()
-    //         ->getArrayResult();
-    // }
-
-    public function recentCommande(): array
+    public function recentCommande()
     {
         $results = $this->createQueryBuilder('c')
             ->leftJoin('c.client', 'client')
             ->leftJoin('c.adresseLivraison', 'adresseLiv')
-            ->leftJoin('App\Entity\Panier', 'p', 'WITH', 'p.commande = c.refCommande')
+            // ->leftJoin('App\Entity\Panier', 'p', 'WITH', 'p.commande = c.refCommande')
+            ->leftJoin('c.paniers', 'p')
             ->leftJoin('p.produit', 'prod')
             ->addSelect('client')
             ->addSelect('adresseLiv')
@@ -93,35 +75,38 @@ class CommandeRepository extends ServiceEntityRepository
             ->orderBy('c.dateCommande', 'DESC')
             ->setMaxResults(5)
             ->getQuery()
-            ->getResult();
+            // ->getResult();
+            ->getArrayResult();
     
         $formattedResults = [];
         
-        foreach ($results as $row) {
-            $commande = $row[0];
-            
-            $formattedResults[] = [
-                'refCommande' => $commande->getRefCommande(),
-                'dateCommande' => $commande->getDateCommande()->format('Y-m-d H:i:s'),
-                'statutCommande' => $commande->getStatutCommande(),
-                'client' => [
-                    'refClient' => $row['client']->getRefClient(),
-                    'nomClient' => $row['client']->getNomClient(),
-                    'prenomClient' => $row['client']->getPrenomClient(),
-                ],
-                'adresseLivraison' => [
-                    'refAdresse' => $row['adresseLiv']->getRefAdresse(),
-                    'ville' => $row['adresseLiv']->getVille(),
-                    'codePostal' => $row['adresseLiv']->getCodePostal(),
-                    'quartier' => $row['adresseLiv']->getQuartier(),
-                ],
-                'fraisLivraison' => (float) $commande->getFraisLivraison(),
-                'methodPaiement' => $commande->getMethodPaiement(),
-                'montant' => (float) $row['montant']
-            ];
-        }
+        // foreach ($results as $row) {
+        //     $commande = $row[0];
+        //     $client = $row['client'] ?? null; 
+        //     $adresseLiv = $row['adresseLiv'] ?? null; 
+        //     $montant = $row['montant'] ?? 0;
+        //     $formattedResults[] = [
+        //         'refCommande' => $commande->getRefCommande(),
+        //         'dateCommande' => $commande->getDateCommande()->format('Y-m-d H:i:s'),
+        //         'statutCommande' => $commande->getStatutCommande(),
+        //         'client' => [
+        //             'refClient' => $client->getRefClient() ,
+        //             'nomClient' => $client->getNomClient(),
+        //             'prenomClient' => $client->getPrenomClient(),
+        //         ],
+        //         'adresseLivraison' => [
+        //             'refAdresse' => $adresseLiv->getRefAdresse(),
+        //             'ville' => $adresseLiv->getVille(),
+        //             'codePostal' => $adresseLiv->getCodePostal(),
+        //             'quartier' => $adresseLiv->getQuartier(),
+        //         ],
+        //         'fraisLivraison' => (float) $commande->getFraisLivraison(),
+        //         'methodPaiement' => $commande->getMethodPaiement(),
+        //         'montant' => (float)$montant
+        //     ];
+        // }
         
-        return $formattedResults;
+        return $results;
     }
    
 }

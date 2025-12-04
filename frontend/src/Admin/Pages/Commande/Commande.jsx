@@ -3,7 +3,7 @@ import { commandeService } from "@/services/CommandeService";
 import { data } from "react-router-dom";
 import { Construction, PencilLine, Trash, NotepadText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
+import { MdInfoOutline } from "react-icons/md";
 const Commande = () => {
     const [commandes, setCommandes] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -128,7 +128,13 @@ const Commande = () => {
 
     return (
         <div className="">
-            {error && <div className="mb-4 rounded border  border-red-400 bg-red-100 px-4 py-3 text-red-700">{error}</div>}
+            
+            {error && (
+                <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-red-50 p-3 text-red-800 dark:bg-red-800/10 dark:text-red-400">
+                    <MdInfoOutline size={20} />
+                    <span>Une erreur de connexion s'est produit. Vérifier si le serveur est désactivé'</span>
+                </div>
+            )}
             {/* Filtres */}
             <div className="mb-3 rounded-lg transition-colors bg-white dark:bg-slate-900 p-4 shadow">
                 <div className="flex flex-wrap items-center gap-4">
@@ -173,7 +179,7 @@ const Commande = () => {
                                             </td>
                                             <td className="table-cell">
                                                 <div className="text-sm text-gray-900 dark:text-slate-50">
-                                                    {commande.client.prenomClient} {commande.client.nomClient}
+                                                    {commande.client.nomClient} {commande.client.prenomClient}
                                                 </div>
                                                 <div className="text-sm text-gray-500">{commande.client.email}</div>
                                             </td>

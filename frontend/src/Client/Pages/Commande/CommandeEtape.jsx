@@ -10,10 +10,12 @@ import Snackbar from "@mui/material/Snackbar";
 import { usePanier } from "@/Client/context/PanierContext";
 import { MdCloseFullscreen, MdOutlineClose, MdRemoveShoppingCart } from "react-icons/md";
 import FormValidationFinal from "./FormValidationFinal";
+import { useNavigate } from 'react-router-dom';
 
 const steps = ["Informations Personnels", "Adresse de Livraison et Facturation", "Service Livraison et Paiement", "Validation Finale"];
 
 export default function CommandeEtape() {
+    const navigate = useNavigate();
     const { isAuthenticated, user } = useAuth();
     const { items, setItems } = usePanier();
     const initialStep = isAuthenticated ? 0 : 0;
@@ -307,6 +309,22 @@ export default function CommandeEtape() {
                     const response = await updateCommandePanier(dataCommandeUpdate);
 
                     if (response.data) {
+                        if (formData.etape3.methodePaiement === "stripe") {
+                            setMessage({
+                                ouvre: true,
+                                texte: "Redirection vers la page de paiement sécurisé...",
+                                statut: "info",
+                            });
+                            setOpen(true);
+    
+                            // Rediriger vers la page Stripe après 1 seconde
+                            setTimeout(() => {
+                                navigate(`/checkout/${refCommandeNettoyee}`);
+                            }, 1000);
+                            
+                            setLoading(false);
+                            return;
+                        }
                         // ENVOYER L'EMAIL DE CONFIRMATION
                         const emailResult = await envoyerEmailConfirmation(
                             { refCommande: refCommandeNettoyee },
@@ -354,7 +372,7 @@ export default function CommandeEtape() {
                         setMessage({
                             ouvre: true,
                             texte: "Vous n'avez pas de commande à créer!. Veuillez séléctionner vos produit à commander.",
-                            statut: "error",
+                            statut: "warning",
                         });
                         setOpen(true);
                 }

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { 
     getDashboardStats, 
-    getSalesData, 
+    // getSalesData, 
     getRecentCommande, 
     getTopProducts 
 } from "@/services/AdminService";

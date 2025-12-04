@@ -68,6 +68,7 @@ class AuthController extends AbstractController
             $client->setPrenomClient($data['prenom']);
             $client->setTelephoneClient($data['telephone']);
             $client->setCiviliteClient($data['civilite']);
+            $client->mettreAjourDate();
 
             if (!empty($data['dateNaissance'])) {
                 try {
@@ -102,6 +103,7 @@ class AuthController extends AbstractController
                         'telephoneClient' => $client->getTelephoneClient(),
                         'civiliteClient' => $client->getCiviliteClient(),
                         'dateNaissance' => $client->getDateNaissance()?->format('Y-m-d'),
+                        'dateInscription' => $client->getDateInscription()?->format('Y-m-d H:i:s'),
                     ]
                     ],
             ], 201);

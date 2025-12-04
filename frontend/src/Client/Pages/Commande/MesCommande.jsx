@@ -20,7 +20,7 @@ const MesCommande = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [expandedCommande, setExpandedCommande] = useState(null);
-    
+    const [dejaConnecte, setDejaConnecte] = useState(false);
     // États pour les filtres
     const [filtreStatut, setFiltreStatut] = useState('tous');
     const [showFiltres, setShowFiltres] = useState(false);
@@ -42,7 +42,21 @@ const MesCommande = () => {
     }, [isAuthenticated, user]);
 
     useEffect(() => {
-        // Appliquer le filtre quand les commandes ou le filtre changent
+        const chargementUser = () => {
+            const local = localStorage.getItem('user');
+            if (local) {
+                const parsedUser = JSON.parse(local);
+                if (parsedUser && parsedUser.client) {
+                    console.log("Utilisateur déjà connecté (MesCommande), chargement des commandes: ", parsedUser);
+                    setDejaConnecte(true);
+                    chargerCommandes();
+                }
+            }
+        };
+        chargementUser();
+    }, []);
+    
+    useEffect(() => {
         filtrerCommandes();
     }, [commandes, filtreStatut]);
 
@@ -171,7 +185,7 @@ const MesCommande = () => {
         setShowFiltres(false);
     };
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !dejaConnecte) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 dark:from-gray-900 dark:to-gray-800 pt-32">
                 <div className="container mx-auto px-4">

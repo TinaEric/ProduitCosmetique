@@ -1,3 +1,4 @@
+import { use } from 'react';
 import { createContext, useContext, useState } from 'react';
 
 const SearchContext = createContext();
@@ -10,6 +11,7 @@ export const SearchProvider = ({ children }) => {
     const [filtreCat, setFiltreCat] = useState('Tous');
     const [filtreStock, setFiltreStock] = useState("Tous")
     const [filterStatus,setFilterStatus] = useState('tous')
+    const [nbrNotification,setNbrNotification] = useState(0)
     const value = {
         searchTerm,
         setSearchTerm,
@@ -20,7 +22,9 @@ export const SearchProvider = ({ children }) => {
         filtreStock,
         setFiltreStock,
         filterStatus,
-        setFilterStatus
+        setFilterStatus,
+        nbrNotification,
+        setNbrNotification
     };
 
     return (

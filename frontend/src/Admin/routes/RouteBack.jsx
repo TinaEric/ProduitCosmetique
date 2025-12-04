@@ -10,6 +10,7 @@ import Commande from "../Pages/Commande/Commande";
 import Paiement from "../Pages/Commande/Paiement";
 import { Command } from "lucide-react";
 import FicheCommande from "../Pages/Commande/FicheCommande";
+import NotificationPage from "../Pages/dashboard/NotificationPage";
 
 const RouteBack = () => {
     return (
@@ -21,7 +22,7 @@ const RouteBack = () => {
                 />
                 <Route  path="settings"  element={<h1 className="title">settings</h1>}
                 />
-                <Route  path="Notification"  element={<h1 className="title">Notification</h1>}
+                <Route  path="Notification"  element={<NotificationPage/>}
                 />
                 <Route  path="Users"  element={<ClientPage />}
                 />

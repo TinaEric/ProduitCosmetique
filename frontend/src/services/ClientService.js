@@ -8,7 +8,7 @@ export const ListeCLient = async () => {
       ) => api.get('/api/client'));
   }
 
-export const NewClient = async (client) => {
+  export const NewClient = async (client) => {
   try {
       const response = await  api.post('/api/auth/register', client);
       if(response.data){

@@ -39,6 +39,7 @@ security:
         - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/admin/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/admin, roles: ROLE_ADMIN }
+        - { path: ^/api/adminNotifie, roles: ROLE_ADMIN }
         - { path: ^/api/client/loginVerifier, roles: PUBLIC_ACCESS }
         - { path: ^/api/client/profile, roles: PUBLIC_ACCESS }
         - { path: ^/api/client/adresse, roles: ROLE_USER }

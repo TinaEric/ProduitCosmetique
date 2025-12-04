@@ -7,6 +7,7 @@ use App\Repository\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use DateTimeImmutable;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
@@ -19,7 +20,7 @@ class Client
 
     #[ORM\OneToOne(inversedBy: 'client', targetEntity: User::class, cascade: ['persist'])]
     #[ORM\JoinColumn(name: 'id_users', referencedColumnName: 'id_users', nullable: false)]
-    #[Groups(["commande:read"])] // Ajout du groupe si vous voulez inclure les infos user
+    #[Groups(["user:me", "client:read","commande:read"])]
     private ?User $user = null; 
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
@@ -38,9 +39,13 @@ class Client
     #[Groups(["user:me", "client:read", "commande:read"])] // Ajout de "commande:read"
     private ?string $civiliteClient = null;
 
-    #[ORM\Column(type: 'date', nullable: true)]
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     #[Groups(["user:me", "client:read", "commande:read"])] // Ajout de "commande:read"
     private ?\DateTimeInterface $dateNaissance = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Groups(["user:me", "client:read", "commande:read"])] 
+    private ?\DateTimeInterface $dateInscription = null;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Adresse::class)]
     #[Groups(["user:me"])]
@@ -76,7 +81,6 @@ class Client
         $this->user = $user;
         return $this;
     }
-    // ... (Autres getters et setters)
     public function getNomClient(): ?string
     {
         return $this->nomClient;
@@ -128,6 +132,16 @@ class Client
         return $this;
     }
 
+    public function getDateInscription(): ?\DateTimeInterface
+    {
+        return $this->dateInscription;
+    }
+
+    public function mettreAjourDate(): self 
+    {
+        $this->dateInscription = new DateTimeImmutable();
+        return $this;
+    }
     /**
      * @return Collection<int, Adresse>
      */

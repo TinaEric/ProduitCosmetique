@@ -209,10 +209,12 @@ class CommandeServices
                 $panier->setCommande($commande);
                 $panier->setProduit($produit);
                 $panier->setQuantite($quantite);
+                $panier->initPrixUnitaireFromProduit();
                 $this->entityManager->persist($panier);
                 $stock = $produit->getStockProduit();
                 $nouveauStock = $stock - $quantite;
                 $produit->setStockProduit($nouveauStock);
+                
                 
                 $produit->setDateMiseAJourProduit(new \DateTimeImmutable());
             }

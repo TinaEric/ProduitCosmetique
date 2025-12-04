@@ -30,7 +30,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $emailUsers = null;
 
     #[ORM\Column(type: 'string', length: 32, nullable: true)]
-    #[Groups(["user:read","commande:read"])] 
+    #[Groups(["user:read","client:read","commande:read"])] 
     private ?string $roleUsers = null; 
 
     #[ORM\OneToOne(mappedBy: 'user', targetEntity: Client::class, cascade: ['persist', 'remove'])]

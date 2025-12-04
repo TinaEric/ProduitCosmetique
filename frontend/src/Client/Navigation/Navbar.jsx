@@ -47,6 +47,22 @@ const Navbar = () => {
     const [nomUserConncte, setNomUserConnecte] = useState("");
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+     const [dejaConnecte, setDejaConnecte] = useState(false);
+    const [userProviseur, setUserProviseur] = useState(null);
+    useEffect(() => {
+            const chargementUser = () => {
+                const local = localStorage.getItem('user');
+                if (local) {
+                    const parsedUser = JSON.parse(local);
+                    if (parsedUser && parsedUser.client) {
+                        setDejaConnecte(true);
+                        setUserProviseur(parsedUser);
+                        console.log("Utilisateur déjà connecté (Navbar), chargement des commandes: ", parsedUser);
+                    }
+                }
+            };
+            chargementUser();
+        }, []);
 
     // États pour la connexion
     const [loginData, setLoginData] = useState({
@@ -320,12 +336,15 @@ const Navbar = () => {
     };
 
     useEffect(() => {
-        if (user && user.client) {
-            setNomUserConnecte(user.client.nomClient + " " + user.client.prenomClient);
+        if ((user && user.client) || (user && user.client)) {
+            setNomUserConnecte(
+                (user.client.nomClient + " " + user.client.prenomClient) || 
+                (userProviseur.client.nomClient + " " + userProviseur.client.prenomClient)
+            );
         } else {
             setNomUserConnecte("");
         }
-    }, [user]);
+    }, [user,userProviseur]);
     const handleClose = (event, reason) => {
         if (reason === "clickaway") {
             return;
@@ -404,7 +423,7 @@ const Navbar = () => {
                             <div className="h-6 w-px bg-gray-950/10 dark:bg-white/10"></div>
 
                             {/* Connexion / Profil */}
-                            {isAuthenticated && user?.roleUsers === "ROLE_USER" ? (
+                            {(isAuthenticated && user?.roleUsers === "ROLE_USER") || (dejaConnecte && userProviseur.roleUsers === "ROLE_USER") ? (
                                 <div className="dropdown dropdown-end">
                                     <label
                                         tabIndex={0}

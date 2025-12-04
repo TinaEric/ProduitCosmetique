@@ -68,4 +68,25 @@ class ProduitRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    public function findProduitStockAlerte():array
+    {
+        return $this->createQueryBuilder('p')
+        ->leftJoin('p.categorie', 'categorie')
+        ->addSelect('categorie')
+        ->where('p.stockProduit < 10')
+        ->andWhere('p.stockProduit > 0')
+        ->orderBy('p.stockProduit', 'ASC')
+        ->getQuery()
+        ->getResult();
+    }
+    public function findProduitRuptureStock():array
+    {
+        return $this->createQueryBuilder('p')
+        ->leftJoin('p.categorie', 'categorie')
+        ->addSelect('categorie')
+        ->where('p.stockProduit <= 0')
+        ->orderBy('p.dateMiseAJourProduit', 'DESC')
+        ->getQuery()
+        ->getResult();
+    }
 }

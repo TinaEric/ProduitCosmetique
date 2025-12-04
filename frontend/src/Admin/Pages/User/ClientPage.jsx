@@ -46,7 +46,7 @@ const ClientPage = () => {
             const donnes = await ClientListe();
             if (donnes.data) {
                 setClientTab(donnes.data);
-                console.log("Liste Client : ", donnes.data);
+                console.log("Data Client : ", donnes.data);
             } else {
                 setMessage({
                     ouvre: true,
@@ -111,6 +111,9 @@ const ClientPage = () => {
     }, []);
 
     const ExtractionDate = (dateTimeString, extract = "date", format = false) => {
+        if(dateTimeString == null || dateTimeString === ''){
+            return 'date non renseignée';
+        }
         const mois = [
             'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
             'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
@@ -134,7 +137,7 @@ const ClientPage = () => {
         }
 
       }
-      
+
         useEffect(() => {
             let resultat = [...ClientTab];
     
@@ -295,24 +298,26 @@ const ClientPage = () => {
                                                 />
                                             </td>
                                             <td className="table-cell">
-                                                <div className="text-sm font-medium text-slate-900 dark:text-slate-50">{client.refClient}</div>
-                                            </td>
-                                            <td className="table-cell">
-                                                <div className="text-sm text-gray-500">{client.civiliteClient}</div>
+                                                <div className="text-sm font-medium text-slate-900 dark:text-slate-50">
+                                                    {client.refClient}</div>
                                             </td>
                                             <td className="table-cell">
                                                 <div className="text-sm text-gray-900 dark:text-slate-50">
-                                                    {client.prenomClient} {client.nomClient}
+                                                    {client.civiliteClient}</div>
+                                            </td>
+                                            <td className="table-cell">
+                                                <div className="text-sm text-gray-900 dark:text-slate-50">
+                                                    {client.nomClient} {client.prenomClient}
                                                 </div>
                                             </td>
                                             <td className="table-cell">
-                                                <div className="text-sm text-gray-500">
-                                                    {/* {client.user.emailUser }  */}
-                                                    @gmail.com
+                                                <div className="text-sm text-gray-900 dark:text-slate-50">
+                                                    {client.user.emailUsers }
                                                 </div>
                                             </td>
                                             <td className="table-cell">
-                                                <div className="text-sm text-gray-500">{client.telephoneClient}</div>
+                                                <div className="text-sm text-gray-900 dark:text-slate-50">
+                                                    {client.telephoneClient}</div>
                                             </td>
                                             <td className="table-cell">
                                                 <div className="text-sm text-gray-900 dark:text-slate-50">
@@ -323,6 +328,7 @@ const ClientPage = () => {
                                                 <div className="text-sm text-gray-900 dark:text-slate-50">
                                                     {ExtractionDate(client.dateInscription, "date", true)}
                                                 </div>
+                                                <div className="text-sm text-gray-500">{ExtractionDate(client.dateInscription,"time")}</div>
                                             </td>
                                             <td className="table-cell">
                                                 <button
@@ -336,7 +342,7 @@ const ClientPage = () => {
                                     ))
                                 ) : (
                                     <tr key="vide">
-                                        <td colSpan="7">
+                                        <td colSpan="8">
                                             <div className="flex flex-col items-center justify-center p-5 text-gray-500 dark:text-gray-500">
                                                 {loading ? (
                                                     <div className="flex h-64 flex-row items-center justify-center gap-2">

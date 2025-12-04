@@ -8,9 +8,11 @@ import Logoligth from "../assets/logo-light.svg";
 import spray from "../assets/spray.png"
 import { cn } from "../utils/cn";
 import PropTypes from "prop-types";
-
+import { useSearch } from "@/Admin/contexts/SearchContext";
+import Badge from "@mui/material/Badge";
 // forwardRef
 export const Sidebar = forwardRef(({ collapsed }, ref) => {
+     const { nbrNotification} = useSearch();
     return (
         <aside
             ref={ref}
@@ -43,13 +45,25 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
                                         collapsed && "md:w-[45px]",
                                         isActive && "active" 
                                     )
-                                }
+                                } 
                             >
                                 <link.icon
                                     size={22}
                                     className="flex-shrink-0"
                                 />
-                                {!collapsed && <p className="whitespace-nowrap">{link.label}</p>}
+                                {!collapsed && <p className="whitespace-nowrap">
+                                    { link.label !== "Notifications" ?
+                                        link.label: 
+                                        (
+                                                <Badge
+                                                    badgeContent={nbrNotification}
+                                                    color="info"
+                                                >
+                                                    <span>{link.label}</span>
+                                                </Badge>
+                                        )
+                                    }
+                                </p>}
                             </NavLink>
                         ))}
                     </nav>

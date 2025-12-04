@@ -10,6 +10,8 @@ import Inscription from '../Pages/Profil/Inscription';
 import ProduitClient from '../Pages/Produit/ProduitClient';
 import CommandeEtape from '../Pages/Commande/CommandeEtape';
 import ProfilUser from '../Pages/Profil/ProfilUser';
+import CheckoutStripe from '../Pages/Paiement/CheckoutStripe';
+import PaymentSuccess from '../Pages/Paiement/PaymentSuccess';
 
 const AdminRoute = () => {
     return (
@@ -22,6 +24,8 @@ const AdminRoute = () => {
                 <Route path='mesCommande' element={<MesCommande />}/>
                 <Route path='passerCommande' element={<CommandeEtape />}/>
                 <Route path='profilUser' element={<ProfilUser />}/>
+                <Route path='checkout/:refCommande' element={<CheckoutStripe />}/>
+                <Route path='payment-success' element={<PaymentSuccess />}/>
             </Route>
             <Route path='*' element={<NotFound />}/>
         </Routes>

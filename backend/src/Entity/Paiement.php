@@ -7,6 +7,7 @@ use App\Repository\PaiementRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use DateTimeImmutable;
 
 #[ORM\Entity(repositoryClass: PaiementRepository::class)]
 class Paiement
@@ -29,7 +30,7 @@ class Paiement
     #[Groups(['commande:read'])]
     private ?string $statutPaiment = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     private ?\DateTimeInterface $datePaiment = null;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
@@ -45,6 +46,11 @@ class Paiement
         return $this->idPaiement;
     }
 
+    public function mettreAjourDate(): self 
+    {
+        $this->datePaiment = new DateTimeImmutable();
+        return $this;
+    }
 
     public function getCommande(): ?Commande
     {

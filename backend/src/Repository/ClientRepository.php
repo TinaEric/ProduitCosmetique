@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Client;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * @extends ServiceEntityRepository<Client>
@@ -39,6 +40,13 @@ class ClientRepository extends ServiceEntityRepository
         return $newCode;
     }
 
+    public function getClientUser(){
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.user', 'u')
+            ->addSelect('u')
+            ->getQuery()
+            ->getResult();
+    }
     
     public function RefCommandeSuivant(string $code): string
     {
@@ -48,4 +56,28 @@ class ClientRepository extends ServiceEntityRepository
         $newCode = "CMD" . $dateNow . $random . $code;
         return $newCode;
     }
+    public function findRecentUsers(\DateTime $dateLimit): array
+    {
+        return $this->createQueryBuilder('c')
+        ->leftJoin('c.user', 'user')
+        ->addSelect('user')
+        ->where('c.dateInscription >= :dateLimit')
+        ->setParameter('dateLimit', $dateLimit)
+        ->orderBy('c.dateInscription', 'DESC')
+        ->getQuery()
+        ->getResult();
+    }
+
+    public function findRecentClient(): array
+    {
+        return $this->createQueryBuilder('c')
+            // ->leftJoin('c.user', 'u')
+            // ->addSelect('u')
+            ->select('c')   
+            ->where("c.dateInscription >= DATE_SUB(CURRENT_TIMESTAMP(), 24, 'HOUR')")
+            ->orderBy('c.dateInscription', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
 }

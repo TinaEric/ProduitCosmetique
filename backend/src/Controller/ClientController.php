@@ -30,7 +30,7 @@ final class ClientController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
 
         try {
-            $clients = $repository->findAll();
+            $clients = $repository->getClientUser();
 
             if (empty($clients)) { 
                 return $this->json([
@@ -102,6 +102,7 @@ final class ClientController extends AbstractController
                     'telephoneClient' => $client->getTelephoneClient(),
                     'civiliteClient' => $client->getCiviliteClient(),
                     'dateNaissance' => $client->getDateNaissance()?->format('Y-m-d'),
+                    'dateInscription' => $client->getDateInscription()?->format('Y-m-d H:i:s'),
                 ]
                 ],
             'message'   => "OK, Profil d'Utilisateur trouvé ",
@@ -214,6 +215,7 @@ final class ClientController extends AbstractController
                 'telephoneClient' => $client->getTelephoneClient(),
                 'civiliteClient' => $client->getCiviliteClient(),
                 'dateNaissance' => $client->getDateNaissance()?->format('Y-m-d'),
+                'dateInscription' => $client->getDateInscription()?->format('Y-m-d H:i:s'),
             ]
         ]);
     }

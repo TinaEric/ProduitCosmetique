@@ -109,4 +109,17 @@ class CommandeRepository extends ServiceEntityRepository
         return $results;
     }
    
+    public function findRecentOrders(\DateTime $dateLimit): array
+    {
+        return $this->createQueryBuilder('c')
+        ->leftJoin('c.client', 'client')
+        ->addSelect('client')
+        ->where('c.dateCommande >= :dateLimit')
+        ->setParameter('dateLimit', $dateLimit)
+        ->andWhere('c.statutCommande IN (:statuses)')
+        ->setParameter('statuses', ['INITIALISE', 'EN_ATTENTE_PAIEMENT'])
+        ->orderBy('c.dateCommande', 'DESC')
+        ->getQuery()
+        ->getResult();
+    }
 }

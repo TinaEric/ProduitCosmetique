@@ -36,7 +36,7 @@ export default function PaymentSuccess() {
             variant="contained"
             color="primary"
             fullWidth
-            onClick={() => navigate('/mes-commandes')}
+            onClick={() => navigate('/MesCommande')}
           >
             Voir mes commandes
           </Button>

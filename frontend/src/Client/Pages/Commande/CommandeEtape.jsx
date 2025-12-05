@@ -326,18 +326,18 @@ export default function CommandeEtape() {
                             return;
                         }
                         // ENVOYER L'EMAIL DE CONFIRMATION
-                        const emailResult = await envoyerEmailConfirmation(
-                            { refCommande: refCommandeNettoyee },
-                            formData.etape1.email
-                        );
+                        // const emailResult = await envoyerEmailConfirmation(
+                        //     { refCommande: refCommandeNettoyee },
+                        //     formData.etape1.email
+                        // );
 
-                        let messageText = "Votre commande a été passée avec succès. En attente de votre paiement.";
+                        // let messageText = "Votre commande a été passée avec succès. En attente de votre paiement.";
                         
-                        if (emailResult.success) {
-                            messageText += " Un email de confirmation vous a été envoyé.";
-                        } else {
-                            messageText += " (Note: L'email de confirmation n'a pas pu être envoyé)";
-                        }
+                        // if (emailResult.success) {
+                        //     messageText += " Un email de confirmation vous a été envoyé.";
+                        // } else {
+                        //     messageText += " (Note: L'email de confirmation n'a pas pu être envoyé)";
+                        // }
 
                         setMessage({
                             ouvre: true,

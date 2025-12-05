@@ -32,6 +32,7 @@ export default function CheckoutForm({ refCommande }) {
 
     if (error) {
       setMessage({ type: 'error', text: error.message });
+      console.log( "Erreur dans PaimentIntent: ",error)
       setIsLoading(false);
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         try {
@@ -39,18 +40,23 @@ export default function CheckoutForm({ refCommande }) {
             payment_intent_id: paymentIntent.id,
             ref_commande: refCommande
           }
+          console.log("Data Envoyer au backend pour Confirm Commande: ", confirmData)
           const result = await ConfirmPaiement(confirmData);
       
           if (result.data) {
             setMessage({ type: 'success', text: 'Paiement réussi ! Redirection...' });
+            console.log("Confirm paiement TERMINE!")
+            // console.log('✓ Email envoyé:', result.data.email_sent);
             setTimeout(() => {
               window.location.href = `/payment-success?ref=${refCommande}`;
             }, 1500);
           } else {
+            console.log("Erreur dans Confirme Paiemt: ",result.error)
             setMessage({ type: 'error', text: 'Erreur lors de la confirmation' });
           }
         } catch (err) {
           setMessage({ type: 'error', text: 'Erreur réseau' });
+          console.log("Erreur pour la confirm Paiement (Try/Catch) :", err)
         }
       
       setIsLoading(false);

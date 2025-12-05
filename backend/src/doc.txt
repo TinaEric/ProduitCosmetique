@@ -16,3 +16,28 @@ lexik_jwt_authentication:
     # -----------------------------------------------------------------------
     user_id_claim: email
     token_ttl: 3600
+
+
+
+    <?php
+
+// require 'vendor/autoload.php'; // Assurez-vous que Stripe est installé via Composer
+
+// use Stripe\Stripe;
+// use Stripe\PaymentIntent;
+
+// try {
+    // Initialisez Stripe avec votre clé secrète
+    // Stripe::setApiKey('sk_test_51SZ34yBMxT9I3UmVmug3RRMbuwu9PmhcTmiNxSZ6G8vqVHqtATKhipbeEE4Bzb0fJCycnyuxmuchQiVMwa61SNVa00UDreWAyk');
+
+    // Créez un PaymentIntent de test
+    // $paymentIntent = PaymentIntent::create([
+        // 'amount' => 1000, // Montant en centimes (10.00 EUR)
+        // 'currency' => 'eur',
+        // 'payment_method_types' => ['card'],
+    // ]);
+
+    // echo "Connexion réussie ! Client Secret : " . $paymentIntent->client_secret;
+// } catch (\Exception $e) {
+    // echo "Erreur : " . $e->getMessage();
+// } -->

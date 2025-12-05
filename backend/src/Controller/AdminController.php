@@ -11,6 +11,7 @@ use App\Repository\ClientRepository;
 use App\Repository\CommandeRepository;
 use App\Repository\PanierRepository;
 use App\Repository\ProduitRepository;
+use App\Service\DashboardService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -44,16 +45,18 @@ class AdminController extends AbstractController
             $outOfStockProducts = $em->getRepository(Produit::class)->findProduitRuptureStock();
             $allProducts = array_merge($criticalProducts, $outOfStockProducts);  // Combiner les produits en alerte et en rupture
 
-            // $jsonContent = $serializer->serialize($recentClients, 'json', [
-            //     'groups' => 'client:read'
-            // ]);
+            $jsonContent = $serializer->serialize($recentClients, 'json', [
+                'groups' => 'client:read'
+            ]);
+            $clientData = json_decode($jsonContent, true);
+            foreach ($clientData as &$client) {
+                $client['unread'] = true; // Ajout de la valeur unread=true pour chaque élément
+            }
 
-
-            // Formater les données
             $notifications = [
                 'commandeNotifie' => $this->formatOrders($recentOrders),
-                'clientNotifie' => $this->formatClients($recentClients),
-                'clientNotifies' => $recentClients,
+                // 'clientNotifie' => $this->formatClients($recentClients),
+                'clientNotifie' => $clientData,
                 'produitNotifie' => $this->formatProducts($allProducts),
             ];
 
@@ -256,6 +259,81 @@ class AdminController extends AbstractController
         };
     }
 
+    #[Route('/dashboard/stats', name: 'admin_dashboard_stats', methods: ['GET'])]
+    public function getDashboard(DashboardService $dashboardService): JsonResponse
+    {
+        try {
+            $stats = $dashboardService->getDashboardStats();
+            
+            return $this->json([
+                'success' => true,
+                'data' => $stats
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    #[Route('/dashboard/sales', name: 'admin_dashboard_sales', methods: ['GET'])]
+    public function getSalesData(DashboardService $dashboardService): JsonResponse
+    {
+        try {
+            $salesData = $dashboardService->getSalesData();
+            
+            return $this->json([
+                'success' => true,
+                'data' => $salesData
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    #[Route('/statHome', name: 'admin_statHome_dashboard', methods: ['GET'])]
+    public function getDashboardStats(
+        EntityManagerInterface $entityManager,
+
+    ): JsonResponse
+    {
+        try {
+            $totalClient = $entityManager->getRepository(Client::class)->count([]);
+            $totalProduit = $entityManager->getRepository(Produit::class)->count([]);
+            $commandeRepo = $entityManager->getRepository(Commande::class);
+            $totalCommande = $commandeRepo->count([]);
+            $totalRevenue = $commandeRepo->getTotalRevenue();
+
+            $stats = [
+                'totalClient' => $totalClient,
+                'totalProduit' => $totalProduit,
+                'totalCommande' => $totalCommande,
+                'totalRevenue' => (float) $totalRevenue,
+            ];
+
+            return new JsonResponse([
+                'message' => 'Statistiques du tableau de bord récupérées avec succès.',
+                'data' => $stats,
+                'status' => 'success'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne du serveur: ' . $e->getMessage(),
+                    'status' => 'error'
+                ]
+            ], 500);
+        }
+    }
+
+
+
     #[Route('/recentCommande', name: 'admnin_recentCommande', methods: ['GET'])]
     public function recentCommande(CommandeRepository $cmd): JsonResponse
     {
@@ -270,7 +348,6 @@ class AdminController extends AbstractController
                     'message' => 'Utilisateur non connecté ou non autorisé.',
                     'status' => 'error'
                 ]
-               ,
             ], JsonResponse::HTTP_UNAUTHORIZED);
         }
 

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Commande;
 use App\Entity\Paiement;
 use App\Repository\CommandeRepository;
+use App\Service\CommandeEmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,13 +15,13 @@ use Stripe\Stripe;
 use Stripe\PaymentIntent;
 
 #[Route('/api/payment')]
-class PaymentController extends AbstractController
+class PaiementController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private CommandeRepository $commandeRepository
+        private CommandeRepository $commandeRepository,
+        private CommandeEmailService $emailService  
     ) {
-        // Initialiser Stripe avec la clé secrète
         Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
     }
 
@@ -42,16 +43,14 @@ class PaymentController extends AbstractController
                         'status' => 'error'
                     ]
                 ], 404);
-            }
+            } 
             
             // Calculer le montant total (paniers + frais de livraison)
             $montantTotal = 0;
             foreach ($commande->getPaniers() as $panier) {
-                // Assuming Panier has getQuantite() and getProduit()->getPrix()
-                $montantTotal += $panier->getQuantite() * $panier->getProduit()->getPrix();
+                $montantTotal += $panier->getQuantite() * $panier->getProduit()->getPrixProduit();
             }
-            
-            // Ajouter les frais de livraison
+            // calcule avec le frais de livraison
             if ($commande->getFraisLivraison()) {
                 $montantTotal += floatval($commande->getFraisLivraison());
             }
@@ -74,25 +73,25 @@ class PaymentController extends AbstractController
 
             // Mettre à jour la commande
             $commande->setMethodePaiement('stripe');
-            $commande->setStatutCommande('EN_ATTENTE_DE_PAIEMENT');
+            $commande->setStatutCommande('EN_ATTENTE_PAIEMENT');
             $commande->mettreAjourDate();
             $this->entityManager->flush();
 
             return $this->json([
                 'status' => 'success',
-                'message' => 'Paiement confirmé avec succès',
-                'data' =>[
+                'message' => 'Payment Intent créé avec succès',
+                'data' => [
                     'clientSecret' => $paymentIntent->client_secret,
                     'paymentIntentId' => $paymentIntent->id,
                     'amount' => $montantTotal
                 ]
-            ],200);
+            ], 200);
 
         } catch (\Exception $e) {
             return $this->json([
                 'error' => [
                     'code' => 500,
-                    'message' => 'Erreur lors de la creation paiement : ' . $e->getMessage(),
+                    'message' => 'Erreur lors de la création paiement : ' . $e->getMessage(),
                     'status' => 'error'
                 ]
             ], 500);
@@ -127,7 +126,7 @@ class PaymentController extends AbstractController
                 // Créer l'entité Paiement
                 $paiement = new Paiement();
                 $paiement->setCommande($commande);
-                $paiement->setMontantPaye($paymentIntent->amount / 100); // Convertir centimes en euros
+                $paiement->setMontantPaye($paymentIntent->amount / 100);
                 $paiement->setModePaiment('stripe');
                 $paiement->setStatutPaiment('VALIDÉ');
                 $paiement->mettreAjourDate();
@@ -140,16 +139,31 @@ class PaymentController extends AbstractController
                 $this->entityManager->persist($paiement);
                 $this->entityManager->flush();
                 
+                // Envoyer un email de confirmation de commande
+                try {
+                    $this->emailService->sendCommandeConfirmation($commande);
+                    $emailSent = true;
+                    $emailError = null;
+                } catch (\Exception $e) {
+                    // Log l'erreur mais ne bloque pas la confirmation de paiement
+                    $emailSent = false;
+                    $emailError = $e->getMessage();
+                    error_log('Erreur envoi email: ' . $e->getMessage());
+                }
+                
                 return $this->json([
                     'status' => 'success',
                     'message' => 'Paiement confirmé avec succès',
                     'data' => [
                         'paiement_id' => $paiement->getIdPaiement(),
                         'montant_paye' => $paiement->getMontantPaye(),
-                        'ref_commande' => $refCommande
+                        'ref_commande' => $refCommande,
+                        'email_sent' => $emailSent,
+                        'email_error' => $emailError
                     ],
-                ],200);
+                ], 200);
             }
+            
             return $this->json([
                 'status' => 'success',
                 'message' => 'Paiement en attente',
@@ -157,8 +171,7 @@ class PaymentController extends AbstractController
                     'status' => 'pending',
                     'payment_intent_status' => $paymentIntent->status
                 ],
-                
-            ],200);
+            ], 200);
 
         } catch (\Exception $e) {
             return $this->json([
@@ -170,6 +183,34 @@ class PaymentController extends AbstractController
             ], 500);
         }
     }
+
+    #[Route('/test-email-direct', name: 'test_email_direct', methods: ['GET'])]
+public function testEmailDirect(): JsonResponse
+{
+    try {
+        // Récupérer une commande existante
+        $commande = $this->commandeRepository->findOneBy(['statutCommande' => 'PAYÉE']);
+        
+        if (!$commande) {
+            return $this->json(['error' => 'Aucune commande trouvée'], 404);
+        }
+        
+        // Tester l'envoi d'email
+        $this->emailService->sendCommandeConfirmation($commande);
+        
+        return $this->json([
+            'success' => true,
+            'message' => 'Email envoyé avec succès',
+            'ref_commande' => $commande->getRefCommande()
+        ]);
+        
+    } catch (\Exception $e) {
+        return $this->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+}
 
     #[Route('/webhook', name: 'stripe_webhook', methods: ['POST'])]
     public function handleWebhook(Request $request): JsonResponse
@@ -189,14 +230,14 @@ class PaymentController extends AbstractController
             switch ($event->type) {
                 case 'payment_intent.succeeded':
                     $paymentIntent = $event->data->object;
-                    $refCommande = $paymentIntent->metadata->ref_commande;
+                    $refCommande = $paymentIntent->metadata->refCommande;
                     
                     $commande = $this->commandeRepository->find($refCommande);
                     if ($commande) {
-                        // Créer le paiement si pas déjà fait
+                        // Vérifier si le paiement n'existe pas déjà
                         $paiementExiste = false;
                         foreach ($commande->getPaiements() as $p) {
-                            if ($p->getTransactionId() === $paymentIntent->id) {
+                            if ($p->getReferencePaiment() === $paymentIntent->id) {
                                 $paiementExiste = true;
                                 break;
                             }
@@ -216,13 +257,20 @@ class PaymentController extends AbstractController
                             
                             $this->entityManager->persist($paiement);
                             $this->entityManager->flush();
+                            
+                            // Envoie de l'email de conformation (via webhook)
+                            try {
+                                $this->emailService->sendCommandeConfirmation($commande);
+                            } catch (\Exception $e) {
+                                error_log('Erreur envoi email (webhook): ' . $e->getMessage());
+                            }
                         }
                     }
                     break;
                 
                 case 'payment_intent.payment_failed':
                     $paymentIntent = $event->data->object;
-                    $refCommande = $paymentIntent->metadata->ref_commande;
+                    $refCommande = $paymentIntent->metadata->refCommande;
                     
                     $commande = $this->commandeRepository->find($refCommande);
                     if ($commande) {
@@ -235,8 +283,8 @@ class PaymentController extends AbstractController
 
             return $this->json([
                 'status' => 'success',
-                'message' => 'Paiement confirmé avec succès'
-            ],200);
+                'message' => 'Webhook traité avec succès'
+            ], 200);
 
         } catch (\Exception $e) {
             return $this->json([

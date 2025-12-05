@@ -1,27 +1,43 @@
 <?php
+
 namespace App\Service;
 
 use Stripe\Stripe;
-use Stripe\Checkout\Session;
+use Stripe\PaymentIntent;
+use Stripe\Webhook;
+use Stripe\Exception\SignatureVerificationException;
 
 class StripeService
 {
-    public function __construct(string $secretKey)
+    private string $secretKey;
+    private string $webhookSecret;
+
+    public function __construct(string $secretKey, string $webhookSecret)
     {
-        // Initialiser Stripe avec la clé secrète
-        Stripe::setApiKey($secretKey);
+        $this->secretKey = $secretKey;
+        $this->webhookSecret = $webhookSecret;
+        Stripe::setApiKey($this->secretKey);
     }
 
-    public function createCheckoutSession(array $lineItems, string $mode, string $successUrl, string $cancelUrl): Session
+    public function createPaymentIntent(int $amount, string $currency = 'eur', array $metadata = []): PaymentIntent
     {
-        return Session::create([
-            'payment_method_types' => ['card'],
-            'line_items' => $lineItems,
-            'mode' => $mode, // 'payment' pour un achat unique ou 'subscription'
-            'success_url' => $successUrl . '?session_id={CHECKOUT_SESSION_ID}', // Ajouter l'ID pour la validation future
-            'cancel_url' => $cancelUrl,
-            // Optionnel : ajouter l'ID de votre commande interne
-            // 'client_reference_id' => $internalOrderId,
+        return PaymentIntent::create([
+            'amount' => $amount, // Montant en centimes (ex: 1000 = 10.00€)
+            'currency' => $currency,
+            'metadata' => $metadata,
+            'automatic_payment_methods' => [
+                'enabled' => true,
+            ],
         ]);
+    }
+
+    public function retrievePaymentIntent(string $paymentIntentId): PaymentIntent
+    {
+        return PaymentIntent::retrieve($paymentIntentId);
+    }
+
+    public function verifyWebhookSignature(string $payload, string $signature): \Stripe\Event
+    {
+        return Webhook::constructEvent($payload, $signature, $this->webhookSecret);
     }
 }

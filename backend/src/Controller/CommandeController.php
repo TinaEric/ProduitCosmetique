@@ -137,14 +137,22 @@ class CommandeController extends AbstractController
                     ]
                 ], Response::HTTP_FORBIDDEN);
             }
-
-            // Utiliser serialize au lieu de normalize
+            $montantTotal = 0;
+            foreach ($commande->getPaniers() as $panier) {
+                $montantTotal += $panier->getQuantite() * $panier->getProduit()->getPrixProduit();
+            }
+            if ($commande->getFraisLivraison()) {
+                $montantTotal += floatval($commande->getFraisLivraison());
+            }
+            
             $data = json_decode($this->serializer->serialize($commande, 'json', [
                 'groups' => ['commande:read'],
                 AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object) {
                     return $object->getRefCommande();
                 }
             ]), true);
+
+            $data['montantTotal'] = $montantTotal; // Ajouter montantTotal dans la réponse JSON
 
             return $this->json([
                 'data' => $data,

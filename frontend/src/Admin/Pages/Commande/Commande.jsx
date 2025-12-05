@@ -62,8 +62,8 @@ const Commande = () => {
               return "INITIALISE";
           case "livrée":
               return "LIVREE";
-          case "expédiée":
-              return "EXPEDIEE"; 
+          case "payée":
+              return "PAYÉE"; 
           case "en cours":
               return"EN_COURS";
           case "annulée":
@@ -91,8 +91,8 @@ const Commande = () => {
             return "Inititalise";
         case "LIVREE":
             return "Livrée";
-        case "EXPEDIEE":
-            return "Expédiée"; 
+        case "PAYÉE":
+            return "Payée"; 
         case "EN_COURS":
             return"En cours";
         case "ANNULER":
@@ -111,7 +111,7 @@ const Commande = () => {
                 return `${baseClasses} bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200`;
             case "LIVREE":
                 return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
-            case "EXPEDIEE":
+            case "PAYÉE":
                 return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-slate-800 dark:text-blue-600`;
             case "EN_COURS":
                 return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
@@ -139,7 +139,7 @@ const Commande = () => {
             <div className="mb-3 rounded-lg transition-colors bg-white dark:bg-slate-900 p-4 shadow">
                 <div className="flex flex-wrap items-center gap-4">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filtrer par statut :</span>
-                    {["tous", "en attente","inititalise", "en cours", "expédiée", "livrée", "annulée"].map((status) => (
+                    {["tous", "en attente","inititalise", "en cours", "payée", "livrée", "annulée"].map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilterStatus(statutTransforme(status))}

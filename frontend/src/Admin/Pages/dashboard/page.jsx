@@ -124,11 +124,12 @@ const DashboardPage = () => {
             setLoading(true);
             const Result = await getDashboardStats()
             if (Result.data){
+                console.log("Dashboard Stats: ", Result.data)
                 setStats({
                     totalClient : Result.data.totalClient,
                     totalProduit : Result.data.totalProduit,
                     totalCommande: Result.data.totalCommande,
-                    totalRevenue: Result.data.totalRevenus[0].totalRevenus
+                    totalRevenue: Result.data.totalRevenue
                 })
             }else{
                 console.log("Result.error: ", Result.error)
@@ -325,6 +326,8 @@ const DashboardPage = () => {
                 return 'badge-warning';
             case 'ANNULEE':
                 return 'badge-error';
+            case 'PAYÉE':
+                return 'badge-success';
             default:
                 return 'badge-ghost';
         }
@@ -342,6 +345,8 @@ const DashboardPage = () => {
                 return 'En atente Paiement';
             case 'ANNULEE':
                 return 'Annulé';
+            case 'PAYÉE':
+                return 'payée';
             default:
                 return 'INVALIDE';
         }

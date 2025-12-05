@@ -8,5 +8,6 @@ export const getcommandeDetails = async (refCommande) => {
     return await verifierReponse(() =>  api.get(`/api/commandes/${refCommande}`));
 }
 export const createPaymentIntent = async (refCommande) => {
-    return await verifierReponse(() =>  api.post('/api/payment/create-payment-intent', refCommande ));
+    console.log('createPaymentIntent refCommande:', refCommande);
+    return await verifierReponse(() =>  api.post('/api/payment/create-payment-intent', refCommande));
 }

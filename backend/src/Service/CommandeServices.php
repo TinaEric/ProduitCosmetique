@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Client;
 use App\Entity\Commande;
 use App\Entity\Panier;
+use App\Entity\Paiement;
 use App\Entity\Adresse;
 use App\Entity\Produit;
 use App\Repository\ClientRepository;
@@ -221,8 +222,29 @@ class CommandeServices
             $commande->setMethodeLivraison($methodeLivraison);
             $commande->setFraisLivraison($fraisLivraison);
             $commande->setMethodePaiement($methodePaiement);
-            $commande->setStatutCommande('EN_ATTENTE_PAIEMENT');
+            if ($methodePaiement === "especes") {
+                $commande->setStatutCommande('EN_COURS');
+                $montantTotal = 0;
+                foreach ($commande->getPaniers() as $panier) {
+                    $montantTotal += $panier->getQuantite() * $panier->getProduit()->getPrixProduit();
+                }
+                if ($commande->getFraisLivraison()) {
+                    $montantTotal += floatval($commande->getFraisLivraison());
+                }
+                
+                $paiement = new Paiement();
+                $paiement->setCommande($commande);
+                $paiement->setMontantPaye($montantTotal);
+                $paiement->setModePaiment('especes');
+                $paiement->setStatutPaiment('EN_ATTENTE_LIVRAISON');
+                $paiement->mettreAjourDate();
+                $paiement->setReferencePaiment("Via Especes-".uniqid());
+                $this->entityManager->persist($paiement);
+            }else{
+                $commande->setStatutCommande('EN_ATTENTE_PAIEMENT');
+            }
             $commande->mettreAjourDate();
+
             $this->entityManager->flush();
             $this->entityManager->commit();
 

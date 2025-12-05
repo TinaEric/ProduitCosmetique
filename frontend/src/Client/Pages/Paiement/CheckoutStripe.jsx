@@ -18,22 +18,31 @@ export default function CheckoutStripe() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!refCommande) {
+      setError('Référence de commande manquante');
+      setLoading(false);
+      return;
+    }
+
     const initPayment = async () => {
       try {
         const commandeResponse = await getcommandeDetails(refCommande);
-        if (commandeResponse.data){
+        if (commandeResponse.data) {
           setCommandeData(commandeResponse.data);
-        }else{
+        } else {
           setError('Aucune donnée de commande trouvée');
-          console.log("Erreur dans Get Commande: ", commandeResponse);
+          console.log('Erreur dans Get Commande: ', commandeResponse);
         }
+        const reference = {
+          refCommande: refCommande
+        }
+        const paymentResponse = await createPaymentIntent(reference);
 
-        const paymentResponse = await createPaymentIntent(refCommande );
-        if (paymentResponse.data){
+        if (paymentResponse.data) {
           setClientSecret(paymentResponse.data.clientSecret);
-        }else{
-          setError('Aucune donnée de paiement trouvée')
-          console.log("Erreur dans Create Payement: ", paymentResponse);
+        } else {
+          setError('Aucune donnée de paiement trouvée');
+          console.log('Erreur dans Create Payement: ', paymentResponse);
         }
         setLoading(false);
       } catch (error) {
@@ -43,12 +52,7 @@ export default function CheckoutStripe() {
       }
     };
 
-    if (refCommande) {
-      initPayment();
-    } else {
-      setError('Référence de commande manquante');
-      setLoading(false);
-    }
+    initPayment();
   }, [refCommande]);
 
   const appearance = {
@@ -110,8 +114,7 @@ export default function CheckoutStripe() {
                 <div className="flex justify-between border-t pt-2">
                   <span className="font-bold">Total:</span>
                   <span className="font-bold">
-                    {/* Calculer le total depuis commandeData */}
-                    {commandeData.total?.toFixed(2) || '0.00'} Ar
+                    {commandeData.montantTotal?.toFixed(2) || '0.00'} Ar
                   </span>
                 </div>
               </>

@@ -13,17 +13,15 @@ class PaiementRepository extends ServiceEntityRepository
         parent::__construct($registry, Paiement::class);
     }
 
-    // Vous pouvez ajouter ici des méthodes de recherche spécifiques à l'entité Client
-    // Exemple : Trouver un client par son ID_USERS (la clé étrangère)
-    /*
-    public function findOneByUser(User $user): ?Client
+    public function findAllWithCommande(): array
     {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.user = :user')
-            ->setParameter('user', $user)
+        return $this->createQueryBuilder('p')
+            ->leftJoin('p.commande', 'c')
+            ->leftJoin('c.client', 'cl')
+            ->addSelect('c')
+            ->addSelect('cl')
+            ->orderBy('p.datePaiment', 'DESC')
             ->getQuery()
-            ->getOneOrNullResult()
-        ;
+            ->getResult();
     }
-    */
 }

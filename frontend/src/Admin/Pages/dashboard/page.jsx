@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, BarChart, Bar, CartesianGrid, Legend } from "recharts";
 import { useTheme } from "../../hooks/use-theme";
-import { 
-    CreditCard, 
+import {
+    CreditCard,
     DollarSign,
-    Construction, 
-    Package, 
-    Users, 
+    Construction,
+    Package,
+    Users,
     ShoppingCart,
-    TrendingUp, 
+    TrendingUp,
     TrendingDown,
     Star,
     MapPin,
@@ -17,23 +17,25 @@ import {
     Edit,
     Trash2,
 } from "lucide-react";
-import { 
-    getDashboardStats, 
-    // getSalesData, 
-    getRecentCommande, 
-    getTopProducts 
+import {
+    getDashboardStats,
+    getSalesData,
+    testeCommande,
+    getRecentCommande,
+    getTopProducts,
 } from "@/services/AdminService";
 
 const DashboardPage = () => {
     const { theme } = useTheme();
     const [loading, setLoading] = useState(true);
-        const [produitDetail, setProduitDetail] = useState(null);
-        const [openDetail, setOpenDetail] = useState(false);
+    const [loadingStat, setLoadingStat] = useState(true);
+    const [produitDetail, setProduitDetail] = useState(null);
+    const [openDetail, setOpenDetail] = useState(false);
     const [stats, setStats] = useState({
-            totalClient : 0,
-            totalProduit : 0,
-            totalCommande: 0,
-            totalRevenue: 0
+        totalClient: 0,
+        totalProduit: 0,
+        totalCommande: 0,
+        totalRevenue: 0,
     });
     const [salesData, setSalesData] = useState([]);
     const [commandeRecent, setCommandeRecent] = useState([]);
@@ -41,40 +43,37 @@ const DashboardPage = () => {
 
     const formatDateAfficher = (dateInput) => {
         if (!dateInput) return null;
-        
+
         // Si c'est une string au bon format
-        if (typeof dateInput === 'string' && dateInput.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-            return dateInput.toLocaleDateString('fr-FR', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+        if (typeof dateInput === "string" && dateInput.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+            return dateInput.toLocaleDateString("fr-FR", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
             });
         }
-        
-        // Si c'est un doctrine objet {date: "...", timezone: "...", timezone_type: 3}
-        if (dateInput && typeof dateInput === 'object' && dateInput.date) {
-            // Extraire juste la partie date 
-            const dateStr = dateInput.date.split('.')[0];
+        if (dateInput && typeof dateInput === "object" && dateInput.date) {
+            const dateStr = dateInput.date.split(".")[0];
             return dateStr;
         }
-        
+
         // Si c'est un timestamp ou autre format
         try {
-            const date = new Date(dateInput)
+            const date = new Date(dateInput);
             if (!isNaN(date.getTime())) {
-                let form = date.toISOString().replace('T', ' ').substring(0, 19);
-                return form.toLocaleDateString('fr-FR', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                })
+                let form = date.toISOString().replace("T", " ").substring(0, 19);
+                return form.toLocaleDateString("fr-FR", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                });
             }
         } catch (e) {
             console.warn("Erreur de conversion de date :", dateInput, e);
         }
-        
+
         return null;
     };
 
@@ -82,21 +81,22 @@ const DashboardPage = () => {
         loadDashboardData();
         getRecentCommandes();
         getTopProduit();
+        loadSaleData();
     }, []);
 
     const getRecentCommandes = async () => {
         try {
             setLoading(true);
             const Result = await getRecentCommande();
-            
+
             if (Result.data) {
-                const nouvelleDonnee = Result.data.recentCommande.map(commande => ({
+                const nouvelleDonnee = Result.data.recentCommande.map((commande) => ({
                     ...commande,
-                    dateCommande: formatDateAfficher(commande.dateCommande)
+                    dateCommande: formatDateAfficher(commande.dateCommande),
                 }));
                 setCommandeRecent(nouvelleDonnee);
-            }else{
-                console.log("Result.error: ", Result.error)
+            } else {
+                console.log("Result.error: ", Result.error);
             }
         } catch (error) {
             console.error("Erreur RecentCommande:", error);
@@ -106,11 +106,11 @@ const DashboardPage = () => {
     const getTopProduit = async () => {
         try {
             setLoading(true);
-            const Result = await getTopProducts()
-            if (Result.data){
-                setTopProducts(Result.data.topProduit)
-            }else{
-                console.log("Result.error: ", Result.error)
+            const Result = await getTopProducts();
+            if (Result.data) {
+                setTopProducts(Result.data.topProduit);
+            } else {
+                console.log("Result.error: ", Result.error);
             }
         } catch (error) {
             console.error("Erreur lors du chargement du dashboard:", error);
@@ -121,62 +121,74 @@ const DashboardPage = () => {
 
     const loadDashboardData = async () => {
         try {
-            setLoading(true);
-            const Result = await getDashboardStats()
-            if (Result.data){
-                console.log("Dashboard Stats: ", Result.data)
+            setLoadingStat(true);
+            const Result = await getDashboardStats();
+            if (Result.data) {
+                console.log("Dashboard Stats: ", Result.data);
                 setStats({
-                    totalClient : Result.data.totalClient,
-                    totalProduit : Result.data.totalProduit,
+                    totalClient: Result.data.totalClient,
+                    totalProduit: Result.data.totalProduit,
                     totalCommande: Result.data.totalCommande,
-                    totalRevenue: Result.data.totalRevenue
-                })
-            }else{
-                console.log("Result.error: ", Result.error)
+                    totalRevenue: Result.data.totalRevenue,
+                });
+            } else {
+                console.log("Result.error: ", Result.error);
             }
         } catch (error) {
             console.error("Erreur lors du chargement du dashboard:", error);
         } finally {
-            setLoading(false);
+            setLoadingStat(false);
         }
     };
 
+    const loadSaleData   = async () => {
+        try {
+            setLoadingStat(true);
+            const Result = await getSalesData();
+            if (Result.data) {
+                setSalesData(Result.data)
+            } else {
+                console.log("Result.error: ", Result.error);
+            }
+        } catch (error) {
+            console.error("Erreur lors du chargement du graphe:", error);
+        } finally {
+            setLoadingStat(false);
+        }
+    }
+
     useEffect(() => {
-        
         console.log("commandeRecent mis à jour : ", commandeRecent);
         console.log("stats mis à jour : ", stats);
         console.log("top Produit mis à jour : ", topProducts);
-    }, [commandeRecent,stats,topProducts]);
+        console.log("Dashboard Graphe Data: ", salesData);
+    }, [commandeRecent, stats, topProducts,salesData]);
 
     const totalPaye = (montant, frais) => {
         const total = montant + frais;
-       return total;
-    }
+        return total;
+    };
 
     const mockStats = {
-        totalProducts: 156,
-        totalOrders: 342,
-        totalCustomers: 289,
-        totalRevenue: 12540000,
         revenueGrowth: 12.5,
         customerGrowth: 8.2,
         orderGrowth: 15.7,
-        productGrowth: 5.3
+        productGrowth: 5.3,
     };
 
     const mockSalesData = [
-        { mois: 'Jan', ventes: 4500000, commandes: 45 },
-        { mois: 'Fév', ventes: 5200000, commandes: 52 },
-        { mois: 'Mar', ventes: 4800000, commandes: 48 },
-        { mois: 'Avr', ventes: 6100000, commandes: 61 },
-        { mois: 'Mai', ventes: 5800000, commandes: 58 },
-        { mois: 'Jun', ventes: 7300000, commandes: 73 },
-        { mois: 'Jul', ventes: 6900000, commandes: 69 },
-        { mois: 'Aoû', ventes: 7800000, commandes: 78 },
-        { mois: 'Sep', ventes: 8200000, commandes: 82 },
-        { mois: 'Oct', ventes: 9100000, commandes: 91 },
-        { mois: 'Nov', ventes: 9500000, commandes: 95 },
-        { mois: 'Déc', ventes: 12540000, commandes: 125 }
+        { mois: "Jan", ventes: 4500000, commandes: 45 },
+        { mois: "Fév", ventes: 5200000, commandes: 52 },
+        { mois: "Mar", ventes: 4800000, commandes: 48 },
+        { mois: "Avr", ventes: 6100000, commandes: 61 },
+        { mois: "Mai", ventes: 5800000, commandes: 58 },
+        { mois: "Jun", ventes: 7300000, commandes: 73 },
+        { mois: "Jul", ventes: 6900000, commandes: 69 },
+        { mois: "Aoû", ventes: 7800000, commandes: 78 },
+        { mois: "Sep", ventes: 8200000, commandes: 82 },
+        { mois: "Oct", ventes: 9100000, commandes: 91 },
+        { mois: "Nov", ventes: 9500000, commandes: 95 },
+        { mois: "Déc", ventes: 12540000, commandes: 125 },
     ];
 
     const mockRecentOrders = [
@@ -188,7 +200,7 @@ const DashboardPage = () => {
             montant: 125000,
             statut: "Livrée",
             date: "2024-01-15",
-            ville: "Antananarivo"
+            ville: "Antananarivo",
         },
         {
             id: 2,
@@ -198,7 +210,7 @@ const DashboardPage = () => {
             montant: 89000,
             statut: "En cours",
             date: "2024-01-14",
-            ville: "Toamasina"
+            ville: "Toamasina",
         },
         {
             id: 3,
@@ -208,7 +220,7 @@ const DashboardPage = () => {
             montant: 156000,
             statut: "Confirmée",
             date: "2024-01-14",
-            ville: "Antananarivo"
+            ville: "Antananarivo",
         },
         {
             id: 4,
@@ -218,7 +230,7 @@ const DashboardPage = () => {
             montant: 67000,
             statut: "En attente",
             date: "2024-01-13",
-            ville: "Fianarantsoa"
+            ville: "Fianarantsoa",
         },
         {
             id: 5,
@@ -228,8 +240,8 @@ const DashboardPage = () => {
             montant: 234000,
             statut: "Livrée",
             date: "2024-01-13",
-            ville: "Mahajanga"
-        }
+            ville: "Mahajanga",
+        },
     ];
 
     const mockTopProducts = [
@@ -242,7 +254,7 @@ const DashboardPage = () => {
             ventes: 156,
             note: 4.8,
             statut: "En stock",
-            image: "vitamineCserium.png"
+            image: "vitamineCserium.png",
         },
         {
             id: 2,
@@ -253,7 +265,7 @@ const DashboardPage = () => {
             ventes: 134,
             note: 4.6,
             statut: "Stock faible",
-            image: "acide.png"
+            image: "acide.png",
         },
         {
             id: 3,
@@ -264,7 +276,7 @@ const DashboardPage = () => {
             ventes: 98,
             note: 4.9,
             statut: "En stock",
-            image: "florale.png"
+            image: "florale.png",
         },
         {
             id: 4,
@@ -275,7 +287,7 @@ const DashboardPage = () => {
             ventes: 201,
             note: 4.7,
             statut: "En stock",
-            image: "efface.png"
+            image: "efface.png",
         },
         {
             id: 5,
@@ -286,75 +298,74 @@ const DashboardPage = () => {
             ventes: 87,
             note: 4.5,
             statut: "Rupture",
-            image: "cerave.png"
-        }
+            image: "cerave.png",
+        },
     ];
 
-    // Utiliser les données mockées en attendant les vraies données
     const data = {
         stats: mockStats,
-        sales: mockSalesData,
+        sales: salesData, 
         orders: mockRecentOrders,
-        products: mockTopProducts
+        products: mockTopProducts,
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('fr-MG', {
-            style: 'currency',
-            currency: 'MGA',
-            minimumFractionDigits: 0
+        return new Intl.NumberFormat("fr-MG", {
+            style: "currency",
+            currency: "MGA",
+            minimumFractionDigits: 0,
         }).format(amount);
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
+        return new Date(dateString).toLocaleDateString("fr-FR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
         });
     };
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'LIVREE':
-                return 'badge-success';
-            case 'EN_COURS':
-                return 'badge-primary';
-            case 'CONFIRME':
-                return 'badge-info';
-            case 'EN_ATTENTE_PAIEMENT':
-                return 'badge-warning';
-            case 'ANNULEE':
-                return 'badge-error';
-            case 'PAYÉE':
-                return 'badge-success';
+            case "LIVREE":
+                return "badge-success";
+            case "EN_PREPARATION":
+                return "badge-primary";
+            case "INITIALISE":
+                return "badge-warning";
+            case "EN_ATTENTE_PAIEMENT":
+                return "badge-secondary";
+            case "ANNULER":
+                return "badge-error";
+            case "EXPEDIEE":
+                return "badge-info";
             default:
-                return 'badge-ghost';
+                return "badge-ghost";
         }
     };
 
     const getStatutNom = (status) => {
         switch (status) {
-            case 'LIVREE':
-                return 'Livrée';
-            case 'EN_COURS':
-                return 'En cours';
-            case 'CONFIRME':
-                return 'Confirmé';
-            case 'EN_ATTENTE_PAIEMENT':
-                return 'En atente Paiement';
-            case 'ANNULEE':
-                return 'Annulé';
-            case 'PAYÉE':
-                return 'payée';
+            case "LIVREE":
+                return "Livrée";
+            case "EN_PREPARATION":
+                return "En preparation";
+            case "EXPEDIEE":
+                return "Expédié";
+            case "EN_ATTENTE_PAIEMENT":
+                return "En atente Paiement";
+            case "ANNULER":
+                return "Annulé";
+            case "INITIALISE":
+                return "Initialise";
             default:
-                return 'INVALIDE';
+                return "INVALIDE";
         }
     };
 
     const afficheInfoProduit = (prod) => {
         ouvrirDetailProduit(prod);
-        console.log("produitDetail :",prod)
+        console.log("produitDetail :", prod);
     };
 
     const fermerDetailProduit = () => {
@@ -365,170 +376,124 @@ const DashboardPage = () => {
     const ouvrirDetailProduit = (prod) => {
         setProduitDetail(prod);
         setOpenDetail(true);
-       
     };
 
     const getStockColor = (stock) => {
-        if (stock >= 10) return 'badge-success';
-        if (stock > 0 && stock < 10) return 'badge-warning';
-        if (stock === 0) return 'badge-error';
-        return 'badge-info';
-    };
-    
-    const getStatutStock = (stock) => {
-        if (stock >= 10) return 'En stock';
-        if (stock > 0 && stock < 10) return 'stock faible';
-        if (stock === 0) return 'Rupture';
-        return '...';
+        if (stock >= 10) return "badge-success";
+        if (stock > 0 && stock < 10) return "badge-warning";
+        if (stock === 0) return "badge-error";
+        return "badge-info";
     };
 
-    if (loading) {
-        return (
-            <div className="flex flex-col gap-6 p-6">
-                <div className="skeleton h-8 w-48"></div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="skeleton h-32"></div>
-                    ))}
-                </div>
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <div className="skeleton h-80"></div>
-                    <div className="skeleton h-80"></div>
-                </div>
-                <div className="skeleton h-96"></div>
-            </div>
-        );
-    }
+    const getStatutStock = (stock) => {
+        if (stock >= 10) return "En stock";
+        if (stock > 0 && stock < 10) return "stock faible";
+        if (stock === 0) return "Rupture";
+        return "...";
+    };
 
     return (
         <div className="space-y-6 p-1">
-            {/* En-tête */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tableau de Bord</h1>
-                <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                    <Calendar className="h-5 w-5 text-gray-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {new Date().toLocaleDateString('fr-FR', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                        })}
-                    </span>
-                </div>
-            </div>
-                         {openDetail && produitDetail && (
-                                                <div className="modal modal-open">
-                                                    <div className="modal-box max-w-2xl max-h-[60vh] bg-slate-200 dark:bg-gray-800 overflow-y-auto">
-                                                        {/* Header du dialogue */}
-                                                        <div className="flex justify-between items-center mb-4">
-                                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                                                                Détails du Produit
-                                                            </h3>
-                                                            <button 
-                                                                onClick={fermerDetailProduit}
-                                                                className="btn btn-sm btn-circle btn-ghost"
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                        
-                                                        {/* Contenu du dialogue */}
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ml-4">
-                                                            {/* Image du produit */}
-                                                            <div className="flex items-center">
-                                                                <img 
-                                                                    src={`/image/${produitDetail.imageUrlProduit}`} 
-                                                                    alt={produitDetail.nomProduit}
-                                                                    className="w-full h-64 object-cover rounded-lg shadow-lg"
-                                                                />
-                                                            </div>
-                        
-                                                            {/* Informations détaillées */}
-                                                            <div className="space-y-4">
-                                                                <div>
-                                                                    <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                                                                        {produitDetail.nomProduit}
-                                                                    </h4>
-                                                                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                                                        {produitDetail.prixProduit?.toLocaleString()} Ar
-                                                                    </p>
-                                                                </div>
-                        
-                                                                {/* Description */}
-                                                                <div>
-                                                                    <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                                                        Description
-                                                                    </h5>
-                                                                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                                                                        {produitDetail.descriptionProduit || "Aucune description disponible pour ce produit."}
-                                                                    </p>
-                                                                </div>
-                                                                <div className="mt-4 flex gap-2">
-                                                                    <span className={`badge ${produitDetail.stockProduit > 5 ? 'badge-success' : produitDetail.stockProduit > 0 ? 'badge-warning' : 'badge-error'}`}>
-                                                                        {produitDetail.stockProduit > 5 ? 'En stock' : produitDetail.stockProduit > 0 ? 'Stock faible' : 'Rupture'}
-                                                                    </span>
-                                                                    <span className="badge badge-info">
-                                                                        {produitDetail.stockProduit} unités
-                                                                    </span>
-                                                                </div>
+            {openDetail && produitDetail && (
+                <div className="modal modal-open">
+                    <div className="modal-box max-h-[60vh] max-w-2xl overflow-y-auto bg-slate-200 dark:bg-gray-800">
+                        {/* Header du dialogue */}
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Détails du Produit</h3>
+                            <button
+                                onClick={fermerDetailProduit}
+                                className="btn btn-circle btn-ghost btn-sm"
+                            >
+                                ✕
+                            </button>
+                        </div>
 
-                                                                {/* Dernière mise à jour */}
-                                                                {produitDetail.dateMisAJourProduit && (
-                                                                    <div>
-                                                                        <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                                                            Dernière mise à jour
-                                                                        </h5>
-                                                                        <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                                                            {new Date(produitDetail.dateMisAJourProduit).toLocaleDateString('fr-FR')}
-                                                                        </p>
-                                                                    </div>
-                                                                )}
-                                                                    <button
-                                                                        onClick={fermerDetailProduit}
-                                                                        className="btn btn-outline btn-error btn-wide"
-                                                                    >
-                                                                        Fermer
-                                                                    </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {/* Overlay pour fermer en cliquant à l'extérieur */}
-                                                    <div 
-                                                        className="modal-backdrop" 
-                                                        onClick={fermerDetailProduit}
-                                                    ></div>
-                                                </div>
-                                            )}
+                        {/* Contenu du dialogue */}
+                        <div className="ml-4 grid grid-cols-1 gap-6 md:grid-cols-2">
+                            {/* Image du produit */}
+                            <div className="flex items-center">
+                                <img
+                                    src={`/image/${produitDetail.imageUrlProduit}`}
+                                    alt={produitDetail.nomProduit}
+                                    className="h-64 w-full rounded-lg object-cover shadow-lg"
+                                />
+                            </div>
+
+                            {/* Informations détaillées */}
+                            <div className="space-y-4">
+                                <div>
+                                    <h4 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">{produitDetail.nomProduit}</h4>
+                                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                        {produitDetail.prixProduit?.toLocaleString()} Ar
+                                    </p>
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <h5 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">Description</h5>
+                                    <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                                        {produitDetail.descriptionProduit || "Aucune description disponible pour ce produit."}
+                                    </p>
+                                </div>
+                                <div className="mt-4 flex gap-2">
+                                    <span
+                                        className={`badge ${produitDetail.stockProduit > 5 ? "badge-success" : produitDetail.stockProduit > 0 ? "badge-warning" : "badge-error"}`}
+                                    >
+                                        {produitDetail.stockProduit > 5 ? "En stock" : produitDetail.stockProduit > 0 ? "Stock faible" : "Rupture"}
+                                    </span>
+                                    <span className="badge badge-info">{produitDetail.stockProduit} unités</span>
+                                </div>
+
+                                {/* Dernière mise à jour */}
+                                {produitDetail.dateMisAJourProduit && (
+                                    <div>
+                                        <h5 className="mb-1 font-semibold text-gray-700 dark:text-gray-300">Dernière mise à jour</h5>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {new Date(produitDetail.dateMisAJourProduit).toLocaleDateString("fr-FR")}
+                                        </p>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={fermerDetailProduit}
+                                    className="btn btn-error btn-outline btn-wide"
+                                >
+                                    Fermer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Overlay pour fermer en cliquant à l'extérieur */}
+                    <div
+                        className="modal-backdrop"
+                        onClick={fermerDetailProduit}
+                    ></div>
+                </div>
+            )}
 
             {/* Cartes de statistiques */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {/* Produits */}
-                <div className="card bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="card border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                     <div className="card-body">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <div className="rounded-lg bg-blue-100 p-2 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                                         <Package className="h-6 w-6" />
                                     </div>
-                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Produits
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Produits</span>
                                 </div>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {stats.totalProduit}
+                                    {loadingStat ? <span className="loading loading-dots loading-sm text-blue-600"></span> : stats.totalProduit}
                                 </p>
                             </div>
-                            <div className={`flex items-center gap-1 text-sm font-medium ${
-                                data.stats.productGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                                {data.stats.productGrowth >= 0 ? (
-                                    <TrendingUp className="h-4 w-4" />
-                                ) : (
-                                    <TrendingDown className="h-4 w-4" />
-                                )}
+                            <div
+                                className={`flex items-center gap-1 text-sm font-medium ${
+                                    data.stats.productGrowth >= 0 ? "text-green-600" : "text-red-600"
+                                }`}
+                            >
+                                {data.stats.productGrowth >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                                 {Math.abs(data.stats.productGrowth)}%
                             </div>
                         </div>
@@ -536,30 +501,26 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Commandes */}
-                <div className="card bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="card border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                     <div className="card-body">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <div className="rounded-lg bg-green-100 p-2 text-green-600 dark:bg-green-900/30 dark:text-green-400">
                                         <ShoppingCart className="h-6 w-6" />
                                     </div>
-                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Commandes
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Commandes</span>
                                 </div>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {stats.totalCommande}
+                                    {loadingStat ? <span className="loading loading-dots loading-sm text-blue-600"></span> : stats.totalCommande}
                                 </p>
                             </div>
-                            <div className={`flex items-center gap-1 text-sm font-medium ${
-                                data.stats.orderGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                                {data.stats.orderGrowth >= 0 ? (
-                                    <TrendingUp className="h-4 w-4" />
-                                ) : (
-                                    <TrendingDown className="h-4 w-4" />
-                                )}
+                            <div
+                                className={`flex items-center gap-1 text-sm font-medium ${
+                                    data.stats.orderGrowth >= 0 ? "text-green-600" : "text-red-600"
+                                }`}
+                            >
+                                {data.stats.orderGrowth >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                                 {Math.abs(data.stats.orderGrowth)}%
                             </div>
                         </div>
@@ -567,30 +528,26 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Clients */}
-                <div className="card bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="card border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                     <div className="card-body">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <div className="rounded-lg bg-purple-100 p-2 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
                                         <Users className="h-6 w-6" />
                                     </div>
-                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Clients
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Clients</span>
                                 </div>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {stats.totalClient}
+                                    {loadingStat ? <span className="loading loading-dots loading-sm text-blue-600"></span> : stats.totalClient}
                                 </p>
                             </div>
-                            <div className={`flex items-center gap-1 text-sm font-medium ${
-                                data.stats.customerGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                                {data.stats.customerGrowth >= 0 ? (
-                                    <TrendingUp className="h-4 w-4" />
-                                ) : (
-                                    <TrendingDown className="h-4 w-4" />
-                                )}
+                            <div
+                                className={`flex items-center gap-1 text-sm font-medium ${
+                                    data.stats.customerGrowth >= 0 ? "text-green-600" : "text-red-600"
+                                }`}
+                            >
+                                {data.stats.customerGrowth >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                                 {Math.abs(data.stats.customerGrowth)}%
                             </div>
                         </div>
@@ -598,30 +555,24 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Revenu */}
-                <div className="card bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="card border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                     <div className="card-body">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <div className="rounded-lg bg-orange-100 p-2 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
                                         <DollarSign className="h-6 w-6" />
                                     </div>
-                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                        Revenu Total
-                                    </span>
+                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Revenu Total</span>
                                 </div>
-                                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {formatCurrency(stats.totalRevenue)}
-                                </p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalRevenue)}</p>
                             </div>
-                            <div className={`flex items-center gap-1 text-sm font-medium ${
-                                data.stats.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                                {data.stats.revenueGrowth >= 0 ? (
-                                    <TrendingUp className="h-4 w-4" />
-                                ) : (
-                                    <TrendingDown className="h-4 w-4" />
-                                )}
+                            <div
+                                className={`flex items-center gap-1 text-sm font-medium ${
+                                    data.stats.revenueGrowth >= 0 ? "text-green-600" : "text-red-600"
+                                }`}
+                            >
+                                {data.stats.revenueGrowth >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                                 {Math.abs(data.stats.revenueGrowth)}%
                             </div>
                         </div>
@@ -632,41 +583,45 @@ const DashboardPage = () => {
             {/* Graphiques et Commandes Récentes */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Graphique des ventes */}
-                <div className="card bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="card border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                     <div className="card-body">
-                        <h3 className="card-title text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            Évolution des Ventes
-                        </h3>
+                        <h3 className="card-title mb-4 text-lg font-semibold text-gray-900 dark:text-white">Évolution des Ventes pour les 5 derniers derniers mois</h3>
                         <div className="h-80">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%"
+                            >
                                 <BarChart data={data.sales}>
-                                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                                    <XAxis 
-                                        dataKey="mois" 
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        className="opacity-30"
+                                    />
+                                    <XAxis
+                                        dataKey="mois"
                                         stroke={theme === "dark" ? "#94a3b8" : "#475569"}
                                     />
-                                    <YAxis 
+                                    <YAxis
                                         stroke={theme === "dark" ? "#94a3b8" : "#475569"}
-                                        tickFormatter={(value) => `${value / 1000000}M`}
+                                        tickFormatter={(value) => `${value /1000}M`}
                                     />
-                                    <Tooltip 
+                                    <Tooltip
                                         formatter={(value, name) => [
-                                            name === 'ventes' ? formatCurrency(value) : value,
-                                            name === 'ventes' ? 'Ventes' : 'Commandes'
+                                            name === "ventes" ? formatCurrency(value) : value,
+                                            name === "ventes" ? "Ventes" : "Commandes",
                                         ]}
                                         labelFormatter={(label) => `Mois: ${label}`}
                                     />
                                     <Legend />
-                                    <Bar 
-                                        dataKey="ventes" 
-                                        name="Ventes (Ar)" 
-                                        fill="#3b82f6" 
+                                    <Bar
+                                        dataKey="ventes"
+                                        name="Ventes (Ar)"
+                                        fill="#3b82f6"
                                         radius={[4, 4, 0, 0]}
                                     />
-                                    <Bar 
-                                        dataKey="commandes" 
-                                        name="Nombre de commandes" 
-                                        fill="#10b981" 
+                                    <Bar
+                                        dataKey="commandes"
+                                        name="Nombre de commandes"
+                                        fill="#10b981"
                                         radius={[4, 4, 0, 0]}
                                     />
                                 </BarChart>
@@ -676,31 +631,42 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Commandes récentes */}
-                <div className="card bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <div className="card border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                     <div className="card-body">
-                        <h3 className="card-title text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                            Commandes Récentes
-                        </h3>
-                        <div className="space-y-4 max-h-80 overflow-y-auto">
-                            {
-                            commandeRecent.length !== 0 ? ( 
+                        <h3 className="card-title mb-4 text-lg font-semibold text-gray-900 dark:text-white">Commandes Récentes</h3>
+                        <div className="max-h-80 space-y-4 overflow-y-auto">
+                            {loading ? (
+                                <div className="mt-[100px] flex flex-row items-center justify-center gap-2">
+                                    <span className="loading-xl loading loading-dots text-blue-600"></span>
+                                    <span>Chargement des commande Recent...</span>
+                                </div>
+                            ) : commandeRecent.length !== 0 ? (
                                 commandeRecent.map((order) => (
-                                    <div key={order[0].refCommande} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                    <div
+                                        key={order[0].refCommande}
+                                        className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50"
+                                    >
                                         <div className="flex items-center space-x-3">
                                             <div className="flex-shrink-0">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                                    {(order[0].client.nomClient.split(' ').map(n => n[0]).join('')).toUpperCase() || " "} 
-                                                    {(order[0].client.prenomClient.split(' ').map(n => n[0]).join('')).toUpperCase() || " "}
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-sm font-bold text-white">
+                                                    {order[0].client.nomClient
+                                                        .split(" ")
+                                                        .map((n) => n[0])
+                                                        .join("")
+                                                        .toUpperCase() || " "}
+                                                    {order[0].client.prenomClient
+                                                        .split(" ")
+                                                        .map((n) => n[0])
+                                                        .join("")
+                                                        .toUpperCase() || " "}
                                                 </div>
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                                    {order[0].client.nomClient + " " + order[0].client.prenomClient  || " "}
+                                                <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                                    {order[0].client.nomClient + " " + order[0].client.prenomClient || " "}
                                                 </p>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                                    {order[0].refCommande  || " "}
-                                                </p>
-                                                <div className="flex items-center gap-1 mt-1">
+                                                <p className="truncate text-sm text-gray-500 dark:text-gray-400">{order[0].refCommande || " "}</p>
+                                                <div className="mt-1 flex items-center gap-1">
                                                     <MapPin className="h-3 w-3 text-gray-400" />
                                                     <span className="text-xs text-gray-500 dark:text-gray-400">
                                                         {order[0].adresseLivraison.ville || " "} - {order[0].adresseLivraison.quartier || " "}
@@ -710,360 +676,105 @@ const DashboardPage = () => {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                            {formatCurrency(totalPaye(parseFloat(order.montant),parseFloat(order[0].fraisLivraison)))}
+                                                {formatCurrency(totalPaye(parseFloat(order.montant), parseFloat(order[0].fraisLivraison)))}
                                             </p>
                                             <div className={`badge badge-xs ${getStatusColor(order[0].statutCommande || "LIVREE")} mt-1`}>
-                                              {getStatutNom(order[0].statutCommande)}
+                                                {getStatutNom(order[0].statutCommande)}
                                             </div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 py-1 mt-1">
+                                            <p className="mt-1 py-1 text-xs text-gray-500 dark:text-gray-400">
                                                 {formatDate(order[0].dateCommande.date)}
                                             </p>
                                         </div>
                                     </div>
                                 ))
-                            ):(
-                                <div className="flex flex-col items-center justify-center  py-10">
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-10">
                                     <Construction
                                         strokeWidth={1}
                                         className="h-40 w-40"
                                     />
                                     <p className="text-gray-600 dark:text-gray-400">Aucune commande récente disponible.</p>
                                 </div>
-                               
-                            )
-                            }
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Produits populaires */}
-            <div className="card bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
-                <div className="card-body">
-                    <h3 className="card-title text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                        Produits les Plus Vendus
-                    </h3>
-                    <div className="overflow-x-auto">
-                        <table className="table w-full">
-                            <thead>
-                                <tr className="bg-gray-100 dark:bg-gray-700">
-                                    <th className="text-gray-900 dark:text-white">Produit</th>
-                                    <th className="text-gray-900 dark:text-white">Prix</th>
-                                    <th className="text-gray-900 dark:text-white">Stock</th>
-                                    <th className="text-gray-900 dark:text-white">Ventes</th>
-                                    <th className="text-gray-900 dark:text-white">Statut</th>
-                                    <th className="text-gray-900 dark:text-white">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {topProducts.map((product) => (
-                                    <tr key={product.numProduit} className="hover:bg-gray-50 dark:hover:bg-gray-600">
-                                        <td>
-                                            <div className="flex items-center space-x-3">
-                                                <div className="avatar">
-                                                    <div className="mask mask-squircle w-12 h-12">
-                                                        <img 
-                                                            src={`/image/${product.imageUrlProduit}`}
-                                                            alt={product.nomProduit}
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-gray-900 dark:text-white">
-                                                        {product.nomProduit}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {product.descriptionProduit}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="font-semibold text-gray-900 dark:text-white">
-                                            {formatCurrency(product.prixProduit)}
-                                        </td>
-                                        <td>
-                                            <span className="font-medium text-gray-900 dark:text-white">
-                                                {product.stockProduit}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className="font-medium text-gray-900 dark:text-white">
-                                                {product.total_ventes || 0}
-                                            </span>
-                                        </td>
-                                        
-                                        <td>
-                                            <div className={`badge ${getStockColor(product.stockProduit)}`}>
-                                                {getStatutStock(product.stockProduit)}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => afficheInfoProduit(product)}
-                                                     className="btn btn-ghost btn-sm text-blue-600 items-center hover:text-blue-700">
-                                                    <Eye className="h-4 w-4" />
-                                                    <span>Détails</span>
-                                                </button>
-                                            </div>
-                                        </td>
+            {topProducts.length !== 0 && (
+                <div className="card border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    <div className="card-body">
+                        <h3 className="card-title mb-6 text-lg font-semibold text-gray-900 dark:text-white">Produits les Plus Vendus</h3>
+                        <div className="overflow-x-auto">
+                            <table className="table w-full">
+                                <thead>
+                                    <tr className="bg-gray-100 dark:bg-gray-700">
+                                        <th className="text-gray-900 dark:text-white">Produit</th>
+                                        <th className="text-gray-900 dark:text-white">Prix</th>
+                                        <th className="text-gray-900 dark:text-white">Stock</th>
+                                        <th className="text-gray-900 dark:text-white">Ventes</th>
+                                        <th className="text-gray-900 dark:text-white">Statut</th>
+                                        <th className="text-gray-900 dark:text-white">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {topProducts.map((product) => (
+                                        <tr
+                                            key={product.numProduit}
+                                            className="hover:bg-gray-50 dark:hover:bg-gray-600"
+                                        >
+                                            <td>
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="avatar">
+                                                        <div className="mask mask-squircle h-12 w-12">
+                                                            <img
+                                                                src={`/image/${product.imageUrlProduit}`}
+                                                                alt={product.nomProduit}
+                                                                className="object-cover"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-gray-900 dark:text-white">{product.nomProduit}</div>
+                                                        <div className="text-sm text-gray-500 dark:text-gray-400">{product.descriptionProduit}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="font-semibold text-gray-900 dark:text-white">{formatCurrency(product.prixProduit)}</td>
+                                            <td>
+                                                <span className="font-medium text-gray-900 dark:text-white">{product.stockProduit}</span>
+                                            </td>
+                                            <td>
+                                                <span className="font-medium text-gray-900 dark:text-white">{product.total_ventes || 0}</span>
+                                            </td>
+
+                                            <td>
+                                                <div className={`badge ${getStockColor(product.stockProduit)}`}>
+                                                    {getStatutStock(product.stockProduit)}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => afficheInfoProduit(product)}
+                                                        className="btn btn-ghost btn-sm items-center text-blue-600 hover:text-blue-700"
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                        <span>Détails</span>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
 
 export default DashboardPage;
-
-
-// import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
-// import { useTheme } from "../../hooks/use-theme";
-
-// import { overviewData, recentSalesData, topProducts } from "../../constants";
-
-// import { Footer } from "../../layouts/footer";
-
-// import { CreditCard, DollarSign, Package, PencilLine, Star, Trash, TrendingUp, Users } from "lucide-react";
-
-// const DashboardPage = () => {
-//     const { theme } = useTheme();
-
-//     return (
-//         <div className="flex flex-col gap-y-4">
-//             <h1 className="title">Dashboard</h1>
-//             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-//                <div className="card">
-//                     <div className="card-header">
-//                         <div className="w-fit rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
-//                             <Package size={26} />
-//                         </div>
-//                         <p className="card-title">Total Products</p>
-//                     </div>
-//                     <div className="card-body bg-slate-100 transition-colors dark:bg-slate-950">
-//                         <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">25,154</p>
-//                         <span className="flex w-fit items-center gap-x-2 rounded-full border border-blue-500 px-2 py-1 font-medium text-blue-500 dark:border-blue-600 dark:text-blue-600">
-//                             <TrendingUp size={18} />
-//                             25%
-//                         </span>
-//                     </div>
-//                 </div> 
-//                 <div className="card">
-//                     <div className="card-header">
-//                         <div className="rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
-//                             <DollarSign size={26} />
-//                         </div>
-//                         <p className="card-title">Total Paid Orders</p>
-//                     </div>
-//                     <div className="card-body bg-slate-100 transition-colors dark:bg-slate-950">
-//                         <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">$16,000</p>
-//                         <span className="flex w-fit items-center gap-x-2 rounded-full border border-blue-500 px-2 py-1 font-medium text-blue-500 dark:border-blue-600 dark:text-blue-600">
-//                             <TrendingUp size={18} />
-//                             12%
-//                         </span>
-//                     </div>
-//                 </div>
-//                 <div className="card">
-//                     <div className="card-header">
-//                         <div className="rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
-//                             <Users size={26} />
-//                         </div>
-//                         <p className="card-title">Total Customers</p>
-//                     </div>
-//                     <div className="card-body bg-slate-100 transition-colors dark:bg-slate-950">
-//                         <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">15,400k</p>
-//                         <span className="flex w-fit items-center gap-x-2 rounded-full border border-blue-500 px-2 py-1 font-medium text-blue-500 dark:border-blue-600 dark:text-blue-600">
-//                             <TrendingUp size={18} />
-//                             15%
-//                         </span>
-//                     </div>
-//                 </div>
-//                 <div className="card">
-//                     <div className="card-header">
-//                         <div className="rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
-//                             <CreditCard size={26} />
-//                         </div>
-//                         <p className="card-title">Sales</p>
-//                     </div>
-//                     <div className="card-body bg-slate-100 transition-colors dark:bg-slate-950">
-//                         <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">12,340</p>
-//                         <span className="flex w-fit items-center gap-x-2 rounded-full border border-blue-500 px-2 py-1 font-medium text-blue-500 dark:border-blue-600 dark:text-blue-600">
-//                             <TrendingUp size={18} />
-//                             19%
-//                         </span>
-//                     </div>
-//                 </div>
-//             </div>
-//             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
-//                 <div className="card col-span-1 md:col-span-2 lg:col-span-4">
-//                     <div className="card-header">
-//                         <p className="card-title">Overview</p>
-//                     </div>
-//                     <div className="card-body p-0">
-//                         <ResponsiveContainer
-//                             width="100%"
-//                             height={300}
-//                         >
-//                             <AreaChart
-//                                 data={overviewData}
-//                                 margin={{
-//                                     top: 0,
-//                                     right: 0,
-//                                     left: 0,
-//                                     bottom: 0,
-//                                 }}
-//                             >
-//                                 <defs>
-//                                     <linearGradient
-//                                         id="colorTotal"
-//                                         x1="0"
-//                                         y1="0"
-//                                         x2="0"
-//                                         y2="1"
-//                                     >
-//                                         <stop
-//                                             offset="5%"
-//                                             stopColor="#2563eb"
-//                                             stopOpacity={0.8}
-//                                         />
-//                                         <stop
-//                                             offset="95%"
-//                                             stopColor="#2563eb"
-//                                             stopOpacity={0}
-//                                         />
-//                                     </linearGradient>
-//                                 </defs>
-//                                 <Tooltip
-//                                     cursor={false}
-//                                     formatter={(value) => `$${value}`}
-//                                 />
-
-//                                 <XAxis
-//                                     dataKey="name"
-//                                     strokeWidth={0}
-//                                     stroke={theme === "light" ? "#475569" : "#94a3b8"}
-//                                     tickMargin={6}
-//                                 />
-//                                 <YAxis
-//                                     dataKey="total"
-//                                     strokeWidth={0}
-//                                     stroke={theme === "light" ? "#475569" : "#94a3b8"}
-//                                     tickFormatter={(value) => `$${value}`}
-//                                     tickMargin={6}
-//                                 />
-
-//                                 <Area
-//                                     type="monotone"
-//                                     dataKey="total"
-//                                     stroke="#2563eb"
-//                                     fillOpacity={1}
-//                                     fill="url(#colorTotal)"
-//                                 />
-//                             </AreaChart>
-//                         </ResponsiveContainer>
-//                     </div>
-//                 </div>
-//                 <div className="card col-span-1 md:col-span-2 lg:col-span-3">
-//                     <div className="card-header">
-//                         <p className="card-title">Recent Sales</p>
-//                     </div>
-//                     <div className="card-body h-[300px] overflow-auto p-0">
-//                         {recentSalesData.map((sale) => (
-//                             <div
-//                                 key={sale.id}
-//                                 className="flex items-center justify-between gap-x-4 py-2 pr-2"
-//                             >
-//                                 <div className="flex items-center gap-x-4">
-//                                     <img
-//                                         src={sale.image}
-//                                         alt={sale.name}
-//                                         className="size-10 flex-shrink-0 rounded-full object-cover"
-//                                     />
-//                                     <div className="flex flex-col gap-y-2">
-//                                         <p className="font-medium text-slate-900 dark:text-slate-50">{sale.name}</p>
-//                                         <p className="text-sm text-slate-600 dark:text-slate-400">{sale.email}</p>
-//                                     </div>
-//                                 </div>
-//                                 <p className="font-medium text-slate-900 dark:text-slate-50">${sale.total}</p>
-//                             </div>
-//                         ))}
-//                     </div>
-//                 </div>
-//             </div>
-//             <div className="card"> 
-//                  <div className="card-header">
-//                     <p className="card-title">Top Orders</p>
-//                 </div>
-//                 <div className="card-body p-0">
-//                     <div className="relative h-[500px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
-//                         <table className="table">
-//                             <thead className="table-header">
-//                                 <tr className="table-row">
-//                                     <th className="table-head">#</th>
-//                                     <th className="table-head">Product</th>
-//                                     <th className="table-head">Price</th>
-//                                     <th className="table-head">Status</th>
-//                                     <th className="table-head">Rating</th>
-//                                     <th className="table-head">Actions</th>
-//                                 </tr>
-//                             </thead>
-//                             <tbody className="table-body">
-//                                 {topProducts.map((product) => (
-//                                     <tr
-//                                         key={product.number}
-//                                         className="table-row"
-//                                     >
-//                                         <td className="table-cell">{product.number}</td>
-//                                         <td className="table-cell">
-//                                             <div className="flex w-max gap-x-4">
-//                                                 <img
-//                                                     src={product.image}
-//                                                     alt={product.name}
-//                                                     className="size-14 rounded-lg object-cover"
-//                                                 />
-//                                                 <div className="flex flex-col">
-//                                                     <p>{product.name}</p>
-//                                                     <p className="font-normal text-slate-600 dark:text-slate-400">{product.description}</p>
-//                                                 </div>
-//                                             </div>
-//                                         </td>
-//                                         <td className="table-cell">${product.price}</td>
-//                                         <td className="table-cell">{product.status}</td>
-//                                         <td className="table-cell">
-//                                             <div className="flex items-center gap-x-2">
-//                                                 <Star
-//                                                     size={18}
-//                                                     className="fill-yellow-600 stroke-yellow-600"
-//                                                 />
-//                                                 {product.rating}
-//                                             </div>
-//                                         </td>
-//                                         <td className="table-cell">
-//                                             <div className="flex items-center gap-x-4">
-//                                                 <button className="text-blue-500 dark:text-blue-600">
-//                                                     <PencilLine size={20} />
-//                                                 </button>
-//                                                 <button className="text-red-500">
-//                                                     <Trash size={20} />
-//                                                 </button>
-//                                             </div>
-//                                         </td>
-//                                     </tr>
-//                                 ))}
-//                             </tbody>
-//                         </table>
-//                     </div>
-//                  </div>
-//             </div>
-//             <Footer />
-//         </div>
-//     );
-// };
-
-// export default DashboardPage;

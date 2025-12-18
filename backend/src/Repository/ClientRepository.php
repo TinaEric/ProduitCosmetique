@@ -43,7 +43,9 @@ class ClientRepository extends ServiceEntityRepository
     public function getClientUser(){
         return $this->createQueryBuilder('c')
             ->leftJoin('c.user', 'u')
+            ->leftJoin('c.adresses', 'a')
             ->addSelect('u')
+            ->addSelect('a')
             ->getQuery()
             ->getResult();
     }
@@ -78,6 +80,15 @@ class ClientRepository extends ServiceEntityRepository
             ->orderBy('c.dateInscription', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function findOneByUserId(string $userId): ?Client
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.user = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
 }

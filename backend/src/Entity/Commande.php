@@ -20,7 +20,7 @@ class Commande
 
     #[ORM\ManyToOne(targetEntity: Client::class, inversedBy: 'commandes')]
     #[ORM\JoinColumn(name: 'ref_client', referencedColumnName: 'ref_client', nullable: false)]
-    #[Groups(['commande:read'])]
+    // #[Groups(['commande:read'])]
     private ?Client $client = null;
 
     #[ORM\ManyToOne(targetEntity: Adresse::class, inversedBy: 'commandesLivraison')]
@@ -41,6 +41,10 @@ class Commande
     #[Groups(['commande:read'])]
     private ?\DateTimeInterface $dateUpdate = null;
 
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[Groups(['commande:read'])]
+    private ?\DateTimeInterface $dateLivraison = null;
+
     #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
     #[Groups(['commande:read'])]
     private ?string $methodeLivraison = null;
@@ -56,10 +60,14 @@ class Commande
     #[ORM\Column(type: Types::STRING, length: 32, nullable: true)]
     #[Groups(['commande:read'])]
     private ?string $statutCommande = null;
-
-    #[ORM\OneToMany(mappedBy: 'commande', targetEntity: Paiement::class)]
+    
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2, nullable: true)]
     #[Groups(['commande:read'])]
-    private Collection $paiements;
+    private ?string $montantTotal = null;
+
+    #[ORM\OneToOne(mappedBy: 'commande', targetEntity: Paiement::class, cascade: ['persist'])]
+    #[Groups(['commande:read'])]
+    private ?Paiement $paiement = null;
 
     #[ORM\OneToMany(mappedBy: 'commande', targetEntity: Panier::class)]
     #[Groups(['commande:read'])]
@@ -67,13 +75,42 @@ class Commande
 
     public function __construct()
     {
-        $this->paiements = new ArrayCollection();
         $this->paniers = new ArrayCollection();
+        $this->montantTotal = $this->TotalCommande();
     }
 
     public function mettreAjourDate(): self 
     {
         $this->dateUpdate = new DateTimeImmutable();
+        return $this;
+    }
+
+    public function TotalCommande(): string
+    {
+        $total = '0.00';
+        $paniers = $this->getPaniers();
+            foreach ($paniers as $panier) {
+                if (method_exists($panier, 'getSousTotal')) {
+                    $sousTotal = $panier->getSousTotal();
+                    $total = bcadd($total, $sousTotal, 2);
+                }
+            }
+        $fraisLivraison = $this->getFraisLivraison();
+        if ($fraisLivraison) {
+            $total = bcadd($total, $fraisLivraison, 2);
+        }
+        
+        return $total;
+    }
+
+    public function getMontantTotal(): ?string
+    {
+        return $this->montantTotal;
+    }
+
+    public function setMontantTotal(?string $montantTotal): static
+    {
+        $this->montantTotal = $montantTotal;
         return $this;
     }
 
@@ -124,6 +161,17 @@ class Commande
     public function getDateCommande(): ?\DateTimeInterface
     {
         return $this->dateCommande;
+    }
+
+    public function setDateLivraison(?\DateTimeInterface $dateLivraison): static
+    {
+        $this->dateLivraison = $dateLivraison;
+        return $this;
+    }
+
+    public function getDateLivraison(): ?\DateTimeInterface
+    {
+        return $this->dateLivraison;
     }
 
     public function setDateCommande(?\DateTimeInterface $dateCommande): static
@@ -187,32 +235,25 @@ public function setFraisLivraison(?string $fraisLivraison): static
     return $this;
 }
 
-    /**
-     * @return Collection<int, Paiement>
-     */
-    public function getPaiements(): Collection
+    public function getPaiement(): ?Paiement
     {
-        return $this->paiements;
+        return $this->paiement;
     }
 
-    public function addPaiement(Paiement $paiement): static
+    public function setPaiement(?Paiement $paiement): self
     {
-        if (!$this->paiements->contains($paiement)) {
-            $this->paiements->add($paiement);
+        if ($paiement === null && $this->paiement !== null) {
+            $this->paiement->setCommande(null);
+        }
+        if ($paiement !== null && $paiement->getCommande() !== $this) {
             $paiement->setCommande($this);
         }
+
+        $this->paiement = $paiement;
+
         return $this;
     }
 
-    public function removePaiement(Paiement $paiement): static
-    {
-        if ($this->paiements->removeElement($paiement)) {
-            if ($paiement->getCommande() === $this) {
-                $paiement->setCommande(null);
-            }
-        }
-        return $this;
-    }
 
     /**
      * @return Collection<int, Panier>

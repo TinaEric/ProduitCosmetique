@@ -37,16 +37,25 @@ export const LoginVerifier = async (client) => {
  
 };
 
+export const RegistreVerifier = async (client) => {
+  return await verifierReponse(() => api.post('/api/client/registreVerifier', client));
+ 
+};
+
 export const UpdateClient = async (client) => {
-  return await verifierReponse(() =>  api.put(`/api/categorie/${client.id}`, client));
+  return await verifierReponse(() =>  api.post('/api/client/profile/update', client));
       
 };
 
 export const DeleteClient = async (refClient) => {
-  return await verifierReponse(() =>  api.post('/api/categorie/deleteAll',{codes : refClient} ));
+  return await verifierReponse(() =>  api.post('/api/client/deleteAll',{codes : refClient} ));
     
 };
 
+export const CreateNewAdresse = async (dataAdresse) => {
+  return await verifierReponse(() =>  api.post('/api/client/createAdresse', { adresse: dataAdresse}));
+    
+};
 
 export const createCommande = async (dataCommande) => {
   return await verifierReponse(() =>  api.post('/api/client/initialeCommande', dataCommande));
@@ -63,6 +72,15 @@ export const updateCommandePanier = async (dataCommande) => {
     
 };
 
+export const getTopProducts = async () => {
+    return await verifierReponse(() =>  api.get(`/api/client/topProduit`));
+};
+
+export const CommandeAnnuler = async (dataCommande) => {
+  return await verifierReponse(() =>  api.put('/api/client/CommandeAnnuler', {refCommande: dataCommande}));
+    
+};
+
 export const updateClientAddress = async (addressData) => {
   try {
       const response = await api.put('/api/client/adresse/update', addressData);
@@ -72,6 +90,14 @@ export const updateClientAddress = async (addressData) => {
       throw error;
   }
 };
+
+export const deleteAdresse = async (refClient, refAdresse) => {
+  return await verifierReponse(() => api.put(`/api/client/${refClient}/deleteAdresse/${refAdresse}`));
+}
+
+export const getAllProduit = async () => {
+  return await verifierReponse(() => api.get('/api/client/getAllProduit'));
+}
 
 export const envoieEmail = async (emailData) => {
   return await verifierReponse(() =>  api.post('/api/email/confirmation-commande', emailData));

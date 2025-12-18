@@ -19,6 +19,12 @@ export const ListeCLient = async () => {
   export const suppClient = async (tabClient) => {
     return await verifierReponse(() => api.post('/api/client/supprimer',{codes : tabClient}));
   }
+
+  export const creerClient = async (NewClient) => {
+    return await verifierReponse(() => api.post('/api/client/creerClient',NewClient));
+  }
+
+  
   
   
 export const registerUser = async (userData) => {

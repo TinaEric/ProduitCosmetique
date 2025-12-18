@@ -3,6 +3,9 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
+import { usePanier } from "../../context/PanierContext";
+import {CommandeAnnuler } from "@/services/ClientService";
 import CheckoutForm from '@/Client/Pages/Paiement/CheckoutForm';
 import { CircularProgress, Box, Typography, Alert } from '@mui/material';
 import { getcommandeDetails, createPaymentIntent } from '@/services/StripeService';
@@ -12,6 +15,7 @@ export default function CheckoutStripe() {
   const [clientSecret, setClientSecret] = useState('');
   const [loading, setLoading] = useState(true);
   const [commandeData, setCommandeData] = useState(null);
+  const { setItems } = usePanier();
   const [error, setError] = useState(null);
   
   const { refCommande } = useParams();
@@ -43,6 +47,7 @@ export default function CheckoutStripe() {
         } else {
           setError('Aucune donnée de paiement trouvée');
           console.log('Erreur dans Create Payement: ', paymentResponse);
+
         }
         setLoading(false);
       } catch (error) {
@@ -55,12 +60,34 @@ export default function CheckoutStripe() {
     initPayment();
   }, [refCommande]);
 
+    
+  useEffect(() => {
+    // Si stripe.js n'a pas pu être chargé (timeout, réseau, etc.)
+    stripePromise.catch(error => {
+      console.error("Erreur de chargement de Stripe :", error);
+      setError("Erreur de connexion. Veuillez vérifier votre réseau et réessayer.");
+    })
+  })
+
   const appearance = {
     theme: 'stripe',
     variables: {
       colorPrimary: '#0570de',
     }
   };
+
+  const annulerPaiement = async () => {
+    localStorage.removeItem('panier');
+    localStorage.removeItem('RefCommande');
+    localStorage.removeItem('DataAdresse');
+    localStorage.removeItem('methodeLivraison');
+    localStorage.removeItem('methodePaiement');
+    localStorage.removeItem('dateLivraison')
+    setItems([])
+    const annule = await CommandeAnnuler(refCommande)
+    console.log("Annulation Commande dans Strype:", annule)
+    navigate('/Produit')
+  }
 
   const options = {
     clientSecret,
@@ -69,7 +96,7 @@ export default function CheckoutStripe() {
 
   if (loading) {
     return (
-      <Box className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-slate-900">
+      <Box className="flex min-h-screen gap-6 items-center justify-center bg-gray-100 dark:bg-slate-900">
         <CircularProgress />
         <Typography className="ml-4">Chargement du paiement...</Typography>
       </Box>
@@ -78,24 +105,22 @@ export default function CheckoutStripe() {
 
   if (error) {
     return (
-      <Box className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-slate-900">
-        <Alert severity="error" className="max-w-md">
-          {error}
+      <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-slate-900">
+          <span className='text-black dark:text-white'>{error}</span>
           <button 
-            onClick={() => navigate('/panier')}
-            className="mt-2 underline"
+            onClick={annulerPaiement}
+            className="btn btn-outline btn-wide"
           >
-            Retour au panier
+            Annuler mes commandes
           </button>
-        </Alert>
-      </Box>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 dark:bg-slate-900">
       <div className="mx-auto max-w-4xl px-4">
-        <Typography variant="h4" className="mb-6 text-center font-bold text-gray-700 dark:text-white">
+        <Typography variant="h4" className="mb-6 text-center font-bold text-gray-800 dark:text-white">
           Paiement sécurisé
         </Typography>
 

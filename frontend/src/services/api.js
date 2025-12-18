@@ -36,6 +36,7 @@ api.interceptors.response.use(
       localStorage.removeItem('DataAdresse');
       localStorage.removeItem('methodeLivraison');
       localStorage.removeItem('methodePaiement');
+      localStorage.removeItem('dateLivraison')
       window.location.href = "/admin/login";
     }
     return Promise.reject(error);

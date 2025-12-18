@@ -1,4 +1,5 @@
 import api from './api'; 
+import {verifierReponse} from './verifierReponse';
 
 export const ProduitListe = async () => {
     try {
@@ -22,16 +23,15 @@ export const ProduitGroupe = async () => {
 }
 
 
+export const ProduitSimulaire = async (data) => {
+  return await verifierReponse(() => api.get('/api/produit/produitSimulaire',{ 
+    params: data 
+  }));
+}
+
+
 export const suppProduit = async (id, nom) => {
-    try {
-      const response = await api.delete(`/api/produit/${id}`); 
-      if (response.data) {
-        return response.data;
-      }
-    } catch (error) {
-        console.error("Erreur lors de la suppression :", error);
-        throw error; 
-    }
+  return await verifierReponse(() => api.delete(`/api/produit/${id}`));
 };
 
 

@@ -12,12 +12,17 @@ export const commandeService = {
   },
 
   updateStatut: async (refCommande, statut) => {
-    return await verifierReponse(() => api.put(`/api/admin/${refCommande}/statut`,{
+    return await verifierReponse(() => api.put(`/api/admin/commandes/${refCommande}/statut`, {
         statutCommande: statut
-      }));
+      })
+    );
   },
 
   getCommandesByStatus: async (status) => {
     return await verifierReponse(() => api.get(`/api/admin/commandes/statut/${status}`))
-  }
+  },
+
+  supprimerCommande: async(refCo) => {
+    return await verifierReponse(() => api.post(`/api/admin/commandes/deleteComamnde`, {refCommande: refCo}))
+  },
 };

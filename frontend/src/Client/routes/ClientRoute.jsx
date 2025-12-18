@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route,BrowserRouter } from 'react-router-dom';
 import ClientLayout from './ClientLayout';
 import Home from '../Pages/Accueil/Home';
 import ProfilPage from '../Pages/Profil/ProfilPage';
@@ -12,23 +12,29 @@ import CommandeEtape from '../Pages/Commande/CommandeEtape';
 import ProfilUser from '../Pages/Profil/ProfilUser';
 import CheckoutStripe from '../Pages/Paiement/CheckoutStripe';
 import PaymentSuccess from '../Pages/Paiement/PaymentSuccess';
+import ScrollTop from '../../contexts/ScrollTop';
+import ProduitDetail from '../Pages/Produit/ProduitDetail';
 
 const AdminRoute = () => {
     return (
-        <Routes>
-            <Route element={<ClientLayout />}>
-                <Route path='' element={<Home />}/>
-                <Route path='profile' element={<ProfilPage />}/>
-                <Route path='produit' element={<ProduitClient />}/>
-                <Route path='inscription' element={<Inscription />}/>
-                <Route path='mesCommande' element={<MesCommande />}/>
-                <Route path='passerCommande' element={<CommandeEtape />}/>
-                <Route path='profilUser' element={<ProfilUser />}/>
-                <Route path='checkout/:refCommande' element={<CheckoutStripe />}/>
-                <Route path='payment-success' element={<PaymentSuccess />}/>
-            </Route>
-            <Route path='*' element={<NotFound />}/>
-        </Routes>
+        <>
+            <ScrollTop/>
+            <Routes>
+                <Route element={<ClientLayout />}>
+                    <Route path='' element={<Home />}/>
+                    <Route path='profile' element={<ProfilPage />}/>
+                    <Route path='produit' element={<ProduitClient />}/>
+                    <Route path='inscription' element={<Inscription />}/>
+                    <Route path='mesCommande' element={<MesCommande />}/>
+                    <Route path='passerCommande' element={<CommandeEtape />}/>
+                    <Route path='profilUser' element={<ProfilUser />}/>
+                    <Route path='checkout/:refCommande' element={<CheckoutStripe />}/>
+                    <Route path='payment-success' element={<PaymentSuccess />}/>
+                    <Route path='produitDetail' element={<ProduitDetail />}/>
+                </Route>
+                <Route path='*' element={<NotFound />}/>
+            </Routes>
+        </>
     );
 };
 

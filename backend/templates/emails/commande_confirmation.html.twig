@@ -164,19 +164,21 @@
                 <p>
                     {% if adresseLivraison.libelleAdresse %}
                         {{ adresseLivraison.libelleAdresse }}<br>
+                    {% else %}
+                        Non spécifié<br>
                     {% endif %}
-                    {{ " Non specifié" }}<br>
 
-                    {% if adresseLivraison.ville && adresseLivraison.codePostal%}
-                        {{ adresseLivraison.ville }} {{ adresseLivraison.codePostal}}<br>
-                     {% endif %}
-                    {{ " Non specifié" }}<br>
+                    {% if adresseLivraison.ville and adresseLivraison.codePostal %}
+                        {{ adresseLivraison.ville }} {{ adresseLivraison.codePostal }}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
 
-                    {% if adresseLivraison.quartier && adresseLivraison.lot %}
-                        {{ adresseLivraison.quartier }} {{  adresseLivraison.lot}}<br>
-                     {% endif %}
-                    {{ " Non specifié" }}<br>
-
+                    {% if adresseLivraison.quartier and adresseLivraison.lot %}
+                        {{ adresseLivraison.quartier }} {{ adresseLivraison.lot }}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
                 </p>
             </div>
             
@@ -187,18 +189,21 @@
                 <p>
                      {% if adresseFacturation.libelleAdresse %}
                         {{ adresseFacturation.libelleAdresse }}<br>
+                    {% else %}
+                        Non spécifié<br>
                     {% endif %}
-                    {{ " Non specifié" }}<br>
 
                     {% if adresseFacturation.ville && adresseFacturation.codePostal%}
                         {{ adresseFacturation.ville }} {{ adresseFacturation.codePostal}}<br>
-                     {% endif %}
-                    {{ " Non specifié" }}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
 
                     {% if adresseFacturation.quartier && adresseFacturation.lot %}
                         {{ adresseFacturation.quartier }} {{  adresseFacturation.lot}}<br>
-                     {% endif %}
-                    {{ " Non specifié" }}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
                 </p>
             </div>
             {% endif %}

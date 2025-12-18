@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Commande;
 use App\Entity\Paiement;
 use App\Repository\CommandeRepository;
+use App\Repository\PaiementRepository;
 use App\Service\CommandeEmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -12,19 +13,68 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Stripe\Stripe;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Stripe\PaymentIntent;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/payment')]
 class PaiementController extends AbstractController
 {
+    private MailerInterface $mailer;
     public function __construct(
+        MailerInterface $mailer,
         private EntityManagerInterface $entityManager,
         private CommandeRepository $commandeRepository,
         private CommandeEmailService $emailService  
     ) {
         Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
+        $this->mailer = $mailer;
     }
 
+
+    #[Route('/getAllPaiement', name: 'getAllPaiement', methods: ['GET'])]
+    public function getAllPaiement(PaiementRepository $paie, SerializerInterface $serializer): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        try {
+            $paiement = $paie->findAllWithCommande();
+
+            if(!$paiement){
+                return $this->json([
+                    'error' => [
+                        'code' => 404,
+                        'message' => 'Paiement non trouvé ',
+                        'status' => 'error'
+                    ],
+                    'status' => 'error'
+                ], 404);
+            }
+
+            $data = $serializer->serialize($paiement, 'json', [
+                'groups' => ['paiement:read', 'commande:read'],
+                'circular_reference_handler' => function ($object) {
+                    return $object->getId();
+                }
+            ]);
+            
+            return new JsonResponse([
+                'message' => 'ok, efa io aby',
+                'data' =>  $paiement,
+                'status' => 'success'
+            ],200);
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur lors du chargement des commandes details: ' .  $e->getMessage(),
+                    'status' => 'error'
+                ],
+                'status' => 'error'
+            ], 500);
+        }
+    }
     #[Route('/create-payment-intent', name: 'create_payment_intent', methods: ['POST'])]
     public function createPaymentIntent(Request $request): JsonResponse
     {
@@ -128,24 +178,40 @@ class PaiementController extends AbstractController
                 $paiement->setCommande($commande);
                 $paiement->setMontantPaye($paymentIntent->amount / 100);
                 $paiement->setModePaiment('stripe');
-                $paiement->setStatutPaiment('VALIDÉ');
+                $paiement->setStatutPaiment('PAYEE');
                 $paiement->mettreAjourDate();
                 $paiement->setReferencePaiment($paymentIntentId);
                 
                 // Mettre à jour le statut de la commande
-                $commande->setStatutCommande('PAYÉE');
+                $commande->setStatutCommande('EN_PREPARATION');
                 $commande->mettreAjourDate();
-                
+                $commande->setMontantTotal($this->calculateTotal($commande));
                 $this->entityManager->persist($paiement);
                 $this->entityManager->flush();
                 
                 // Envoyer un email de confirmation de commande
                 try {
-                    $this->emailService->sendCommandeConfirmation($commande);
+                    // $this->emailService->sendCommandeConfirmation($commande);
+                    $client = $commande->getClient();
+                    $total = $this->calculateTotal($commande);
+                    $emailUser = $client->getUser()->getEmailUsers();
+                    $nom = $client->getNomClient() . " " . $client->getPrenomClient();
+                    $email = (new TemplatedEmail())
+                        ->from(new Address("tinarakotonjanahary@gmail.com", "Produit cosmétique - service client"))
+                        ->to($emailUser)
+                        ->subject('Confirmation de commande ' . $commande->getRefCommande())
+                        ->htmlTemplate('emails/contenuEMail.html.twig')
+                        ->context([
+                            'commande' => $commande,
+                            'client' => $client,
+                            'paniers' => $commande->getPaniers(),
+                            'total' => $total,
+                            'fraisLivraison' => $commande->getFraisLivraison()
+                        ]);
+                    $this->mailer->send($email);
                     $emailSent = true;
                     $emailError = null;
                 } catch (\Exception $e) {
-                    // Log l'erreur mais ne bloque pas la confirmation de paiement
                     $emailSent = false;
                     $emailError = $e->getMessage();
                     error_log('Erreur envoi email: ' . $e->getMessage());
@@ -182,6 +248,20 @@ class PaiementController extends AbstractController
                 ]
             ], 500);
         }
+    }
+
+    private function calculateTotal(Commande $commande): float
+    {
+        $total = 0;
+        foreach ($commande->getPaniers() as $panier) {
+            $prix = $panier->getProduit()->getPrixProduit();
+            $total += $prix * $panier->getQuantite();
+        }
+        if ($commande->getFraisLivraison()) {
+            $total += floatval($commande->getFraisLivraison());
+        }
+        
+        return $total;
     }
 
     #[Route('/test-email-direct', name: 'test_email_direct', methods: ['GET'])]

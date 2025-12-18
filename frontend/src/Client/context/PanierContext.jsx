@@ -23,7 +23,29 @@ export function PanierProvider({children}){
                     : item
                 )
             } else {
-                newItems = [...prev, {...produit, quantite: 1}]
+                let qte = produit.quantite ? produit.quantite : 1;
+                newItems = [...prev, {...produit, quantite: qte}]
+            }
+            
+            localStorage.setItem('panier', JSON.stringify(newItems))
+            return newItems
+        })
+    }
+
+    const ajoutePanierModal = (produit) => {
+        setItems((prev) => {
+            const IsExist = prev.find((item) => item.id === produit.id);
+            let newItems;
+            const qte = produit.quantite ? produit.quantite : 1;
+
+            if(IsExist){
+                newItems = prev.map((item) => 
+                    item.id === produit.id 
+                    ? {...item, quantite: qte}
+                    : item
+                )
+            } else {
+                newItems = [...prev, {...produit, quantite: qte}]
             }
             
             localStorage.setItem('panier', JSON.stringify(newItems))
@@ -46,6 +68,15 @@ export function PanierProvider({children}){
             setIsMessage(true)
         }
     }
+
+    const getQuantite = (id) => {
+        const itemTrouve = items.find((item) => item.id === id);
+        if (itemTrouve) {
+            return itemTrouve.quantite;
+        } else {
+            return 1;
+        }
+    };
     
     const MoinsQuantite = (id) => {
         setItems((prev) => {
@@ -75,7 +106,9 @@ export function PanierProvider({children}){
         MoinsQuantite,
         ajouteAuPanier,
         supprimerDuPanier,
-        setIsMessage
+        setIsMessage,
+        getQuantite,
+        ajoutePanierModal
     }
     return (
         <PanierContext.Provider value={value}>

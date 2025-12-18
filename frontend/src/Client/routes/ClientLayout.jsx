@@ -41,7 +41,7 @@ function ClientLayout() {
                           <SideBar />
                           </div>
                         } 
-                          <div className={`w-full ${currentPath !== "/passerCommande" ? "overflow-y-auto h-[calc(100vh-60px)]" :"dark:bg-slate-900"}   p-5`}>
+                          <div className={`w-full ${currentPath === "/Produit" ? "overflow-y-auto h-[calc(100vh-60px)]" :"dark:bg-slate-900"}   p-5`}>
                             <Outlet />
                           </div>
                       </div>

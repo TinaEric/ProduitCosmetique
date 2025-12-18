@@ -17,7 +17,8 @@ export function InputValidate({
     error = false,
     helperText = "",
     onInputs,
-    optionel
+    optionel,
+    login="simple"
 }) {
     const borderClasses = error
         ? "border-red-500 ring-1 ring-red-500"
@@ -28,7 +29,7 @@ export function InputValidate({
     return (
         <fieldset className={`fieldset w-${largeur} gap-y-0 ${margY}`}>
             <legend
-                className={`fieldset-legend ${error ? "text-red-500" : disabled && !saufTitre ? "text-slate-400 dark:text-slate-600" : "text-gray-800 dark:text-slate-300"} `}
+                className={`fieldset-legend ${error ? "text-red-500" : disabled && !saufTitre ? "text-slate-400 dark:text-slate-600" : (login === "simple" ? "text-gray-800 dark:text-slate-300" : "text-white")} `}
                 disabled={disabled}
             >
                 {title} {!optionel && ( <span className="text-red-500">*</span>)}
@@ -43,7 +44,7 @@ export function InputValidate({
                     disabled={disabled}
                     placeholder={placeholder}
                     title={title}
-                    className={`validator w-full bg-transparent outline-none ${className} ${error ? "" : ""}`}
+                    className={`validator w-full bg-transparent outline-none ${className} ${login === "admin" &&  "text-white"} `}
                 />
             </label>
             {helperText && <p className={`mt-1 text-sm ${error ? "text-red-500" : "text-gray-500 dark:text-gray-400"}`}>{helperText}</p>}

@@ -11,6 +11,7 @@ import Paiement from "../Pages/Commande/Paiement";
 import { Command } from "lucide-react";
 import FicheCommande from "../Pages/Commande/FicheCommande";
 import NotificationPage from "../Pages/dashboard/NotificationPage";
+import FicheClient from "../Pages/User/ficheClient";
 
 const RouteBack = () => {
     return (
@@ -37,9 +38,13 @@ const RouteBack = () => {
                 <Route path="categorie"  element={<CategoriePage />}
                 />
                 <Route
-                path="ficheCommande"
-                element={<FicheCommande />}
-            />
+                    path="ficheCommande"
+                    element={<FicheCommande />}
+                />
+                <Route
+                    path="ficheClient"
+                    element={<FicheClient />}
+                />
                 <Route  path="Profil" element={<h1 className="title">verified-customers</h1>}
                 />
             </Route>

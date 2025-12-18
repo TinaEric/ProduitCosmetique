@@ -83,6 +83,7 @@ getStoredUser() {
       localStorage.removeItem('DataAdresse');
       localStorage.removeItem('methodeLivraison');
       localStorage.removeItem('methodePaiement');
+      localStorage.removeItem('dateLivraison')
       return null;
   }
 }
@@ -119,6 +120,7 @@ getStoredUser() {
       localStorage.removeItem('DataAdresse');
       localStorage.removeItem('methodeLivraison');
       localStorage.removeItem('methodePaiement');
+      localStorage.removeItem('dateLivraison')
   }
 
   // Get token

@@ -10,7 +10,7 @@ import { useSearch } from "../../contexts/SearchContext";
 import { InputText } from "@/components/InputGrp";
 import { UploadImage } from "@/components/UploadImage";
 import React, { useEffect, useState, useCallback } from "react";
-import { Construction, SquarePen, NotepadText } from "lucide-react";
+import { Construction, SquarePen,Search, NotepadText } from "lucide-react";
 import { FaSackDollar } from "react-icons/fa6";
 import { RiNumbersFill } from "react-icons/ri";
 import { MdOutlineStar } from "react-icons/md";
@@ -41,9 +41,9 @@ const ProduitPage = () => {
     const [categorieTab, setCategorieTab] = useState([]);
     const [produitsFiltres, setProduitFiltres] = useState([]);
     const [produitASupprimer, setproduitASupprimer] = useState(null);
-    const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loadCategorie, setLoadCategorie] = useState(false);
+    const [open, setOpen] = useState(false);
     const [message, setMessage] = useState({
         ouvre: false,
         texte: "vide",
@@ -81,6 +81,14 @@ const ProduitPage = () => {
         }
     }, []);
 
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    useEffect(()=>{
+        setFilterValue("Tous")
+        setSearchTerm("")
+    },[])
     //chargement de categorie
     const fetchCategories = useCallback(async () => {
         setLoadCategorie(true);
@@ -253,13 +261,26 @@ const ProduitPage = () => {
         const nom = produitASupprimer.nom;
         try {
             const donnes = await suppProduit(id, nom);
-            await fetchProduits();
-            setMessage({
-                ouvre: true,
-                texte: `Le produit "${nom}" a été supprimé avec succès.`,
-                statut: "success",
-            });
-            setOpen(true);
+            if(donnes.data){
+                await fetchProduits();
+                setMessage({
+                    ouvre: true,
+                    texte: `Le produit "${nom}" a été supprimé avec succès.`,
+                    statut: "success",
+                });
+                setOpen(true);
+                console.log("donnes",donnes.data)
+            }else{
+                console.log("donnes",donnes)
+                setMessage({
+                    ouvre: true,
+                    texte: `Erreur de suppression s'est produit`,
+                    statut: "warnig",
+                });
+                setOpen(true);
+            }
+            
+            
         } catch (error) {
             console.error("Erreur de suppression :", error);
             setMessage({
@@ -404,7 +425,22 @@ const ProduitPage = () => {
                 </div>
                 {/* contenu de la page */}
                 <div className="flex w-full flex-col  pt-2 pr-2 ">
-                <div className=" flex gap-6 justify-center rounded-lg transition-colors bg-white dark:bg-slate-900 py-2 px-2 shadow">
+                <div className=" flex justify-between rounded-lg transition-colors bg-white dark:bg-slate-900 py-2 px-2 shadow">
+                    <div className="input border border-slate-500 mr-6 dark:border-slate-600 bg-[#FDFEFF] dark:bg-[#020617]">
+                                                                    <Search
+                                                                        size={20}
+                                                                        className="text-slate-400"
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        name="search"
+                                                                        id="search"
+                                                                        value={searchTerm} 
+                                                                        onChange={handleSearchChange}
+                                                                        placeholder="Recherche..."
+                                                                        className="w-full  bg-transparent text-slate-900 outline-0 placeholder:text-slate-500 dark:text-slate-50"
+                                                                    />
+                                                                </div>
                     <div className="flex  flex-row  items-center gap-4">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Trié par  :</span>
                         {["Tous", "enStock","rupture", "alerte"].map((status) => (

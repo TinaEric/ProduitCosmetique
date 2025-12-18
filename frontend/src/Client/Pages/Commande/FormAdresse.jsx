@@ -98,6 +98,10 @@ const FormAdresse = ({ initialData, onSubmitSuccess }) => {
         getAdresses();
     }, [isUserConnected, user]);
 
+            useEffect(() => {
+                window.scrollTo(0,0);
+            },[])
+            
     useEffect(() => {
         if (initialData && adressesClient.length > 0) {
             // Initialiser l'adresse de livraison depuis les données initiales

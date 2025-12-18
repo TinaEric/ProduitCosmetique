@@ -3,6 +3,8 @@ namespace App\Controller;
 
 use App\Entity\Commande;
 use App\Repository\CommandeRepository;
+use App\Repository\PaiementRepository;
+use App\Repository\PanierRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -11,17 +13,34 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Core\Security;
 
 #[Route('/api/admin/commandes')]
 class AdminCommandeController extends AbstractController
 {
+
+    private $entityManager;
+    private $serializer;
+    private $validator;
+
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        SerializerInterface $serializer,
+        ValidatorInterface $validator,
+    ) {
+        $this->entityManager = $entityManager;
+        $this->serializer = $serializer;
+        $this->validator = $validator;
+    }
+
     #[Route('/', name: 'admin_commandes_index', methods: ['GET'])]
-    public function index(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
+    public function index(EntityManagerInterface $entityManager, SerializerInterface $serializer,CommandeRepository $cmd): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         try {
-            $commandes = $entityManager->getRepository(Commande::class)->findAllWithRelations();
-            
+            $commandes = $cmd->findAllWithRelations();
+
             if(!$commandes){
                 return $this->json([
                     'error' => [
@@ -32,18 +51,11 @@ class AdminCommandeController extends AbstractController
                     'status' => 'error'
                 ], 404);
             }
-
-            $context = (new ObjectNormalizerContextBuilder())
-                ->withGroups(['commande:read'])
-                ->toArray();
-
-            $data = $serializer->serialize($commandes, 'json', $context);
-
             return new JsonResponse([
-                'data' => json_decode($data, true),
+                'message' => 'ok, efa io aby',
+                'data' =>  $commandes,
                 'status' => 'success'
-            ], 200);
-
+            ],200);
         } catch (\Exception $e) {
             return $this->json([
                 'error' => [
@@ -52,6 +64,39 @@ class AdminCommandeController extends AbstractController
                     'status' => 'error'
                 ],
                 'status' => 'error'
+            ], 500);
+        }
+    }
+
+    #[Route('/test', name: 'admin_commandes_test', methods: ['GET'])]
+    public function test(CommandeRepository $commandeRepository): JsonResponse
+    {
+        try {
+            // Test 1: Simple find
+            $simple = $commandeRepository->findAll();
+            
+            // Test 2: Avec une seule relation
+            $qb = $commandeRepository->createQueryBuilder('c')
+                ->leftJoin('c.client', 'client')
+                ->addSelect('client')
+                ->setMaxResults(1);
+            
+            $withClient = $qb->getQuery()->getResult();
+            
+            // Test 3: Avec toutes les relations (copie de findAllWithRelations)
+            $withAll = $commandeRepository->findAllWithRelations();
+            
+            return $this->json([
+                'test1_simple_count' => $simple,
+                'test2_with_client' => $withClient ? 'OK' : 'ERROR',
+                'test3_with_all' => $withAll ? 'OK' : 'ERROR',
+                'first_commande_ref' => $simple[0]->getRefCommande() ?? 'none'
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }
@@ -120,7 +165,208 @@ class AdminCommandeController extends AbstractController
         }
     }
 
-    #[Route('/{refCommande}/statut', name: 'admin_commandes_update_status', methods: ['PUT', 'OPTIONS'])]
+    #[Route('/{refCommande}/statut', name: 'admin_commande_update_statut', methods: ['PUT'])]
+    public function updateStatut(
+        Request $request,
+        string $refCommande,
+        CommandeRepository $commandeRepository
+    ): JsonResponse {
+        try {
+            $user = $this->getUser();
+            if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
+                return $this->json([
+                    'error' => [
+                        'code' => Response::HTTP_UNAUTHORIZED,
+                        'message' => 'Acces non autorisé',
+                        'status' => 'error'
+                    ]
+                ], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Récupérer les données de la requête
+            $data = json_decode($request->getContent(), true);
+            $nouveauStatut = $data['statutCommande'] ?? null;
+
+            // Validation du statut
+            if (!$nouveauStatut) {
+                return $this->json([
+                    'error' => [
+                        'code' => Response::HTTP_BAD_REQUEST,
+                        'message' => 'Donné recue vide!',
+                        'status' => 'error'
+                    ]
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Liste des statuts autorisés
+            $statutsAutorises = [
+                'INITIALISE',
+                'EN_ATTENTE_PAIEMENT',
+                'EN_PREPARATION',
+                'EXPEDIEE',
+                'LIVREE',
+                'ANNULER'
+            ];
+
+            if (!in_array($nouveauStatut, $statutsAutorises)) {
+                return $this->json([
+                    'error' => [
+                        'code' => Response::HTTP_BAD_REQUEST,
+                        'message' => 'Le status recue non autorisé!',
+                        'status' => 'error'
+                    ]
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Trouver la commande
+            $commande = $commandeRepository->findOneBy(['refCommande' => $refCommande]);
+            
+            if (!$commande) {
+                return $this->json([
+                    'error' => [
+                        'code' => Response::HTTP_NOT_FOUND,
+                        'message' => 'Commande Associé non trouvé',
+                        'status' => 'error'
+                    ]
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Sauvegarder l'ancien statut
+            $ancienStatut = $commande->getStatutCommande();
+
+            // Mettre à jour le statut
+            $commande->setStatutCommande($nouveauStatut);
+            $paiement = $commande->getPaiement();
+            $paiement->getStatutPaiment("PAYEE");
+            $commande->mettreAjourDate();
+
+            // Si le statut est "ANNULER", remettre les produits en stock
+            if ($ancienStatut !== 'ANNULER' && $nouveauStatut === 'ANNULER') {
+                $commandeRepository->restaurerStockCommande($commande);
+            }
+
+            // Si le statut est "LIVREE", mettre à jour la date de livraison
+            if ($nouveauStatut === 'LIVREE') {
+                $commande->setDateLivraison(new \DateTimeImmutable());
+            }
+
+            // Valider les modifications
+            $errors = $this->validator->validate($commande);
+            if (count($errors) > 0) {
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[] = $error->getMessage();
+                }
+                return $this->json([
+                    'error' => [
+                        'code' => Response::HTTP_BAD_REQUEST,
+                        'message' => 'Erreur de validation: ' . $errorMessages ,
+                        'status' => 'error'
+                    ]
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Persister les changements
+            $this->entityManager->flush();
+            // Préparer la réponse
+            $commandeData = $this->serializer->serialize($commande, 'json', [
+                'groups' => ['commande:read', 'client:read', 'panier:read', 'produit:read']
+            ]);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Statut de la commande mis à jour avec succès',
+                'data' => [
+                    'commande' => json_decode($commandeData, true),
+                    'modifications' => [
+                        'ancienStatut' => $ancienStatut,
+                        'nouveauStatut' => $nouveauStatut,
+                        'dateModification' => $commande->getDateUpdate()
+                    ]
+                ]
+            ], Response::HTTP_OK);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur lors du chargement des commandes details: ' .  $e->getMessage(),
+                    'status' => 'error'
+                ],
+                'status' => 'error'
+            ], 500);
+        }
+    }
+    
+
+    #[Route('/deleteComamnde', name: 'admin_deleteComamnde', methods: ['POST'])]
+    public function deleteComamnde(
+        Request $request,
+        CommandeRepository $repository,
+        PaiementRepository $paimentRepo, 
+        PanierRepository $panierRepos,
+        EntityManagerInterface $entityManager
+    ): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        try {
+
+            $data = json_decode($request->getContent(),true);
+            if (!is_array($data) || !isset($data['refCommande'])) {
+                return $this->json([
+                   'error' => [
+                       'code' => 400,
+                       'message' => 'Format de données invalide ou référence de commande manquante.',
+                       'status' => 'error'
+                   ]
+               ], Response::HTTP_BAD_REQUEST) ;
+           }
+
+            $refCommande = $data['refCommande']; 
+            $commande = $repository->findOneBy(['refCommande' => $refCommande]);
+            
+            if (!$commande) {
+                return $this->json([
+                    'error' => [
+                        'code' => 404,
+                        'message' => 'Commande non trouvée.',
+                        'status' => 'error'
+                    ]
+                    ], Response::HTTP_NOT_FOUND) ;
+            }
+            $paniers = $panierRepos->findBy(['commande' => $commande]);
+            if (!empty($paniers)) {
+                foreach($paniers as $panier){
+                    $entityManager->remove($panier);
+                }
+            }
+
+            $paiement = $paimentRepo->findOneBy(['commande' => $commande]);
+            if ($paiement) {
+                $entityManager->remove($paiement);
+            }
+            $entityManager->remove($commande);
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'status' => "succes",
+                'message' => 'La suppression est terminés avec succès!',
+                'data' => "OK ,SUPPRESSION SUCCES",
+            ],200);
+            
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur lors du chargement des commandes details: ' .  $e->getMessage(),
+                    'status' => 'error'
+                ],
+                'status' => 'error'
+            ], 500);
+        }
+    }
+
+    #[Route('/{refCommande}/statut', name: 'admin_commandes_update_status', methods: ['PUT'])]
     public function updateStatus(Request $request, Commande $commande = null, EntityManagerInterface $entityManager): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');

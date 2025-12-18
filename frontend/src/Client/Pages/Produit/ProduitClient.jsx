@@ -14,6 +14,8 @@ import { RiNumbersFill } from "react-icons/ri";
 import { MdOutlineStar } from "react-icons/md";
 import { BiSolidCategoryAlt } from "react-icons/bi";
 import { AiOutlineProduct } from "react-icons/ai";
+import CartProduit from "@/components/CartProduit";
+import { useNavigate } from "react-router-dom";
 
 const Filtres = {
     TOUS: "Tous",
@@ -55,7 +57,13 @@ const ProduitClient = () => {
      const [imageProduct,setImageProduct] = useState(null);
      const [codePromosProduct, setCodePromosProduct] =useState("");
      const [codeCategorie, setCodeCategorie] = useState("");
- 
+     const navigate = useNavigate();
+
+
+     const afficheDetailProduit = (product) => {
+        navigate("/produitDetail", { state: product });
+    };
+
      // chargement des produit
     const fetchProduits = useCallback(async () => {
         setLoading(true);
@@ -198,6 +206,8 @@ const ProduitClient = () => {
 
         setProduitFiltres(finalProduitsAffiches);
         setTotalFiltre(nouveauTotal);
+
+        console.log(resultat)
         
     }, [ProduitTab, searchTerm, filterValue]);
     
@@ -339,19 +349,6 @@ const ProduitClient = () => {
                                         </div>
 
                                         {/* Caractéristiques */}
-                                        {/* <div className="grid grid-cols-2 gap-4 w-full">
-                                            <div>
-                                                <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                                    Catégorie
-                                                </h5>
-                                                <p className="text-gray-600 dark:text-gray-400 text-sm w-full">
-                                                    <span className="font-bold">{produitDetail.idCategory?.libelleCategorie || "Non spécifiée"} :</span> 
-                                                    <span className="italic ml-2 w-full">{produitDetail.idCategory?.descriptionCategorie || "Non spécifiée" }</span>
-                                                </p>
-                                            </div>
-                                         */}
-                                        {/* </div> */}
-                                        {/* Caractéristiques */}
                                     <div className="w-full">
                                         <div className="mb-4">
                                             <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -456,17 +453,12 @@ const ProduitClient = () => {
                                     {ParCat.produits.map((data) => (
                                         <div key={data.id} 
                                         >
-                                            <CardClient
-                                                id={data.id}
-                                                img={data.image}
-                                                titre={data.nom}
-                                                stock={data.stock}
-                                                prix={data.prix}
+                                            <CartProduit 
                                                 onDispo={prodDispo}
-                                                categorie={ParCat}
-                                                produit={data}
-                                                onInfos={afficheInfoProduit}
-                                                addPanier={AjouterPanier}
+                                                product={data}
+                                                img={data.image}
+                                                onInfos={afficheDetailProduit}
+                                                addPanier={AjouterPanier} 
                                             />
                                         </div>
                                     ))}

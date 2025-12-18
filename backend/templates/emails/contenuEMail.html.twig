@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .commande-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .commande-info p {
+            margin: 8px 0;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .items-table th {
+            background-color: #f0f0f0;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .total-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        .total-final {
+            font-weight: bold;
+            font-size: 1.3em;
+            color: #667eea;
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .adresse-box {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .footer {
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .statut {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✓ Paiement Confirmé !</h1>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour <strong>{{ client.civiliteClient }} {{ client.nomClient }} {{ client.prenomClient }}</strong>,</p>
+            
+            <p>Merci pour votre commande ! Nous avons bien reçu votre paiement et nous préparons votre commande avec soin.</p>
+            
+            <div class="commande-info">
+                <p><strong>📋 Référence commande :</strong> {{ commande.refCommande }}</p>
+                <p><strong>📅 Date :</strong> {{ commande.dateCommande|date('d/m/Y à H:i') }}</p>
+                <p><strong>📦 Méthode de livraison :</strong> {{ commande.methodeLivraison ?? 'Standard' }}</p>
+                <p><strong>💳 Méthode de paiement :</strong> {{ commande.methodePaiement|upper }}</p>
+                <p><strong>📌 Statut :</strong> <span class="statut">{{ commande.statutCommande }}</span></p>
+            </div>
+            
+            <h2>Produits commandés</h2>
+            
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th style="text-align: center;">Quantité</th>
+                        <th style="text-align: right;">Prix unitaire</th>
+                        <th style="text-align: right;">Sous-total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for panier in paniers %}
+                    <tr>
+                        <td>{{ panier.produit.nomProduit }}</td>
+                        <td style="text-align: center;">{{ panier.quantite }}</td>
+                        <td style="text-align: right;">{{ panier.produit.prixProduit|number_format(2, ',', ' ') }} Ar</td>
+                        <td style="text-align: right;">{{ (panier.quantite * panier.produit.prixProduit)|number_format(2, ',', ' ') }} Ar</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="total-section">
+                <div class="total-row">
+                    <span> Sous Total   :</span>
+                    <span>{{ (total - fraisLivraison)|number_format(2, ',', ' ') }} Ar</span>
+                </div>
+                <div class="total-row">
+                    <span>Frais de livraison :</span>
+                    <span>{{ fraisLivraison|number_format(2, ',', ' ') }} Ar</span>
+                </div>
+                <div class="total-row total-final">
+                    <span>Net à Payé :</span>
+                    <span>{{ total|number_format(2, ',', ' ') }} Ar</span>
+                </div>
+            </div>
+            
+            <h2>📦 Adresse de livraison</h2>
+            <div class="adresse-box">
+                {% set adresseLivraison = commande.adresseLivraison %}
+                <p>
+                    {% if adresseLivraison.libelleAdresse %}
+                        {{ adresseLivraison.libelleAdresse }}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
+
+                    {% if adresseLivraison.ville and adresseLivraison.codePostal %}
+                        {{ adresseLivraison.ville }} {{ adresseLivraison.codePostal }}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
+
+                    {% if adresseLivraison.quartier and adresseLivraison.lot %}
+                        {{ adresseLivraison.quartier }} {{ adresseLivraison.lot }}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
+                </p>
+            </div>
+            
+            {% if commande.adresseFacturation != commande.adresseLivraison %}
+            <h2>📄 Adresse de facturation</h2>
+            <div class="adresse-box">
+                {% set adresseFacturation = commande.adresseFacturation %}
+                <p>
+                     {% if adresseFacturation.libelleAdresse %}
+                        {{ adresseFacturation.libelleAdresse }}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
+
+                    {% if adresseFacturation.ville and adresseFacturation.codePostal %}
+                        {{ adresseFacturation.ville }} {{ adresseFacturation.codePostal}}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
+
+                    {% if adresseFacturation.quartier and adresseFacturation.lot %}
+                        {{ adresseFacturation.quartier }} {{  adresseFacturation.lot}}<br>
+                    {% else %}
+                        Non spécifié<br>
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+            
+            <p style="margin-top: 30px;">🚚 Vous recevrez un email de suivi dès que votre commande sera expédiée.</p>
+            
+            <p>Si vous avez des questions, n'hésitez pas à nous contacter à <a href="mailto:{{'tinarakotonjanahary@gmail.com'}}">{{ 'tinarakotonjanahary@gmail.com' }}</a></p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Merci de votre confiance !</strong></p>
+            <p>&copy; {{ 'now'|date('Y') }} Produit cosmétique - service Client</p>
+            <p style="font-size: 12px; margin-top: 10px; color: #999;">
+                Cet email a été envoyé automatiquement suite à votre commande {{ commande.refCommande }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>

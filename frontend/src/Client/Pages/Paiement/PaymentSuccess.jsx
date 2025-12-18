@@ -10,11 +10,13 @@ export default function PaymentSuccess() {
 
   useEffect(() => {
     // Nettoyer le localStorage après paiement réussi
+    
     localStorage.removeItem('panier');
     localStorage.removeItem('RefCommande');
     localStorage.removeItem('DataAdresse');
     localStorage.removeItem('methodeLivraison');
     localStorage.removeItem('methodePaiement');
+    localStorage.removeItem('dateLivraison')
   }, []);
 
   return (

@@ -179,7 +179,7 @@ class CategorieController extends AbstractController
         $data = json_decode($request->getContent(),true);
         $codes = $data['codes'] ?? []; 
         $count = 0;
-
+        $countProduit = 0;
         if (empty($codes)) {
             return $this->json([
                 'error' => [
@@ -192,6 +192,16 @@ class CategorieController extends AbstractController
 
         foreach ($codes as $code) {
             $categorie = $this->repository->findOneBy(['codeCategorie' => $code]);
+            $produits =  $categorie->getProduits();
+            foreach ($produits as $produit) {
+                $paniers = $produit->getPaniers();
+                foreach ($paniers as $panier) {
+                    $this->entityManager->remove($panier);
+                }
+                $this->entityManager->remove($produit);
+                $countProduit++;
+            }
+            
             if ($categorie) {
                 $this->entityManager->remove($categorie);
                 $count++;
@@ -200,7 +210,10 @@ class CategorieController extends AbstractController
 
         $this->entityManager->flush();
         return $this->json([
-            'data' => $count,
+            'data' => [
+                'countCategorie' => $count,
+                'countProduit' => $countProduit
+            ],
             'status' => 'success',
             'message' => "$count catégories supprimées avec succès.",
             ],200) ;

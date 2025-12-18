@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Facture {{ commande.refCommande }}</title>
+    <style>
+        /* Styles complets */
+        @page {
+            margin: 50px 30px;
+        }
+        
+        body {
+            font-family: 'DejaVu Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+        
+        .entreprise-info {
+            flex: 1;
+        }
+        
+        .facture-info {
+            text-align: right;
+        }
+        
+        .titre-facture {
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            background-color: #ecf0f1;
+            padding: 8px 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            color: #2c3e50;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .info-item {
+            margin-bottom: 8px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: inline-block;
+            min-width: 150px;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 11px;
+        }
+        
+        th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #34495e;
+        }
+        
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .produit-img-container {
+            width: 50px;
+            height: 50px;
+            overflow: hidden;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .produit-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        
+        .totals {
+            width: 300px;
+            float: right;
+            margin-top: 20px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .total-row:last-child {
+            border-bottom: 2px solid #2c3e50;
+            font-weight: bold;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-en-preparation {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-expediee {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-livree {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .signature-area {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #2c3e50;
+        }
+        
+        .signature-box {
+            width: 250px;
+            margin-top: 40px;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 10px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .mb-10 {
+            margin-bottom: 10px;
+        }
+        
+        .mt-20 {
+            margin-top: 20px;
+        }
+        
+        .clearfix {
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+    <!-- En-tête -->
+    <div class="header">
+        <div class="entreprise-info">
+            <h2 style="margin: 0 0 5px 0; color: #2c3e50;">{{ entreprise.nom }}</h2>
+            <div style="font-size: 11px; color: #7f8c8d;">
+                <p style="margin: 2px 0;">{{ entreprise.adresse }}</p>
+                <p style="margin: 2px 0;">{{ entreprise.codePostal }} {{ entreprise.ville }}</p>
+                <p style="margin: 2px 0;">Tél: {{ entreprise.telephone }} | Email: {{ entreprise.email }}</p>
+                {% if entreprise.siteWeb %}
+                    <p style="margin: 2px 0;">Site: {{ entreprise.siteWeb }}</p>
+                {% endif %}
+                <p style="margin: 2px 0;">{{ entreprise.tva }}</p>
+            </div>
+        </div>
+        
+        <div class="facture-info">
+            <h1 class="titre-facture">FACTURE</h1>
+            <div class="info-item">
+                <span class="info-label">N° Facture:</span>
+                <span class="info-value">{{ commande.refCommande }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date facturation:</span>
+                <span class="info-value">{{ date_emission|date('d/m/Y') }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Statut:</span>
+                <span class="status-badge status-{{ commande.statutCommande|lower|replace({'_': '-'}) }}">
+                    {{ commande.statutCommande|replace({'_': ' '})|title }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Client -->
+    <div class="section">
+        <div class="section-title">CLIENT</div>
+        <div class="grid-2">
+            <div class="info-box">
+                <div class="info-item">
+                    <span class="info-label">Nom & Prénom:</span>
+                    <span class="info-value">{{ client.nomClient }} {{ client.prenomClient }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Téléphone:</span>
+                    <span class="info-value">{{ client.telephoneClient }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Référence client:</span>
+                    <span class="info-value">{{ client.refClient }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Adresses -->
+    <div class="section">
+        <div class="section-title">ADDRESSES</div>
+        <div class="grid-2">
+            <div class="info-box">
+                <h4 style="margin-top: 0; color: #2c3e50;">Adresse de Livraison</h4>
+                <div class="info-item">
+                    <span class="info-label">Référence:</span>
+                    <span class="info-value">{{ commande.adresseLivraison.refAdresse }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Adresse:</span>
+                    <span class="info-value">
+                        {{ commande.adresseLivraison.lot }}<br>
+                        {{ commande.adresseLivraison.quartier }}<br>
+                        {{ commande.adresseLivraison.codePostal }} {{ commande.adresseLivraison.ville }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h4 style="margin-top: 0; color: #2c3e50;">Adresse de Facturation</h4>
+                {% if commande.adresseFacturation %}
+                    <div class="info-item">
+                        <span class="info-label">Référence:</span>
+                        <span class="info-value">{{ commande.adresseFacturation.refAdresse }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Adresse:</span>
+                        <span class="info-value">
+                            {{ commande.adresseFacturation.lot }}<br>
+                            {{ commande.adresseFacturation.quartier }}<br>
+                            {{ commande.adresseFacturation.codePostal }} {{ commande.adresseFacturation.ville }}
+                        </span>
+                    </div>
+                {% else %}
+                    <p class="info-value">Identique à l'adresse de livraison</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Commande -->
+    <div class="section">
+        <div class="section-title">INFORMATIONS COMMANDE</div>
+        <div class="grid-2">
+            <div class="info-box">
+                <div class="info-item">
+                    <span class="info-label">Date commande:</span>
+                    <span class="info-value">{{ commande.dateCommande|date('d/m/Y H:i') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date livraison:</span>
+                    <span class="info-value">
+                        {% if commande.dateLivraison %}
+                            {{ commande.dateLivraison|date('d/m/Y H:i') }}
+                        {% else %}
+                            À confirmer
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Méthode livraison:</span>
+                    <span class="info-value">{{ commande.methodeLivraison|title }}</span>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <div class="info-item">
+                    <span class="info-label">Méthode paiement:</span>
+                    <span class="info-value">{{ commande.methodePaiement|title }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Statut paiement:</span>
+                    <span class="info-value">
+                        {% if commande.paiement %}
+                            {{ commande.paiement.statutPaiment|replace({'_': ' '})|title }}
+                        {% else %}
+                            Non spécifié
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Référence paiement:</span>
+                    <span class="info-value">
+                        {% if commande.paiement %}
+                            {{ commande.paiement.referencePaiment }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Produits -->
+    <div class="section">
+        <div class="section-title">DÉTAIL DES PRODUITS</div>
+        <table>
+            <thead>
+                <tr>
+                    <th width="80">Réf.</th>
+                    <th>Produit</th>
+                    <th width="80">Code promo</th>
+                    <th width="80">Prix unitaire</th>
+                    <th width="60">Qté</th>
+                    <th width="100">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for panier in paniers %}
+                    {% set produit = panier.produit %}
+                    {% set sousTotal = panier.prixUnitaire * panier.quantite %}
+                    <tr>
+                        <td class="text-center">{{ produit.numProduit }}</td>
+                        <td>
+                            <strong>{{ produit.nomProduit }}</strong><br>
+                            <small style="color: #666;">{{ produit.descriptionProduit|slice(0, 100) }}...</small>
+                        </td>
+                        <td class="text-center">
+                            {% if produit.codePromos %}
+                                <span style="background-color: #f1c40f; color: #000; padding: 2px 6px; border-radius: 3px; font-size: 10px;">
+                                    {{ produit.codePromos }}
+                                </span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-right">{{ panier.prixUnitaire|number_format(2, ',', ' ') }} Ar</td>
+                        <td class="text-center">{{ panier.quantite }}</td>
+                        <td class="text-right">{{ sousTotal|number_format(2, ',', ' ') }} Ar</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Section Totaux -->
+    <div class="section">
+        <div class="section-title">TOTAUX</div>
+        <div class="clearfix"></div>
+        
+        <div class="totals">
+            <div class="total-row">
+                <span>Sous-total produits:</span>
+                <span>{{ total_produits|number_format(2, ',', ' ') }} Ar</span>
+            </div>
+            <div class="total-row">
+                <span>Frais de livraison:</span>
+                <span>{{ commande.fraisLivraison|number_format(2, ',', ' ') }} Ar</span>
+            </div>
+            <div class="total-row">
+                <strong>Total TTC:</strong>
+                <strong>{{ commande.montantTotal|number_format(2, ',', ' ') }} Ar</strong>
+            </div>
+        </div>
+        
+        <div class="clearfix"></div>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature-area">
+        <div style="display: flex; justify-content: space-between;">
+            <div class="signature-box">
+                <p style="border-top: 1px solid #333; padding-top: 30px; text-align: center;">
+                    Signature du client<br>
+                    <small>Nom et cachet</small>
+                </p>
+            </div>
+            
+            <div class="signature-box">
+                <p style="border-top: 1px solid #333; padding-top: 30px; text-align: center;">
+                    Cachet et signature<br>
+                    <small>{{ entreprise.nom }}</small>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="footer">
+        <p>{{ entreprise.nom }} - {{ entreprise.adresse }} - {{ entreprise.ville }} {{ entreprise.codePostal }}</p>
+        <p>Tél: {{ entreprise.telephone }} | Email: {{ entreprise.email }} 
+           {% if entreprise.siteWeb %}| Site: {{ entreprise.siteWeb }}{% endif %}</p>
+        <p style="margin-top: 10px; color: #95a5a6;">
+            Facture établie conformément aux lois en vigueur. TVA non applicable, article 293 B du CGI.<br>
+            Cette facture est électronique et fait foi au même titre qu'une facture papier.
+        </p>
+    </div>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Facture {{ commande.refCommande }}</title>
+</head>
+<body>
+    <h1>Facture {{ commande.refCommande }}</h1>
+    <p>Date: {{ date_emission|date('d/m/Y') }}</p>
+    <p>Client: {{ commande.client.nomClient }} {{ commande.client.prenomClient }}</p>
+    <p>Total: {{ commande.montantTotal|number_format(2, ',', ' ') }} Ar</p>
+</body>
+</html>
+

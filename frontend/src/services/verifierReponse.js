@@ -5,11 +5,10 @@
 export async function verifierReponse(urlAxios) {
     try{
         const response = await urlAxios();
-
         if (response.status === 200 && response.data?.data){
             return {data : response.data.data, error : null, statut : "success" , message :response.data.message }
         }
-        if (response.data.error.code === 201 && response.data?.error.message){
+        if (response.status === 201 && response.data?.error.message){
             return { data: null, error: response.data.error.message || "Email non trouvé", statut : response.data.error.status };
         }
 
@@ -18,7 +17,7 @@ export async function verifierReponse(urlAxios) {
         }
 
         if (!response.data?.data && !response.data?.error) {
-            return { data: null, error: 'Format de réponse invalide', statut : "error" };
+            return { data: null, error: 'Format de réponse invalide:' + response, statut : "error" };
         }
 
         if (response.status === 400 && response.data?.error?.message){
@@ -36,12 +35,13 @@ export async function verifierReponse(urlAxios) {
         if (response.status === 422 && response.data?.error?.message ) {
             return { data: null, error: response.data.error.message, statut : response.data.error.status};
           }
+          console.log("ERREUR (Serveur): ", response)
         return {data : null, error :`Reponse inattendue du serveur! code : ${response.data.error.code} message : ${response.data.error.message} `, statut :"error"}
     }
     catch(erreur){
         const status = erreur.response?.status;
         const message = erreur.response?.data?.error?.message || `Erreur inconnue:  ${erreur}`
-         
+         console.log("ERREUR (Try/Catch): ", erreur)
         if(!erreur.response){
             return {data : null, error : "Erreur de réseau ou serveur inaccessible :" + erreur}
         }

@@ -32,19 +32,22 @@ class CommandeRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('c')
             ->leftJoin('c.client', 'client')
+            ->leftJoin('client.user', 'user')
             ->leftJoin('c.adresseLivraison', 'adresseLivraison')
             ->leftJoin('c.adresseFacturation', 'adresseFacturation')
             ->leftJoin('c.paniers', 'paniers')
             ->leftJoin('paniers.produit', 'produit')
-            ->leftJoin('c.paiements', 'paiements')
+            ->leftJoin('c.paiement', 'paiement')
             ->addSelect('client')
+            ->addSelect('user')
             ->addSelect('adresseLivraison')
             ->addSelect('adresseFacturation')
             ->addSelect('paniers')
             ->addSelect('produit')
-            ->addSelect('paiements')
+            ->addSelect('paiement')
             ->getQuery()
-            ->getResult();
+            // ->getResult();
+            ->getArrayResult();
     }
     
     public function findByStatus(string $status)
@@ -62,17 +65,19 @@ class CommandeRepository extends ServiceEntityRepository
     {
         $results = $this->createQueryBuilder('c')
             ->leftJoin('c.client', 'client')
+            ->leftJoin('client.user', 'user')
             ->leftJoin('c.adresseLivraison', 'adresseLiv')
             ->leftJoin('c.adresseFacturation', 'adresseFacturation')
             ->leftJoin('c.paniers', 'p')
             ->leftJoin('p.produit', 'prod')
-            ->leftJoin('c.paiements', 'paiements')
+            ->leftJoin('c.paiement', 'paiement')
             ->addSelect('client')
+            ->addSelect('user')
             ->addSelect('adresseLiv')
             ->addSelect('adresseFacturation')
             ->addSelect('p')
             ->addSelect('prod')
-            ->addSelect('paiements')
+            ->addSelect('paiement')
             ->addSelect('COALESCE(SUM(p.quantite * prod.prixProduit), 0) as montant')
             ->andWhere('c.statutCommande != :status')
             ->setParameter('status', "INITIALISE")
@@ -117,14 +122,24 @@ class CommandeRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('c')
         ->leftJoin('c.client', 'client')
+        ->leftJoin('client.user', 'user')
+        ->leftJoin('c.adresseLivraison', 'adresseLivraison')
+        ->leftJoin('c.adresseFacturation', 'adresseFacturation')
+        ->leftJoin('c.paniers', 'paniers')
+        ->leftJoin('paniers.produit', 'produit')
+        ->leftJoin('c.paiement', 'paiement')
         ->addSelect('client')
+        ->addSelect('user')
+        ->addSelect('adresseLivraison')
+        ->addSelect('adresseFacturation')
+        ->addSelect('paniers')
+        ->addSelect('produit')
+        ->addSelect('paiement')
         ->where('c.dateCommande >= :dateLimit')
         ->setParameter('dateLimit', $dateLimit)
-        // ->andWhere('c.statutCommande IN (:statuses)')
-        // ->setParameter('statuses', ['INITIALISE', 'EN_ATTENTE_PAIEMENT'])
         ->orderBy('c.dateCommande', 'DESC')
         ->getQuery()
-        ->getResult();
+        ->getArrayResult();
     }
 
     public function getTotalRevenue(): float
@@ -133,7 +148,7 @@ class CommandeRepository extends ServiceEntityRepository
             ->leftJoin('c.paniers', 'p')
             ->leftJoin('p.produit', 'prod') 
             ->where('c.statutCommande IN (:status_traitee)')
-            ->setParameter('status_traitee', ['PAYÉE', 'EN_COURS'])
+            ->setParameter('status_traitee', ['EXPEDIEE', 'EN_PREPARATION','LIVREE'])
             ->select('COALESCE(SUM(p.quantite * prod.prixProduit), 0)');
         $productRevenue = $sansFrais->getQuery()->getSingleScalarResult();
 
@@ -145,5 +160,24 @@ class CommandeRepository extends ServiceEntityRepository
 
         return (float) $productRevenue + (float) $totalFrais;
     
+    }
+
+    public function restaurerStockCommande(Commande $commande): void
+    {
+        try {
+            foreach ($commande->getPaniers() as $panier) {
+                $produit = $panier->getProduit();
+                $nouveauStock = $produit->getStockProduit() + $panier->getQuantite();
+                
+                $produit->setStockProduit($nouveauStock);
+                $produit->mettreAjourDate();
+
+                $this->entityManager->persist($produit);
+            }
+
+            $this->entityManager->flush();
+        } catch (\Exception $e) {
+            error_log('Erreur lors de la restauration du stock: ' . $e->getMessage());
+        }
     }
 }

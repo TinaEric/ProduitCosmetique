@@ -48,10 +48,11 @@ class Client
     private ?\DateTimeInterface $dateInscription = null;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Adresse::class)]
-    #[Groups(["user:me"])]
+    #[Groups(["user:me", "client:read"])]
     private Collection $adresses;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Commande::class)]
+    #[Groups(["user:me", "client:read"])] 
     private Collection $commandes;
 
     public function __construct()

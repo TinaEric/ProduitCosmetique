@@ -8,10 +8,14 @@ use App\Entity\Panier;
 use App\Entity\Paiement;
 use App\Entity\Adresse;
 use App\Entity\Produit;
+use App\Service\CommandeEmailService;
 use App\Repository\ClientRepository;
 use App\Repository\ProduitRepository;
 use App\Repository\AdresseRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mime\Address;
 
 class CommandeServices
 {
@@ -19,18 +23,24 @@ class CommandeServices
     private $adresseRepos;
     private $produitRepository; 
     private $CliRepos; 
-
+    private $emailService;
+    private MailerInterface $mailer;
+    
     public function __construct(
         EntityManagerInterface $entityManager, 
         ClientRepository $CliRepos,
+        MailerInterface $mailer,
         ProduitRepository $produitRepository,
-        AdresseRepository $adresseRepos
+        AdresseRepository $adresseRepos,
+        CommandeEmailService $emailService  
     )
     {
         $this->entityManager = $entityManager;
         $this->produitRepository = $produitRepository; 
         $this->CliRepos = $CliRepos; 
         $this->adresseRepos = $adresseRepos;
+        $this->emailService = $emailService;
+        $this->mailer = $mailer;
     }
 
     public function creerRecupererAdresse(array $adresseData, Client $client): ?Adresse
@@ -142,6 +152,7 @@ class CommandeServices
         string $fraisLivraison,
         string $methodeLivraison,
         string $methodePaiement,
+        string $dateLivraison
     ): array
     {
         $commande = $this->entityManager->getRepository(Commande::class)->findOneBy(['refCommande' => $refCommande]);
@@ -222,8 +233,13 @@ class CommandeServices
             $commande->setMethodeLivraison($methodeLivraison);
             $commande->setFraisLivraison($fraisLivraison);
             $commande->setMethodePaiement($methodePaiement);
+            $totalPanier = $this->calculateTotal($commande);
+            $commande->setMontantTotal($totalPanier);
+            $commande->setDateLivraison(new \DateTimeImmutable($dateLivraison));
+            $emailSent = true;
+            $emailError = null;
             if ($methodePaiement === "especes") {
-                $commande->setStatutCommande('EN_COURS');
+                $commande->setStatutCommande('EN_PREPARATION');
                 $montantTotal = 0;
                 foreach ($commande->getPaniers() as $panier) {
                     $montantTotal += $panier->getQuantite() * $panier->getProduit()->getPrixProduit();
@@ -240,15 +256,47 @@ class CommandeServices
                 $paiement->mettreAjourDate();
                 $paiement->setReferencePaiment("Via Especes-".uniqid());
                 $this->entityManager->persist($paiement);
+
+                try {
+                    // $this->emailService->sendCommandeConfirmation($commande);
+                    $client = $commande->getClient();
+                    $total = $this->calculateTotal($commande);
+                    $emailUser = $client->getUser()->getEmailUsers();
+                    $nom = $client->getNomClient() . " " . $client->getPrenomClient();
+                    $email = (new TemplatedEmail())
+                        ->from(new Address("tinarakotonjanahary@gmail.com", "Produit cosmétique - service client"))
+                        ->to($emailUser)
+                        ->subject('Confirmation de commande ' . $commande->getRefCommande())
+                        ->htmlTemplate('emails/contenuEMail.html.twig')
+                        ->context([
+                            'commande' => $commande,
+                            'client' => $client,
+                            'paniers' => $commande->getPaniers(),
+                            'total' => $total,
+                            'fraisLivraison' => $commande->getFraisLivraison()
+                        ]);
+                    $this->mailer->send($email);
+                    $emailSent = true;
+                    $emailError = null;
+                } catch (\Exception $e) {
+                    $emailSent = false;
+                    $emailError = $e->getMessage();
+                    error_log('Erreur envoi email: ' . $e->getMessage());
+                }
             }else{
                 $commande->setStatutCommande('EN_ATTENTE_PAIEMENT');
             }
             $commande->mettreAjourDate();
+            
 
             $this->entityManager->flush();
             $this->entityManager->commit();
 
             return [
+                'email'=> [
+                    'emailSent'  => $emailSent,
+                    'emailError' => $emailError
+                ],
                 'commande' => $commande,
                 'message' => 'Commande et panier mis à jour avec succès'
             ];
@@ -257,5 +305,20 @@ class CommandeServices
             $this->entityManager->rollback();
             throw new \Exception("Erreur lors de la mise à jour de la commande: " . $e->getMessage());
         }
+    }
+
+    //Fonction pour calculer le total de la commande pour chaque panier
+    private function calculateTotal(Commande $commande): float
+    {
+        $total = 0;
+        foreach ($commande->getPaniers() as $panier) {
+            $prix = $panier->getProduit()->getPrixProduit();
+            $total += $prix * $panier->getQuantite();
+        }
+        if ($commande->getFraisLivraison()) {
+            $total += floatval($commande->getFraisLivraison());
+        }
+        
+        return $total;
     }
 }

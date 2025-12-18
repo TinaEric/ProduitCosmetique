@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Panier;
 use App\Entity\Produit;
 use App\Form\ProduitType;
 use App\Repository\CategorieRepository;
@@ -13,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Throwable;
 
 #[Route('/api/produit')]
 final class ProduitController extends AbstractController
@@ -35,6 +37,8 @@ final class ProduitController extends AbstractController
         $this->categorieRepository = $categorieRepository;
     }
 
+
+    
     // Liste des produits
     #[Route(name: 'app_produit_index', methods: ['GET'])]
     public function index(): JsonResponse
@@ -53,13 +57,70 @@ final class ProduitController extends AbstractController
     public function ProduitParCategorie(Request $request): JsonResponse
     {
         $codeCategorie = $request->query->get('categorie'); 
-        $produit = $this->produitRepository->findProduitsGroupesParCategorie($codeCategorie);
+        $produit = $this->produitRepository->findProdCatPanier($codeCategorie);
 
         if (empty($produit)) {
             return new JsonResponse([], JsonResponse::HTTP_OK); 
         }
         $jsonContent = $this->serializer->serialize($produit, 'json', ['groups' => ['category:read']]);
         return new JsonResponse($jsonContent, JsonResponse::HTTP_OK, [], true);
+    }
+
+    // Produit simulaire
+    #[Route('/produitSimulaire', name: 'produit_similaire', methods: ['GET'])]
+    public function ProduitSimulaire(Request $request): JsonResponse
+    {
+        try {
+            $numProduit = $request->query->get('numProduit');
+            $codeCategorie = $request->query->get('codeCategorie');
+            
+            if(empty($numProduit)){
+                return $this->json([
+                    'error' => [
+                        'code' => 400,
+                        'message' => 'Numero produit requis',
+                        'status' => 'error'
+                    ]
+                ], 400);
+            }
+            
+            if(empty($codeCategorie)){
+                return $this->json([
+                    'error' => [
+                        'code' => 400,
+                        'message' => 'Code Categorie requis',
+                        'status' => 'error'
+                    ]
+                ], 400);
+            }
+        
+            $produit = $this->produitRepository->findProduitsSimilaires($numProduit, $codeCategorie);
+            
+            if (empty($produit)) {
+                return $this->json([
+                    'data' => [],
+                    'message' => 'Aucun produit similaire trouvé',
+                    'status' => 'success'
+                ], 200);
+            }
+            
+            $jsonContent = $this->serializer->serialize($produit, 'json', ['groups' => ['category:read']]);
+            
+            return new JsonResponse([
+                'data' => json_decode($jsonContent, true), 
+                'message' => 'Produits similaires récupérés avec succès',
+                'status' => 'success'
+            ], 200);
+
+        } catch (Throwable $e) {
+            return $this->json([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne du serveur: ' . $e->getMessage(),
+                    'status' => 'error'
+                ]
+            ], 500);
+        }
     }
 
     // Créer produit
@@ -186,20 +247,41 @@ final class ProduitController extends AbstractController
     #[Route('/{code}', name: 'supp_Produit', methods: ['DELETE'])]
     public function deleteProduit(string $code): Response
     {
-        $produit = $this->produitRepository->findOneBy(['numProduit' => $code]); // Utilisation de $this->produitRepository
+        try{
+            $produit = $this->produitRepository->findOneBy(['numProduit' => $code]); // Utilisation de $this->produitRepository
+            $paniers = $produit->getPaniers();
 
-        if (!$produit) {
-            return new JsonResponse([
-                'statut' => 'warning', 
-                'message' => 'produit non trouvée.'
-            ], Response::HTTP_NOT_FOUND);
+            if (!$produit) {
+                return $this->json([
+                    'error' => [
+                        'code' => 404,
+                        'message' => 'produit non trouvée.',
+                        'status' => 'warning'
+                    ]
+                ], 404);
+            }
+            $count = 0;
+            foreach ($paniers as $panier) {
+                $this->entityManager->remove($panier);
+                $count++;
+            }
+            $this->entityManager->remove($produit);
+            $this->entityManager->flush();
+
+            return $this->json([
+                'status' => 'success',
+                'message' => " Un Produit a été supprimées avec succès.",
+                'data' => $count
+            ], 200);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne DELETE PRODUIT : ' . $e->getMessage(),
+                    'status' => 'error'
+                ]
+            ], 500);
         }
-        $this->entityManager->remove($produit);
-        $this->entityManager->flush();
-        return new JsonResponse([
-            'message' => " Un Produit a été supprimées avec succès.",
-            'statut' => 'success'], 
-            Response::HTTP_OK
-        );
     }
 }

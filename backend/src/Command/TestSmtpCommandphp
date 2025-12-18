@@ -1,0 +1,49 @@
+<?php 
+
+namespace App\Command;
+
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
+
+#[AsCommand(
+    name: 'app:test-smtp',
+    description: 'Teste la connexion SMTP Gmail'
+)]
+class TestSmtpCommand extends Command
+{
+    private MailerInterface $mailer;
+    
+    public function __construct(MailerInterface $mailer)
+    {
+        parent::__construct();
+        $this->mailer = $mailer;
+    }
+    
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $output->writeln(' Test de connexion SMTP...');
+        
+        try {
+            $email = (new Email())
+                ->from('tinarakotonjanahary@gmail.com')
+                ->to('tinarakotonjanahary@gmail.com')
+                ->subject('Test SMTP')
+                ->text('Test simple');
+            
+            $output->writeln('📤 Envoi en cours...');
+            
+            $this->mailer->send($email);
+            
+            $output->writeln('✅ Email envoyé avec succès !');
+            return Command::SUCCESS;
+            
+        } catch (\Exception $e) {
+            $output->writeln('❌ Erreur : ' . $e->getMessage());
+            return Command::FAILURE;
+        }
+    }
+}

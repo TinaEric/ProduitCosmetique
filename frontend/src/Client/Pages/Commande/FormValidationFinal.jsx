@@ -1,4 +1,6 @@
-import React from 'react';
+import { UserMinusIcon } from '@heroicons/react/24/solid';
+import { string } from 'prop-types';
+import React, { useEffect } from "react";
 import {
   MdPerson,
   MdEmail,
@@ -9,7 +11,8 @@ import {
   MdCheckCircle,
   MdBusiness,
   MdInfo,
-  MdAttachMoney
+  MdAttachMoney,
+  MdBadge
 } from "react-icons/md";
 
 const FormValidationFinal = ({
@@ -24,9 +27,25 @@ const FormValidationFinal = ({
     if (!string) return "";
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
+          useEffect(() => {
+              window.scrollTo(0,284);
+          },[])
 
+  const ExtractionDate = (dateTimeString) => {
+    const mois = [
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      ];
+            const daty = new Date(dateTimeString);
+            const jour = String(daty.getDate()).padStart(2, '0');
+            const moisIndex = daty.getMonth();
+            const annee = daty.getFullYear();
+            return `${jour} ${mois[moisIndex]} ${annee}`;
+  }
+
+// bg-base-100
   return (
-    <div className="card w-full bg-base-100 shadow-xl border border-base-300 dark:border-gray-700">
+    <div className=" bg-transparent w-full">
       <div className="card-body p-6 md:p-8">
         {/* En-tête avec icône et titre */}
         <div className="text-center mb-8">
@@ -45,73 +64,80 @@ const FormValidationFinal = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Section Informations Personnelles */}
-          <div className="card bg-base-100 border border-base-300 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-slate-50 p-3 dark:bg-slate-800 shadow-sm dark:shadow-slate-950 rounded-xl w-full  hover:shadow-xl transition-shadow">
             <div className="card-body p-5">
-              <div className="flex items-center mb-4">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 mr-3">
-                  <MdPerson className="text-blue-600 dark:text-blue-400 text-xl" />
-                </div>
-                <h4 className="card-title text-lg font-semibold text-gray-800 dark:text-white">
-                  Informations Personnelles
-                </h4>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="w-36">
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Nom & Prénom
-                    </span>
+                <div className="flex items-center mb-4">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 mr-3">
+                    <MdPerson className="text-blue-600 dark:text-blue-400 text-xl" />
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800 dark:text-gray-200">
-                      {`${formData.etape1.nom || formData.etape1.nomClient || "Non spécifié"} ${formData.etape1.prenom || formData.etape1.prenomClient || ""}`}
-                    </p>
-                  </div>
+                  <h4 className="card-title text-lg font-semibold text-gray-800 dark:text-white">
+                    Informations Personnelles
+                  </h4>
                 </div>
-                
-                <div className="divider my-2"></div>
-                
-                <div className="flex items-start">
-                  <div className="w-36 flex items-center">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex">
+                      <MdBadge className="mr-2 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Nom et Prenom
+                      </span>
+                    </div>
+                    <div className="flex">
+                      <p className="font-semibold text-gray-600 dark:text-gray-200">
+                        {`${formData.etape1.civiliteClient} ${formData.etape1.nomClient} ${ formData.etape1.prenomClient}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex items-center justify-between">
+                        <div className=" flex ">
+                          <MdPhone className="mr-2 text-gray-500 dark:text-gray-400" />
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Téléphone
+                          </span>
+                        </div>
+                        <div className="flex">
+                          <p className="font-semibold text-gray-600 dark:text-gray-200">
+                            {formData.etape1.telephoneClient}
+                          </p>
+                        </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex">
+                      <MdEmail className="mr-2 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Date de naissance
+                      </span>
+                    </div>
+                    <div className="flex">
+                      <p className="font-semibold text-gray-600 dark:text-gray-200">
+                        {ExtractionDate(formData.etape1.dateNaissance,"date",true)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex items-center justify-between">
+                  <div className=" flex">
                     <MdEmail className="mr-2 text-gray-500 dark:text-gray-400" />
                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Email
                     </span>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800 dark:text-gray-200">
+                  <div className="flex">
+                    <p className="font-semibold text-gray-600 dark:text-gray-200">
                       {formData.etape1.email || "Non spécifié"}
                     </p>
                   </div>
-                </div>
-                
-                {formData.etape1.telephoneClient && (
-                  <>
-                    <div className="divider my-2"></div>
-                    <div className="flex items-start">
-                      <div className="w-36 flex items-center">
-                        <MdPhone className="mr-2 text-gray-500 dark:text-gray-400" />
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                          Téléphone
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-800 dark:text-gray-200">
-                          {formData.etape1.telephoneClient}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                )}
+                  </div>
               </div>
             </div>
           </div>
 
           {/* Section Adresse de Livraison */}
-          <div className="card bg-base-100 border border-base-300 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-            <div className="card-body p-5">
-              <div className="flex items-center mb-4">
+          <div className="bg-slate-50 px-3 py-2 dark:bg-slate-800 shadow-md dark:shadow-slate-950 rounded-xl w-full  hover:shadow-xl transition-shadow">
+            <div className="card-body p-3">
+              <div className="flex items-center mb-2">
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 mr-3">
                   <MdLocationOn className="text-purple-600 dark:text-purple-400 text-xl" />
                 </div>
@@ -119,55 +145,141 @@ const FormValidationFinal = ({
                   Adresse de Livraison
                 </h4>
               </div>
-              
-              <div className="space-y-3">
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                  <p className="font-medium text-gray-700 dark:text-gray-300">
-                    {formData.etape2.adresseLivraison?.labelle || "Non spécifiée"}
-                  </p>
-                  {(formData.etape2.adresseLivraison?.ville || formData.etape2.adresseLivraison?.codePostal) && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {`${formData.etape2.adresseLivraison?.ville || ""} ${formData.etape2.adresseLivraison?.codePostal || ""}`.trim()}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex">
+                      <MdBadge className="mr-2 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Ville
+                      </span>
+                    </div>
+                    <div className="flex">
+                      <p className="font-semibold text-gray-600 dark:text-gray-200">
+                      {formData.etape2.adresseLivraison.ville} - {formData.etape2.adresseLivraison.codePostal}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex items-center justify-between">
+                        <div className=" flex ">
+                          <MdPhone className="mr-2 text-gray-500 dark:text-gray-400" />
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Quartier
+                          </span>
+                        </div>
+                        <div className="flex">
+                          <p className="font-semibold text-gray-600 dark:text-gray-200">
+                          {formData.etape2.adresseLivraison.lot} - {formData.etape2.adresseLivraison.quartier}
+                          </p>
+                        </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex">
+                      <MdEmail className="mr-2 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                       Labelle 
+                      </span>
+                    </div>
+                    <div className="flex">
+                      <p className="font-semibold text-gray-600 dark:text-gray-200">
+                      {formData.etape2.adresseLivraison.labelle}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex flex-col space-y-2 w-full">
+                    <div className=" flex">
+                      <MdEmail className="mr-2 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Description
+                      </span>
+                    </div>
+                    <div className="flex justify-center  items-center">
+                      <p className="italic font-gothic text-left text-gray-600 dark:text-gray-200">
+                      {formData.etape2.adresseLivraison.complement}
+                      </p>
+                    </div>
+                  </div>
               </div>
             </div>
           </div>
 
-          {/* Section Adresse de Facturation (si différente) */}
-          {formData.etape2.AdresseDifferent && (
-            <div className="card bg-base-100 border border-base-300 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-              <div className="card-body p-5">
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 mr-3">
-                    <MdBusiness className="text-amber-600 dark:text-amber-400 text-xl" />
-                  </div>
-                  <h4 className="card-title text-lg font-semibold text-gray-800 dark:text-white">
-                    Adresse de Facturation
-                  </h4>
+          {/* Section Adresse de facturation */}
+          <div className="bg-slate-50 px-3 py-2 dark:bg-slate-800 shadow-md dark:shadow-slate-950 rounded-xl w-full  hover:shadow-xl transition-shadow">
+            <div className="card-body p-3">
+              <div className="flex items-center mb-2">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 mr-3">
+                  <MdBusiness className="text-purple-600 dark:text-purple-400 text-xl" />
                 </div>
-                
-                <div className="space-y-3">
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                    <p className="font-medium text-gray-700 dark:text-gray-300">
-                      {formData.etape2.adresseFacturation?.labelle || "Non spécifiée"}
-                    </p>
-                    {(formData.etape2.adresseFacturation?.ville || formData.etape2.adresseFacturation?.codePostal) && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {`${formData.etape2.adresseFacturation?.ville || ""} ${formData.etape2.adresseFacturation?.codePostal || ""}`.trim()}
+                <h4 className="card-title text-lg font-semibold text-gray-800 dark:text-white">
+                  Adresse de Facturation
+                </h4>
+              </div>
+              <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex">
+                      <MdBadge className="mr-2 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Ville
+                      </span>
+                    </div>
+                    <div className="flex">
+                      <p className="font-semibold text-gray-600 dark:text-gray-200">
+                      {formData.etape2.adresseFacturation.ville} - {formData.etape2.adresseFacturation.codePostal}
                       </p>
-                    )}
+                    </div>
                   </div>
-                </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex items-center justify-between">
+                        <div className=" flex ">
+                          <MdPhone className="mr-2 text-gray-500 dark:text-gray-400" />
+                          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Quartier
+                          </span>
+                        </div>
+                        <div className="flex">
+                          <p className="font-semibold text-gray-600 dark:text-gray-200">
+                          {formData.etape2.adresseFacturation.lot} - {formData.etape2.adresseFacturation.quartier}
+                          </p>
+                        </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex">
+                      <MdEmail className="mr-2 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                       Labelle 
+                      </span>
+                    </div>
+                    <div className="flex">
+                      <p className="font-semibold text-gray-600 dark:text-gray-200">
+                      {formData.etape2.adresseFacturation.labelle}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex flex-col space-y-2 w-full">
+                    <div className=" flex">
+                      <MdEmail className="mr-2 text-gray-500 dark:text-gray-400" />
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Description
+                      </span>
+                    </div>
+                    <div className="flex justify-center  items-center">
+                      <p className="italic font-gothic text-left text-gray-600 dark:text-gray-200">
+                      {formData.etape2.adresseFacturation.complement}
+                      </p>
+                    </div>
+                  </div>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Section Livraison & Paiement */}
-          <div className={`card bg-base-100 border border-base-300 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow ${formData.etape2.AdresseDifferent ? 'md:col-span-2' : ''}`}>
-            <div className="card-body p-5">
-              <div className="flex items-center mb-4">
+          <div className={`bg-slate-50 px-3 py-2 dark:bg-slate-800 shadow-sm dark:shadow-slate-950 rounded-xl w-full hover:shadow-xl transition-shadow `}>
+            <div className="card-body p-3">
+              <div className="flex items-center mb-2">
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 mr-3">
                   <MdLocalShipping className="text-green-600 dark:text-green-400 text-xl" />
                 </div>
@@ -176,7 +288,7 @@ const FormValidationFinal = ({
                 </h4>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                   <div className="flex items-center mb-3">
                     <MdLocalShipping className="mr-2 text-gray-500 dark:text-gray-400" />
@@ -184,7 +296,7 @@ const FormValidationFinal = ({
                       Livraison
                     </span>
                   </div>
-                  <p className="font-bold text-gray-800 dark:text-white text-lg">
+                  <p className="font-bold text-gray-600 dark:text-white text-lg">
                     {formData.etape3.methodeLivraison ? 
                       capitalizeFirstLetter(formData.etape3.methodeLivraison) 
                       : "Non spécifiée"}
@@ -201,7 +313,7 @@ const FormValidationFinal = ({
                       Paiement
                     </span>
                   </div>
-                  <p className="font-bold text-gray-800 dark:text-white text-lg">
+                  <p className="font-bold text-gray-600 dark:text-white text-lg">
                     {formData.etape3.methodePaiement ? 
                       capitalizeFirstLetter(formData.etape3.methodePaiement) 
                       : "Non spécifiée"}
@@ -212,8 +324,8 @@ const FormValidationFinal = ({
           </div>
         </div>
 
-        {/* Section Total */}
-        <div className="card bg-gradient-to-r from-base-100 to-base-50 dark:from-gray-900 dark:to-gray-800 border border-base-300 dark:border-gray-700 mt-8">
+        {/* Section Total : gradient-to-r from-base-100 to-base-50 / border border-base-300 dark:border-gray-700*/}
+        <div className=" bg-slate-50 px-6 py-4 dark:bg-slate-800 shadow-sm dark:shadow-slate-950 rounded-xl w-full hover:shadow-xl transition-shadow  mt-8">
           <div className="card-body p-6">
             <h4 className="card-title text-lg font-bold text-gray-800 dark:text-white mb-4">
               Récapitulatif du Montant

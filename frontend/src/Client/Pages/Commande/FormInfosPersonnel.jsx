@@ -4,9 +4,9 @@ import Snackbar from "@mui/material/Snackbar";
 import { FaUserCheck, FaUserLock } from "react-icons/fa6";
 import { InputValidate } from "@/components/InputValidate";
 import { useAuth } from "../../../hook/useAuth";
-import { LoginVerifier,NewClient} from '@/services/ClientService'
+import { LoginVerifier,RegistreVerifier} from '@/services/ClientService'
 import { FaUserCircle } from "react-icons/fa";
-import { MdOutlineEmail, MdVerifiedUser } from "react-icons/md";
+import { MdOutlineEmail, MdVerifiedUser,MdInfoOutline } from "react-icons/md";
 import { RiKeyFill } from "react-icons/ri";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
@@ -21,11 +21,11 @@ import { Badge } from "lucide-react";
 
 const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
     const { user, login, logout ,register} = useAuth();
-    const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [messageError, setMessageError] = useState(null)
     const [IsProfil, setIsProfil] = useState(false)
     const [profil, setProfil] = useState({});
+    const [open, setOpen] = useState(false);
     const [message, setMessage] = useState({
         ouvre: false,
         texte: "vide",
@@ -47,7 +47,11 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
     };
-    
+
+    useEffect(() => {
+        window.scrollTo(0,0);
+    },[])
+            
     const isUserConnected = user && (user.emailUsers || user.email);
     
     useEffect(() => {
@@ -92,7 +96,10 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
         setIsNonInscrit(false);
         setData({});
         setErrors({});
+        setMessageError(null)
+        window.scrollTo(0,0);
     }
+   
     
     useEffect(() => {
         if (isDark) {
@@ -180,11 +187,16 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                         const infos =  await login(donnes.emailUser, donnes.passwordUser);
                         if (infos.success) {
                             if (infos.user.roleUsers === "ROLE_USER") {
+                                
                                 setProfil({
                                     nom: infos.user.client.nomClient,
                                     prenom: infos.user.client.prenomClient,
-                                    email: infos.user.emailUsers
-                                })
+                                    email: infos.user.emailUsers,
+                                    telephone: infos.user.client.telephoneClient,
+                                    civilite: infos.user.client.civiliteClient,
+                                    dateNaissance: infos.user.client.dateNaissance,
+                                    idUsers: infos.user.idUsers
+                                });
                                 setIsProfil(true)
                                 setMessage({
                                     ouvre: true,
@@ -194,10 +206,10 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                                 setOpen(true);
                             }
                         } else {
-                            setMessageError(infos.error || "Erreur de connexion.")
+                            setMessageError("Une erreur de connexion au serveur s'est produit, Veuillez attendre quelque minute")
                             setMessage({
                                 ouvre: true,
-                                texte: infos.error || "Erreur de connexion.",
+                                texte: "Une erreur de connexion au serveur s'est produit, Veuillez attendre quelque minute",
                                 statut: "error",
                             });
                             setOpen(true);
@@ -247,11 +259,10 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                 const dataVerifier = {
                     'email': NewUser.email,
                     'role' : 'ROLE_USER',
-                    'password': NewUser.password
                 }
                 try {
-                    const response = await LoginVerifier(dataVerifier)
-                    if (!response.data){
+                    const response = await RegistreVerifier(dataVerifier)
+                    if (response.data){
                         const enregistre = await register(NewUser)
                         if (enregistre.success) {
                              
@@ -268,7 +279,7 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                                 });
                                 setOpen(true);
                         } else {
-                            setMessageError(enregistre.error || "Erreur de connexion.")
+                            setMessageError("Une erreur de connexion au serveur s'est produit, Veuillez attendre quelque minute")
                             setMessage({
                                 ouvre: true,
                                 texte: enregistre.error || "Erreur de connexion.",
@@ -280,10 +291,10 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                         }
                            
                     } else {
-                        setMessageError("Votre email est utilisé par un autre compte")
+                        setMessageError("Votre email est déjà utilisé par un autre compte")
                         setMessage({
                             ouvre: true,
-                            texte: "Votre email est utilisé par un autre compte",
+                            texte: "Votre email est déjà utilisé par un autre compte",
                             statut: "error",
                         });
                         setOpen(true);
@@ -348,21 +359,23 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                                 </p>
                             )}
                         </div>
-                        
-                        {/* <ProfilUser user={profil} /> */}
+
                         <ProfilUser 
-                        user={profil}
-                        onEdit={(updatedData) => {
-                            if (updatedData) {
-                            // Mettre à jour le profil avec les nouvelles données
-                            setProfil(updatedData);
-                            // Optionnellement, mettre à jour l'utilisateur dans le contexte/auth
-                            console.log("Profil mis à jour:", updatedData);
-                            }
-                        }}
-                        size="large"
-                        showStatus={true}
+                            user={profil}
+                            onEdit={(updatedData) => {
+                                if (updatedData) {
+                                    setProfil(prev => ({
+                                        ...prev,
+                                        ...updatedData
+                                    }));
+                                    console.log("Profil mis à jour:", updatedData);
+                                }
+                            }}
+                            size="large"
+                            showStatus={true}
+                            showEditButton={isUserConnected}
                         />
+
                         <div className="flex justify-center items-center  w-full ">
                             <button 
                                 className="btn btn-accent btn-outline btn-wide"
@@ -393,13 +406,11 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                                 <span className="font-gothic text-black opacity-70 dark:text-white">Connecter à votre compte</span>
                             </div>
                             {messageError && (
-                                <div className="flex items-center justify-center w-full">
-                                    <Alert severity="error" 
-                                        className="w-full bg-[#FDEDED] dark:bg-red-400 justify-center items-center dark:text-white dark:text-opacity-100 dark:bg-opacity-15">
-                                        {messageError}
-                                    </Alert>
+                                <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-red-50 p-3 text-red-800 dark:bg-red-800/10 dark:text-red-500">
+                                    <MdInfoOutline size={20} />
+                                    <span> {messageError}</span>
                                 </div>
-                            )}
+                            )} 
                             <div className="mb-5 flex flex-col items-center justify-center">
                                 <InputValidate
                                     IconComponent={MdOutlineEmail}
@@ -451,6 +462,12 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                                     Information sur votre Profil
                                 </span>
                             </div>
+                            {messageError && (
+                                <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-red-50 p-3 text-red-800 dark:bg-red-800/10 dark:text-red-500">
+                                    <MdInfoOutline size={20} />
+                                    <span> {messageError}</span>
+                                </div>
+                            )} 
                             <div className="flex flex-col items-center justify-center">
                                 <div className="mt-4 w-2/3 items-start">
                                     <FormControl error={!!errors.civiliteClient}>
@@ -604,6 +621,8 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                                         setIsNonInscrit(false);
                                         setDonnes({});
                                         setErrors({})
+                                        setMessageError(null)
+                                        window.scrollTo(0,0);
                                     }}
                                     className="cursor-pointer text-slate-500 hover:underline dark:text-slate-400"
                                 >
@@ -615,6 +634,7 @@ const FormInfosPersonnel = ({ initialData, onSubmitSuccess }) => {
                                         setIsNonInscrit(true);
                                         setData({});
                                         setErrors({})
+                                        window.scrollTo(0,0);
                                     }}
                                     className="cursor-pointer text-slate-500 hover:underline dark:text-slate-400"
                                 >

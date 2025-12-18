@@ -5,6 +5,3 @@ controllers:
     type: attribute
 api_login:
     path: /api/auth/login
-
-# api_login_check:
-#     path: /api/login_check

@@ -111,11 +111,11 @@ class DashboardService
             SELECT 
                 DATE_FORMAT(c.date_commande, '%b') as mois,
                 DATE_FORMAT(c.date_commande, '%m') as mois_num,
-                COUNT(c.id) as commandes,
+                COUNT(c.REF_COMMANDE) as commandes,
                 COALESCE(SUM(c.montant_total), 0) as ventes
             FROM commande c
             WHERE c.date_commande >= DATE_SUB(NOW(), INTERVAL :months MONTH)
-            AND c.statut = 'LIVREE'
+            AND c.statut_commande = 'LIVREE'
             GROUP BY DATE_FORMAT(c.date_commande, '%Y-%m'), DATE_FORMAT(c.date_commande, '%b')
             ORDER BY DATE_FORMAT(c.date_commande, '%Y-%m')
         ";

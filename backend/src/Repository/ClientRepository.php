@@ -7,14 +7,6 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 
-/**
- * @extends ServiceEntityRepository<Client>
- *
- * @method Client|null find($id, $lockMode = null, $lockVersion = null)
- * @method Client|null findOneBy(array $criteria, array $orderBy = null)
- * @method Client[]    findAll()
- * @method Client[]    findBy(array $criteria, array $orderBy = null)
- */
 class ClientRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)

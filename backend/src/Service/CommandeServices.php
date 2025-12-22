@@ -307,7 +307,28 @@ class CommandeServices
         }
     }
 
-    //Fonction pour calculer le total de la commande pour chaque panier
+    public function deleteClient(Client $client): void
+    {
+        // Supprimer d'abord les commandes
+        foreach ($client->getCommandes() as $commande) {
+            foreach ($commande->getPaniers() as $panier) {
+                $this->entityManager->remove($panier);
+            }
+            $paiment = $commande->getPaiement();
+            $this->entityManager->remove($paiment);
+            $this->entityManager->remove($commande);
+        }
+        foreach ($client->getAdresses() as $adresse) {
+            $this->entityManager->remove($adresse);
+        }
+        $user = $client->getUser();
+        if ($user) {
+            $this->entityManager->remove($user);
+        }
+        $this->entityManager->remove($client);
+        $this->entityManager->flush();
+    }
+
     private function calculateTotal(Commande $commande): float
     {
         $total = 0;

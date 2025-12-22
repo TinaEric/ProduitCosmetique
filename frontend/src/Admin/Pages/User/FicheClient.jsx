@@ -15,13 +15,14 @@ import FormLabel from "@mui/material/FormLabel";
 import { Avatar, FormHelperText, Stack } from "@mui/material";
 import { InputValidate } from "@/components/InputValidate";
 import { MdOutlineEmail } from "react-icons/md";
-import { UpdateClient} from "@/services/AdminService";
+import { UpdateClient, DeleteClient} from "@/services/AdminService";
 import { FaUser, FaPhone, FaBirthdayCake } from "react-icons/fa";
 import { IoPerson } from "react-icons/io5";
 
 const FicheClient = () => {
     const [messageError, setMessageError] = useState(null);
     const [open, setOpen] = useState(false);
+    const [loadsup, setloadSup] = useState(false);
     const [message, setMessage] = useState({
         ouvre: false,
         texte: "vide",
@@ -193,9 +194,49 @@ const FicheClient = () => {
 
 
     // Logique pour la suppression (inchangée)
-    const handleDeleteClient = () => {
-        console.log("Suppression du client:", client.refClient);
+    const handleDeleteClient = async () => {
         setShowDeleteModal(false);
+        console.log("Suppression du client:", client.refClient);
+        const refCli = client.refClient
+        setloadSup(true)
+        try{
+            const result = await DeleteClient(refCli)
+            if (result.data){
+                setMessage({
+                    ouvre: true,
+                    texte: `La suppresion du client '${refCli}' est términé avec succès.`,
+                    statut: "success",
+                });
+                  setOpen(true);
+                  console.log("Delete avec succes: ",result.data)
+
+                  setTimeout(() => {
+                    retourVersClient()
+                }, 1500);
+                  
+              }else{
+                  setMessage({
+                      ouvre: true,
+                      texte: "Une erreur s'est produit lors de la supression du CLient",
+                      statut: "error",
+                  });
+                  setOpen(true);
+                  console.log("Update Profil: ", result.error)
+              }
+              setloadSup(false)
+        } catch (error) {
+            console.error("Erreur de suppression client:", error);
+            setMessageError(error.message || "Erreur lors de la suppression du client.");
+            setMessage({
+                ouvre: true,
+                texte: error.message || "Erreur lors de la suppression du client.",
+                statut: "error",
+            });
+            setOpen(true);
+        } finally {
+            setLoading(false);
+            
+        }
     };
 
     return (
@@ -214,7 +255,7 @@ const FicheClient = () => {
                     <div className="flex gap-2">
                         {/* Le bouton "Modifier Rôle" appelle maintenant la modal de modification client */}
                         <button
-                            onClick={openEditClientModal} // Modifié pour ouvrir la modal de modification client
+                            onClick={openEditClientModal}
                             className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:bg-blue-600 hover:shadow-lg"
                         >
                             <Edit className="h-4 w-4" />
@@ -224,8 +265,18 @@ const FicheClient = () => {
                             onClick={() => setShowDeleteModal(true)}
                             className="flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:bg-red-600 hover:shadow-lg"
                         >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="hidden sm:inline">Supprimer</span>
+                            
+                                {loadsup ? (
+                                    <div className="flex flex-row items-center justify-center gap-2">
+                                        <span className="loading loading-spinner text-white"></span>
+                                        <span>Suppression...</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3">
+                                        <Trash2 className="h-4 w-4" />
+                                        <span>Supprimer client</span>
+                                    </div>
+                                )}
                         </button>
                     </div>
                 </div>
@@ -385,21 +436,19 @@ const FicheClient = () => {
                 )}
             </div>
 
-            {/* Modal de suppression  */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-                    <div className="w-full max-w-md animate-[scale-in_0.2s_ease-out] rounded-2xl bg-white p-6 shadow-2xl">
-                        <div className="flex justify-center gap-3 items-center">
-                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <dialog className={`modal ${showDeleteModal ? "modal-open" : ""}`}>
+                <div className="modal-box bg-slate-200 dark:bg-gray-800">
+                <div className="flex justify-center gap-3 items-center">
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-200 dark:bg-red-700/20">
                                 <Trash2 className="h-6 w-6 text-red-600" />
                             </div>
-                            <h3 className="mb-2 text-xl font-bold text-gray-800">
+                            <h3 className="mb-2 text-xl font-bold text-gray-800 dark:text-white">
                                 Confirmer la suppression
                             </h3>
                         </div>
-                        <p className="mb-6 text-gray-600">
+                        <p className="mb-6 text-gray-600 dark:text-gray-300">
                             Êtes-vous sûr de vouloir supprimer le client{" "}
-                            <strong className="text-gray-800">
+                            <strong className="text-gray-800 dark:text-white">
                                 {client.nomClient} {client.prenomClient}
                             </strong>{" "}
                             ? Cette action est irréversible.
@@ -419,8 +468,7 @@ const FicheClient = () => {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+            </dialog>
 
             {/* Modal de modification client */}
             <dialog

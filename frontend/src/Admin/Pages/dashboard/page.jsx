@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useCallback } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, BarChart, Bar, CartesianGrid, Legend } from "recharts";
 import { useTheme } from "../../hooks/use-theme";
 import {
@@ -20,10 +20,11 @@ import {
 import {
     getDashboardStats,
     getSalesData,
-    testeCommande,
+    getNotification,
     getRecentCommande,
     getTopProducts,
 } from "@/services/AdminService";
+import { useSearch } from "../../contexts/SearchContext";
 
 const DashboardPage = () => {
     const { theme } = useTheme();
@@ -31,6 +32,7 @@ const DashboardPage = () => {
     const [loadingStat, setLoadingStat] = useState(true);
     const [produitDetail, setProduitDetail] = useState(null);
     const [openDetail, setOpenDetail] = useState(false);
+    const { setNbrNotification } = useSearch();
     const [stats, setStats] = useState({
         totalClient: 0,
         totalProduit: 0,
@@ -81,6 +83,7 @@ const DashboardPage = () => {
         loadDashboardData();
         getRecentCommandes();
         getTopProduit();
+        fetchNotifications();
         loadSaleData();
     }, []);
 
@@ -119,6 +122,7 @@ const DashboardPage = () => {
         }
     };
 
+
     const loadDashboardData = async () => {
         try {
             setLoadingStat(true);
@@ -141,6 +145,27 @@ const DashboardPage = () => {
         }
     };
 
+     const fetchNotifications = useCallback(async () => {
+        try {
+          const donnes = await getNotification();
+          const notificationsData = donnes?.data?.notifications;
+          
+          if (notificationsData) {
+            const totalUnread = [
+              ...(notificationsData.commandeNotifie || []).filter(n => n.unread),
+              ...(notificationsData.clientNotifie || []).filter(n => n.unread),
+              ...(notificationsData.produitNotifie || []).filter(n => n.unread),
+            ].length;
+            setNbrNotification(totalUnread);
+          } else {
+            setNbrNotification(0);
+          }
+        } catch (err) {
+          console.error("Erreur lors du chargement des notifications", err);
+          setNbrNotification(0);
+        }
+      }, [setNbrNotification]);
+    
     const loadSaleData   = async () => {
         try {
             setLoadingStat(true);

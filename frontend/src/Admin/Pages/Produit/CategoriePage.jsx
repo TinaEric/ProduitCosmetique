@@ -32,11 +32,21 @@ const CategoriePage = () => {
         statut: "success",
     });
 
+
     // Drawer states
     const [produitModifier, setProduitModifier] = useState(null);
     const [code, setCode] = useState("");
     const [labelleEdit, setLabelleEdit] = useState("");
     const [descriptEdit, setDescriptEdit] = useState("");
+
+    const [browserClass, setBrowserClass] = useState("");
+    useEffect(() => {
+        const ua = navigator.userAgent;
+        const isEdge = ua.indexOf("Edg/") > -1;
+        const isChrome = ua.indexOf("Chrome/") > -1 && !isEdge;
+        if (isEdge) setBrowserClass("is-edge");
+        else if (isChrome) setBrowserClass("is-chrome");
+    }, []);
 
     // Fetch categories avec useCallback pour éviter les re-renders inutiles
     const fetchCategories = useCallback(async () => {
@@ -371,7 +381,10 @@ const CategoriePage = () => {
                         <p className="card-title font-bold">Liste des catégories de produits</p>
                     </div>
                     <div className="card-body p-0">
-                        <div className="relative h-[415px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
+                        {/*voici la modification:  415 chrome  et 500px sur edge*/}
+                        <div className={`relative w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin] 
+                            ${browserClass === 'is-chrome' ? 'h-[420px]' : 
+                            browserClass === 'is-edge' ? 'h-[530px]' : 'h-[530px]'}`}>
                             <table className="table">
                                 <thead className="table-header">
                                     <tr className="table-row text-gray-500 dark:text-gray-400">

@@ -9,6 +9,7 @@ import {PanierProvider} from "../context/PanierContext"
 import {UsersProvider} from "../context/UserContext"
 import PanierDrawer from "../Pages/Produit/PanierDrawer"
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthModalProvider } from '../context/AuthModalContext';
 
 function ClientLayout() {
   const location = useLocation();
@@ -28,6 +29,7 @@ function ClientLayout() {
       <AuthProvider>
       <UsersProvider>
       <PanierProvider>
+        <AuthModalProvider>
         <NavBarProvider>
           <PanierDrawer >
               <div className=" bg-slate-100 transition-colors dark:bg-slate-950">
@@ -54,6 +56,7 @@ function ClientLayout() {
               </div>
               </PanierDrawer>
         </NavBarProvider>
+        </AuthModalProvider>
         </PanierProvider>
         </UsersProvider>
         </AuthProvider>

@@ -12,6 +12,7 @@ import { Command } from "lucide-react";
 import FicheCommande from "../Pages/Commande/FicheCommande";
 import NotificationPage from "../Pages/dashboard/NotificationPage";
 import FicheClient from "../Pages/User/ficheClient";
+import Deconnection from "./Deconnection";
 
 const RouteBack = () => {
     return (
@@ -46,6 +47,8 @@ const RouteBack = () => {
                     element={<FicheClient />}
                 />
                 <Route  path="Profil" element={<h1 className="title">verified-customers</h1>}
+                />
+                  <Route path="deconnexion"  element={<Deconnection />}
                 />
             </Route>
             

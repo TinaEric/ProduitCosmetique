@@ -472,7 +472,7 @@ const ProduitDetail = () => {;
                 {/* Section produits similaires */}
                 <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                        Produits similaires (même catégorie)
+                        Produits similaires
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {produitsSimilaires.map((produitSim) => {

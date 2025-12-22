@@ -34,6 +34,15 @@ const ClientPage = () => {
         message: "",
         severity: "success",
     });
+    
+        const [browserClass, setBrowserClass] = useState("");
+        useEffect(() => {
+            const ua = navigator.userAgent;
+            const isEdge = ua.indexOf("Edg/") > -1;
+            const isChrome = ua.indexOf("Chrome/") > -1 && !isEdge;
+            if (isEdge) setBrowserClass("is-edge");
+            else if (isChrome) setBrowserClass("is-chrome");
+        }, []);
 
     const clientSelectionner = (idClient) => {
         if (chekTab.includes(idClient)) {
@@ -580,7 +589,9 @@ const ClientPage = () => {
 
             {/* Tableau des clients */}
             <div className="rounded-2xl bg-white shadow-xl dark:bg-slate-800">
-                <div className="relative h-[460px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
+                <div className={`relative w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]
+                            ${browserClass === 'is-chrome' ? 'h-[460px]' : 
+                            browserClass === 'is-edge' ? 'h-[540px]' : 'h-[540px]'}`}>
                     <table className="w-full">
                         <thead className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800">
                             <tr>

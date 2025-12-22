@@ -35,3 +35,8 @@ export const UpdateClient = async (client) => {
   return await verifierReponse(() =>  api.post('/api/admin/updateClient', client));
       
 };
+
+export const DeleteClient = async (refClient) => {
+    return await verifierReponse(() =>  api.post(`/api/client/${refClient}/deleteClient`));
+      
+  };

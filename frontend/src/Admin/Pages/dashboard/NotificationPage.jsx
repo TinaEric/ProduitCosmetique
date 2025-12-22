@@ -18,18 +18,10 @@ import {
   ClockIcon,
   ChartBarIcon, 
   ExclamationCircleIcon,
-  XMarkIcon, // Remplace XIcon
-  FunnelIcon, // Remplace FilterIcon
-  EllipsisVerticalIcon, // Remplace DotsVerticalIcon
-  UserGroupIcon, // Remplace UsersIcon
-  CubeTransparentIcon // Remplace PackageIcon
-} from '@heroicons/react/24/outline'; // Notez le chemin '24/outline'
-
-// Pour les icônes solides (si nécessaire)
-import {
-  CheckCircleIcon as CheckCircleSolid,
-  ExclamationTriangleIcon as ExclamationTriangleSolid
-} from '@heroicons/react/24/solid';
+  XMarkIcon, 
+  UserGroupIcon, 
+  CubeTransparentIcon 
+} from '@heroicons/react/24/outline'; 
 
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState({
@@ -56,8 +48,6 @@ const NotificationPage = () => {
     setError(null);
     try {
       const donnes = await getNotification();
-      
-      // Assurer que donnes.data et donnes.data.notifications existent
       const notificationsData = donnes?.data?.notifications;
       
       if (notificationsData) {
@@ -84,14 +74,12 @@ const NotificationPage = () => {
         });
         setOpen(true);
         setError("Erreur de récupération des notifications ou format de données inattendu!");
-        // En cas d'erreur de données, s'assurer que l'état local est vide, et non indéfini.
         setNotifications({ orders: [], users: [], produit: [] }); 
         setNbrNotification(0);
       }
     } catch (err) {
       setError('Erreur lors du chargement des notifications');
       console.error("Erreur lors du chargement des notifications", err);
-      // S'assurer que l'état local est vide même en cas d'erreur réseau
       setNotifications({ orders: [], users: [], produit: [] });
       setNbrNotification(0);
     } finally {

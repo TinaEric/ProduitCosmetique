@@ -25,11 +25,11 @@ const FooterLinks = [
     link: "/",
   },
   {
-    title: "About",
-    link: "/Apropos",
+    title: "A propos",
+    link: "/apropos",
   },
   {
-    title: "Poduit",
+    title: "Nos Poduits",
     link: "/Produit",
   },
 ];

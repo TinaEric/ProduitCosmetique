@@ -26,6 +26,27 @@ const Layout = () => {
         }
     });
 
+    // const getContainerClass = (path) => {
+    //     if (path === '/admin/ficheCommande') {
+    //       return "h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden w-full";
+    //     }
+    //     if (path === '/admin/products') {
+    //       return "px-0 h-[550px] w-3/4";
+    //     }
+    //     return "p-3 w-full";
+    //   };
+
+      const getContainerClass = (path) => {
+        switch (path) {
+          case '/admin/ficheCommande':
+            return "h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden w-full";
+      
+          case '/admin/products':
+            return "px-0 h-[550px] w-3/4 overflow-hidden";
+          default:
+            return "p-3 w-full";
+        }
+      };
  
     return (
         <SearchProvider>
@@ -51,7 +72,7 @@ const Layout = () => {
                             <SideProduit />
                         </div>
                     )}
-                    <div className={` ${currentPath !== '/admin/ficheCommande' ? (currentPath !== '/admin/products' ? "p-3  w-full" : "px-0 h-[550px] w-3/4") : "h-[calc(100vh-60px)]  overflow-y-auto overflow-x-hidden w-full"}`}>
+                      <div className={getContainerClass(currentPath)}>
                         <Outlet />
                     </div>
                 </div>

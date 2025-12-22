@@ -53,11 +53,14 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
                                 />
                                 {!collapsed && <p className="whitespace-nowrap">
                                     { link.label !== "Notifications" ?
-                                        link.label: 
+
+                                        link.label
+                                        
+                                        : 
                                         (
                                                 <Badge
                                                     badgeContent={nbrNotification}
-                                                    color="info"
+                                                    color="error"
                                                 >
                                                     <span>{link.label}</span>
                                                 </Badge>

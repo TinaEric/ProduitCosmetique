@@ -14,6 +14,7 @@ import CheckoutStripe from '../Pages/Paiement/CheckoutStripe';
 import PaymentSuccess from '../Pages/Paiement/PaymentSuccess';
 import ScrollTop from '../../contexts/ScrollTop';
 import ProduitDetail from '../Pages/Produit/ProduitDetail';
+import Apropos from '../Pages/Accueil/Apropos';
 
 const AdminRoute = () => {
     return (
@@ -31,6 +32,7 @@ const AdminRoute = () => {
                     <Route path='checkout/:refCommande' element={<CheckoutStripe />}/>
                     <Route path='payment-success' element={<PaymentSuccess />}/>
                     <Route path='produitDetail' element={<ProduitDetail />}/>
+                    <Route path='apropos' element={<Apropos />}/>
                 </Route>
                 <Route path='*' element={<NotFound />}/>
             </Routes>

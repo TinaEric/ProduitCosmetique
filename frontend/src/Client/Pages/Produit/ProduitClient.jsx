@@ -123,7 +123,6 @@ const ProduitClient = () => {
     useEffect(() => {
         fetchProduits();
         fetchCategories();
-        setSearchTerm('');
         setFilterValue('Tous');
     }, []);
 

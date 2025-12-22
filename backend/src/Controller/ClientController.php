@@ -1133,4 +1133,37 @@ final class ClientController extends AbstractController
         }
     }
 
+
+    #[Route('/api/client/{refClient}/deleteClient', name: 'client_delete_client', methods: ['POST'])]
+    public function deleteClient(string $refClient,CommandeServices $cmdServ, ClientRepository $clientRepos): JsonResponse
+    {
+        try {
+        $client = $clientRepos->findOneBy(['refClient' => $refClient]);
+            if (!$client) {
+                return $this->json([
+                    'error' => [
+                        'code' => 404,
+                        'message' => 'Client associé non trouvé',
+                        'status' => 'error'
+                    ]
+                ], 404);
+            }
+            $cmdServ->deleteClient($client);
+        
+            return new JsonResponse([
+                'message' => 'Client supprimé avec avec succès',
+                'data' => 'OK',
+                'status' => 'success'
+            ],200);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne de SUPPRESSION Client: ' . $e->getMessage(),
+                    'status' => 'error'
+                ]
+            ], 500);
+        }
+    }
 }

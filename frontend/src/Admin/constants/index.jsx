@@ -82,7 +82,7 @@ export const navbarLinks = [
             {
                 label: "Déconnecter",
                 icon: LogOut,
-                path: "/admin/login",
+                path: "/admin/deconnexion",
             },
         ],
     },

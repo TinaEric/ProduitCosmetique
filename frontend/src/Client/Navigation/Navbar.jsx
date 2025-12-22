@@ -5,10 +5,10 @@ import Snackbar from "@mui/material/Snackbar";
 import logoBleu from "@/image/logoBleu.png";
 import { MdInfoOutline, MdOutlineEmail, MdOutlineStarRate, MdBookmarkBorder } from "react-icons/md";
 import { IoMdSearch } from "react-icons/io";
-import { FaCartShopping, FaUser, FaPhone } from "react-icons/fa6";
+import { FaCartShopping, FaUser, FaPhone, FaQuestion } from "react-icons/fa6";
 import DarkMode from "./DarkMode";
 import { LoginVerifier, RegistreVerifier } from "@/services/ClientService";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useNavbar } from "../context/NavbarContext";
 import Panier from "../Pages/Commande/Panier";
 import { RiHome5Fill, RiKeyFill } from "react-icons/ri";
@@ -23,8 +23,19 @@ import { usePanier } from "../context/PanierContext";
 import { useAuthContext } from "@/contexts/AuthContext";
 import { InputValidate } from "@/components/InputValidate";
 import { IoPerson } from "react-icons/io5";
+import { useAuthModal } from "@/Client/context/AuthModalContext";
 
 const Navbar = () => {
+    const { 
+        isLoginModalOpen, 
+        isRegisterModalOpen,
+        closeLoginModal,
+        closeRegisterModal,
+        switchToRegister,
+        switchToLogin,
+        openLoginModal
+    } = useAuthModal();
+    
     const { user, login, logout, isAuthenticated, register } = useAuthContext();
     const [ouvrePanier, setOuvrePanier] = useState(false);
     const [messageError, setMessageError] = useState(null);
@@ -38,12 +49,12 @@ const Navbar = () => {
     const { items } = usePanier();
     const [loading, setLoading] = useState(false);
     const [nomUserConncte, setNomUserConnecte] = useState("");
-    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [dejaConnecte, setDejaConnecte] = useState(false);
     const [registerErrors, setRegisterErrors] = useState({});
     const { searchTerm, setSearchTerm, setOpenPanier } = useNavbar();
     const [userProviseur, setUserProviseur] = useState(null);
+    const location = useLocation();
+    const currentPath = location.pathname;
     
     // États pour les animations
     const [prevItemsLength, setPrevItemsLength] = useState(0);
@@ -67,6 +78,12 @@ const Navbar = () => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    useEffect(() => {
+        if (currentPath !== "/Produit"){
+            navigate("/Produit")
+        }
+    }, [searchTerm]);
 
     useEffect(() => {
         const chargementUser = () => {
@@ -238,7 +255,7 @@ const Navbar = () => {
                                 statut: "success",
                             });
                             setOpen(true);
-                            setIsLoginModalOpen(false);
+                            closeLoginModal();
                             setLoginData({ emailUser: "", passwordUser: "" });
                         }
                     } else {
@@ -305,7 +322,7 @@ const Navbar = () => {
                             telephoneClient: "",
                             dateNaissance: "",
                         });
-                        setIsRegisterModalOpen(false);
+                        closeRegisterModal();
                         setOpen(true);
                     } else {
                         setMessageError(enregistre.error);
@@ -331,46 +348,6 @@ const Navbar = () => {
                 setLoading(false);
             }
         }
-    };
-
-    const openLoginModal = () => {
-        setIsLoginModalOpen(true);
-        setLoginErrors({});
-        setMessageError(null);
-    };
-
-    const closeLoginModal = () => {
-        setIsLoginModalOpen(false);
-        setLoginData({ emailUser: "", passwordUser: "" });
-    };
-
-    const openRegisterModal = () => {
-        setIsRegisterModalOpen(true);
-        setRegisterErrors({});
-        setMessageError(null);
-    };
-
-    const closeRegisterModal = () => {
-        setIsRegisterModalOpen(false);
-        setRegisterData({
-            civiliteClient: "",
-            nomClient: "",
-            prenomClient: "",
-            email: "",
-            password: "",
-            telephoneClient: "",
-            dateNaissance: "",
-        });
-    };
-
-    const switchToRegister = () => {
-        closeLoginModal();
-        openRegisterModal();
-    };
-
-    const switchToLogin = () => {
-        closeRegisterModal();
-        openLoginModal();
     };
 
     const handleClose = (event, reason) => {
@@ -463,13 +440,8 @@ const Navbar = () => {
                 }
             `}</style>
             
-            {/* <div className={`relative ${document.documentElement.classList.contains('dark') ? 'glass-effect-dark' : 'glass-effect'} text-black shadow-md duration-200 dark:text-white transition-all`}>
-                <div className={`relative ${scrolled ? (document.documentElement.classList.contains('dark') ? 'glass-effect-dark' : 'glass-effect') : 'bg-[#EDECF2] dark:bg-[#0E121E]'} text-black shadow-md duration-200 dark:text-white transition-all`}>
-            
-            </div> */}
             <nav className={`fixed left-0 top-0 h-20 w-full md:h-16 z-50 navbar-enter transition-all duration-300 ${scrolled ? 'shadow-lg' : ''}`}>
-                 <div className={`relative bg-[#EDECF2] dark:bg-[#0E121E] text-black shadow-md duration-200 dark:text-white transition-all`}>
-            
+                <div className={`relative bg-[#EDECF2] dark:bg-[#0E121E] text-black shadow-md duration-200 dark:text-white transition-all`}>
                     <div>
                         {message.ouvre && (
                             <Snackbar open={open} autoHideDuration={5000} onClose={handleClose}>
@@ -535,7 +507,14 @@ const Navbar = () => {
                                         </ul>
                                     </div>
                                 ) : (
-                                    <button onClick={openLoginModal} className="flex items-center justify-end gap-3 rounded-full px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-purple-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium">
+                                    <button 
+                                        // onClick={() => {
+                                        //     const { openLoginModal } = useAuthModal();
+                                        //     openLoginModal();
+                                        // }}
+                                        onClick={openLoginModal}
+                                        className="flex items-center justify-end gap-3 rounded-full px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-purple-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium"
+                                    >
                                         Se connecter
                                     </button>
                                 )}
@@ -565,6 +544,10 @@ const Navbar = () => {
                                         <span>Mes Commandes</span>
                                     </Link>
                                 )}
+                                <Link to="/apropos" className="nav-link flex items-center justify-center gap-2 rounded-full px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium">
+                                    <FaQuestion className="text-accent text-xl" />
+                                    <span>A propos</span>
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -811,35 +794,28 @@ export default Navbar;
 
 // import React, { useEffect, useState } from "react";
 // import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
-// import Logo from "../../image/Logo.png";
 // import Alert from "@mui/material/Alert";
 // import Snackbar from "@mui/material/Snackbar";
 // import logoBleu from "@/image/logoBleu.png";
-// import { MdInfoOutline } from "react-icons/md";
+// import { MdInfoOutline, MdOutlineEmail, MdOutlineStarRate, MdBookmarkBorder } from "react-icons/md";
 // import { IoMdSearch } from "react-icons/io";
-// import { FaCartShopping } from "react-icons/fa6";
+// import { FaCartShopping, FaUser, FaPhone, FaQuestion } from "react-icons/fa6";
 // import DarkMode from "./DarkMode";
-// import { LoginVerifier,RegistreVerifier } from "@/services/ClientService";
-// import { Link } from "react-router-dom";
+// import { LoginVerifier, RegistreVerifier } from "@/services/ClientService";
+// import { Link,useLocation, useNavigate } from "react-router-dom";
 // import { useNavbar } from "../context/NavbarContext";
-// import { MdOutlineStarRate } from "react-icons/md";
-// import { useNavigate } from 'react-router-dom';
 // import Panier from "../Pages/Commande/Panier";
-// import { RiHome5Fill } from "react-icons/ri";
-// import { MdBookmarkBorder } from "react-icons/md";
+// import { RiHome5Fill, RiKeyFill } from "react-icons/ri";
 // import Radio from "@mui/material/Radio";
 // import RadioGroup from "@mui/material/RadioGroup";
 // import FormControlLabel from "@mui/material/FormControlLabel";
 // import FormControl from "@mui/material/FormControl";
 // import FormLabel from "@mui/material/FormLabel";
-// import { Avatar, FormHelperText, Stack } from "@mui/material";
+// import { FormHelperText } from "@mui/material";
 // import Badge from "@mui/material/Badge";
 // import { usePanier } from "../context/PanierContext";
 // import { useAuthContext } from "@/contexts/AuthContext";
 // import { InputValidate } from "@/components/InputValidate";
-// import { MdOutlineEmail } from "react-icons/md";
-// import { RiKeyFill } from "react-icons/ri";
-// import { FaUser, FaPhone, FaBirthdayCake } from "react-icons/fa";
 // import { IoPerson } from "react-icons/io5";
 
 // const Navbar = () => {
@@ -847,60 +823,83 @@ export default Navbar;
 //     const [ouvrePanier, setOuvrePanier] = useState(false);
 //     const [messageError, setMessageError] = useState(null);
 //     const [open, setOpen] = useState(false);
-//     const [IsProfil, setIsProfil] = useState(false);
-//       const navigate = useNavigate();
-//     const [profil, setProfil] = useState({});
+//     const navigate = useNavigate();
 //     const [message, setMessage] = useState({
 //         ouvre: false,
 //         texte: "vide",
 //         statut: "success",
 //     });
 //     const { items } = usePanier();
-//     const [loadingRegistre, setLoadingRegistre] = useState(false);
 //     const [loading, setLoading] = useState(false);
 //     const [nomUserConncte, setNomUserConnecte] = useState("");
 //     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 //     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-//      const [dejaConnecte, setDejaConnecte] = useState(false);
+//     const [dejaConnecte, setDejaConnecte] = useState(false);
 //     const [registerErrors, setRegisterErrors] = useState({});
 //     const { searchTerm, setSearchTerm, setOpenPanier } = useNavbar();
 //     const [userProviseur, setUserProviseur] = useState(null);
+//    const location = useLocation();
+//    const currentPath = location.pathname;
+//     // États pour les animations
+//     const [prevItemsLength, setPrevItemsLength] = useState(0);
+//     const [cartAnimation, setCartAnimation] = useState(false);
+//     const [scrolled, setScrolled] = useState(false);
 
+//     // Animation du panier quand items.length change
 //     useEffect(() => {
-//             const chargementUser = () => {
-//                 const local = localStorage.getItem('user');
-//                 if (local) {
-//                     const parsedUser = JSON.parse(local);
-//                     if (parsedUser && parsedUser.client) {
-//                         setDejaConnecte(true);
-//                         setUserProviseur(parsedUser);
-//                         console.log("Utilisateur déjà connecté (Navbar), chargement des commandes: ", parsedUser);
-//                     }
-//                 }
-//             };
-//             chargementUser();
+//         if (items.length > prevItemsLength) {
+//             setCartAnimation(true);
+//             setTimeout(() => setCartAnimation(false), 600);
+//         }
+//         setPrevItemsLength(items.length);
+//     }, [items.length]);
+
+//     // Effet de scroll pour la navbar
+//     useEffect(() => {
+//         const handleScroll = () => {
+//             setScrolled(window.scrollY > 20);
+//         };
+//         window.addEventListener('scroll', handleScroll);
+//         return () => window.removeEventListener('scroll', handleScroll);
 //     }, []);
 
-    
 //     useEffect(() => {
-//         if ((user && user.client) || (user && user.client)) {
+//         if (currentPath === "/"){
+//             navigate("/Produit")
+//         }
+//     }, [searchTerm]);
+
+//     useEffect(() => {
+//         const chargementUser = () => {
+//             const local = localStorage.getItem('user');
+//             if (local) {
+//                 const parsedUser = JSON.parse(local);
+//                 if (parsedUser && parsedUser.client) {
+//                     setDejaConnecte(true);
+//                     setUserProviseur(parsedUser);
+//                 }
+//             }
+//         };
+//         chargementUser();
+//     }, []);
+
+//     useEffect(() => {
+//         if ((user && user.client) || (userProviseur && userProviseur.client)) {
 //             setNomUserConnecte(
-//                 (user.client.nomClient + " " + user.client.prenomClient) || 
-//                 (userProviseur.client.nomClient + " " + userProviseur.client.prenomClient)
+//                 (user?.client?.nomClient + " " + user?.client?.prenomClient) || 
+//                 (userProviseur?.client?.nomClient + " " + userProviseur?.client?.prenomClient)
 //             );
 //         } else {
 //             setNomUserConnecte("");
 //         }
-//     }, [user,userProviseur]);
+//     }, [user, userProviseur]);
     
-//     // États pour la connexion
 //     const [loginData, setLoginData] = useState({
 //         emailUser: "",
 //         passwordUser: "",
 //     });
 //     const [loginErrors, setLoginErrors] = useState({});
 
-//     // États pour l'inscription
 //     const [registerData, setRegisterData] = useState({
 //         civiliteClient: "",
 //         nomClient: "",
@@ -911,7 +910,8 @@ export default Navbar;
 //         dateNaissance: "",
 //     });
 
-//     const seDeconnecter = ()  => {
+
+//     const seDeconnecter = () => {
 //         logout();
 //         setDejaConnecte(false);
 //         setUserProviseur(null);
@@ -945,26 +945,22 @@ export default Navbar;
 //         setSearchTerm(e.target.value);
 //     };
 
-//     // Gestion des changements pour la connexion
 //     const handleLoginChange = (e) => {
 //         const { name, value } = e.target;
 //         setLoginData((prevData) => ({ ...prevData, [name]: value }));
 //         setLoginErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
 //     };
 
-//     // Gestion des changements pour l'inscription
 //     const handleRegisterChange = (e) => {
 //         const { name, value } = e.target;
 //         setRegisterData((prevData) => ({ ...prevData, [name]: value }));
 //         setRegisterErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
 //     };
 
-//     // Validation email
 //     const validateEmailFormat = (email) => {
 //         return /\S+@\S+\.\S+/.test(email);
 //     };
 
-//     // Validation connexion
 //     const validateLogin = () => {
 //         let tempErrors = {};
 //         let isValid = true;
@@ -982,7 +978,6 @@ export default Navbar;
 //         return isValid;
 //     };
 
-//     // Validation inscription
 //     const validateRegister = () => {
 //         let tempErrors = {};
 //         let isValid = true;
@@ -1023,10 +1018,9 @@ export default Navbar;
 //         return isValid;
 //     };
 
-//     // Soumission connexion
 //     const handleLoginSubmit = async (e) => {
 //         e.preventDefault();
-//         setMessageError(null)
+//         setMessageError(null);
 //         if (validateLogin()) {
 //             setLoading(true);
 //             const data = {
@@ -1046,9 +1040,7 @@ export default Navbar;
 //                                 statut: "success",
 //                             });
 //                             setOpen(true);
-//                             console.log("Connexion avec:", loginData);
 //                             setIsLoginModalOpen(false);
-//                             setLoading(false);
 //                             setLoginData({ emailUser: "", passwordUser: "" });
 //                         }
 //                     } else {
@@ -1059,11 +1051,7 @@ export default Navbar;
 //                             statut: "error",
 //                         });
 //                         setOpen(true);
-//                         console.log(infos.error);
-//                         setLoading(false);
 //                     }
-//                     // setDonnes({});
-//                     setLoading(false);
 //                 } else {
 //                     setMessageError(response.error);
 //                     setMessage({
@@ -1076,14 +1064,14 @@ export default Navbar;
 //                 setLoading(false);
 //             } catch (error) {
 //                 console.error("Erreur de connexion:", error);
+//                 setLoading(false);
 //             }
 //         }
 //     };
 
-//     // Soumission inscription
 //     const handleRegisterSubmit = async (e) => {
 //         e.preventDefault();
-//         setMessageError(null)
+//         setMessageError(null);
 //         if (validateRegister()) {
 //             const NewUser = {
 //                 nom: registerData.nomClient,
@@ -1094,14 +1082,12 @@ export default Navbar;
 //                 email: registerData.email,
 //                 password: registerData.password,
 //             };
-//             console.log("Nouvelle inscription: ", NewUser);
 //             setLoading(true);
 //             const dataVerifier = {
 //                 email: NewUser.email,
 //                 role: "ROLE_USER",
 //                 password: NewUser.password,
 //             };
-//             setLoading(true);
 //             try {
 //                 const response = await RegistreVerifier(dataVerifier);
 //                 if (response.data) {
@@ -1123,17 +1109,14 @@ export default Navbar;
 //                         });
 //                         setIsRegisterModalOpen(false);
 //                         setOpen(true);
-//                         setLoading(false);
 //                     } else {
-//                         setMessageError(enregistre.error, "Erreur de connexion.");
+//                         setMessageError(enregistre.error);
 //                         setMessage({
 //                             ouvre: true,
 //                             texte: enregistre.error || "Erreur de connexion.",
 //                             statut: "error",
 //                         });
 //                         setOpen(true);
-//                         console.log(" Registre NavBar: ", enregistre.error);
-//                         setLoading(false);
 //                     }
 //                 } else {
 //                     setMessageError("Votre email est déjà utilisé par un autre compte");
@@ -1143,20 +1126,19 @@ export default Navbar;
 //                         statut: "error",
 //                     });
 //                     setOpen(true);
-//                     console.log("RegistreVerifier Navbar: ",response.error)
 //                 }
 //                 setLoading(false);
 //             } catch (error) {
 //                 console.error("Erreur d'inscription:", error);
+//                 setLoading(false);
 //             }
 //         }
 //     };
 
-//     // Fonctions pour ouvrir/fermer les modals
 //     const openLoginModal = () => {
 //         setIsLoginModalOpen(true);
 //         setLoginErrors({});
-//         setMessageError(null)
+//         setMessageError(null);
 //     };
 
 //     const closeLoginModal = () => {
@@ -1167,7 +1149,7 @@ export default Navbar;
 //     const openRegisterModal = () => {
 //         setIsRegisterModalOpen(true);
 //         setRegisterErrors({});
-//         setMessageError(null)
+//         setMessageError(null);
 //     };
 
 //     const closeRegisterModal = () => {
@@ -1183,7 +1165,6 @@ export default Navbar;
 //         });
 //     };
 
-//     // Navigation entre modals
 //     const switchToRegister = () => {
 //         closeLoginModal();
 //         openRegisterModal();
@@ -1200,184 +1181,216 @@ export default Navbar;
 //         }
 //         setOpen(false);
 //     };
+
 //     return (
-//         <nav className="fixed left-0 top-0 h-20 w-full md:h-16">
-//             <div className="z-100 relative  text-black shadow-md duration-200 bg-[#EDECF2] dark:bg-[#0E121E] dark:text-white">
-//                 <div>
-//                     {message.ouvre && (
-//                         <Snackbar
-//                             open={open}
-//                             autoHideDuration={5000}
-//                             onClose={handleClose}
-//                         >
-//                             <Alert
-//                                 onClose={handleClose}
-//                                 severity={message.statut}
-//                                 variant="filled"
-//                                 sx={{ width: "100%" }}
-//                             >
-//                                 {message.texte}
-//                             </Alert>
-//                         </Snackbar>
-//                     )}
-//                 </div>
-//                 {/* Navbar Haut */}
-//                 <div className="rounded-2xl bg-[#E1DFE7] px-10 py-2 shadow-sm shadow-gray-400 dark:bg-[#0E121E] dark:shadow-white/10">
-//                     <div className="flex flex-wrap items-center justify-between gap-2">
-//                         {/* Logo */}
-//                         <div className="w-1/2 md:w-auto">
-//                             <Link
-//                                 to="/"
-//                                 className="text-gradient-to-r flex gap-2 from-[#2563EB] to-[#313f58] text-2xl font-bold sm:text-3xl"
-//                             >
-//                                 <img
-//                                     src={logoBleu}
-//                                     alt="Logo"
-//                                     className="w-10"
-//                                 />
-//                                 MaBeauté
-//                             </Link>
-//                         </div>
-
-//                         {/* search bar */}
-//                         <div className="flex w-full justify-start md:w-auto">
-//                             <div className="relative">
-//                                 <input
-//                                     type="text"
-//                                     placeholder="Recherche..."
-//                                     value={searchTerm}
-//                                     onChange={handleSearchChange}
-//                                     className="focus:border-1 w-[350px] rounded-full border border-gray-300 px-2 py-[5px] focus:border-[#2563EB] focus:outline-none dark:border-gray-500 dark:bg-[#161B2A]"
-//                                 />
-//                                 <IoMdSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-2xl text-gray-500 hover:text-[#2563EB]" />
+//         <>
+//             <style>{`
+//                 @keyframes cartBounce {
+//                     0%, 100% { transform: scale(1) rotate(0deg); }
+//                     25% { transform: scale(1.2) rotate(-10deg); }
+//                     50% { transform: scale(1.1) rotate(10deg); }
+//                     75% { transform: scale(1.15) rotate(-5deg); }
+//                 }
+                
+//                 @keyframes pulse {
+//                     0%, 100% { opacity: 1; }
+//                     50% { opacity: 0.5; }
+//                 }
+                
+//                 .cart-animate {
+//                     animation: cartBounce 0.6s ease-in-out;
+//                 }
+                
+//                 .badge-pulse {
+//                     animation: pulse 0.6s ease-in-out 3;
+//                 }
+                
+//                 @keyframes slideDown {
+//                     from {
+//                         transform: translateY(-100%);
+//                         opacity: 0;
+//                     }
+//                     to {
+//                         transform: translateY(0);
+//                         opacity: 1;
+//                     }
+//                 }
+                
+//                 .navbar-enter {
+//                     animation: slideDown 0.3s ease-out;
+//                 }
+                
+//                 .glass-effect {
+//                     backdrop-filter: blur(10px);
+//                     background: rgba(240, 240, 240, 0.8);
+//                 }
+                
+//                 .glass-effect-dark {
+//                     backdrop-filter: blur(10px);
+//                     background: rgba(14, 18, 30, 0.9);
+//                 }
+                
+//                 @keyframes glow {
+//                     0%, 100% { box-shadow: 0 0 5px rgba(37, 99, 235, 0.5); }
+//                     50% { box-shadow: 0 0 20px rgba(37, 99, 235, 0.8), 0 0 30px rgba(37, 99, 235, 0.6); }
+//                 }
+                
+//                 .search-focus:focus {
+//                     animation: glow 2s ease-in-out infinite;
+//                 }
+                
+//                 .nav-link {
+//                     position: relative;
+//                     transition: all 0.3s ease;
+//                 }
+                
+//                 .nav-link::before {
+//                     content: '';
+//                     position: absolute;
+//                     bottom: -2px;
+//                     left: 50%;
+//                     width: 0;
+//                     height: 2px;
+//                     background: linear-gradient(to right, #2563EB, #3B82F6);
+//                     transition: all 0.3s ease;
+//                     transform: translateX(-50%);
+//                 }
+                
+//                 .nav-link:hover::before {
+//                     width: 80%;
+//                 }
+                
+//                 .nav-link:hover {
+//                     transform: translateY(-2px);
+//                 }
+//             `}</style>
+            
+//             {/* <div className={`relative ${document.documentElement.classList.contains('dark') ? 'glass-effect-dark' : 'glass-effect'} text-black shadow-md duration-200 dark:text-white transition-all`}>
+//                 <div className={`relative ${scrolled ? (document.documentElement.classList.contains('dark') ? 'glass-effect-dark' : 'glass-effect') : 'bg-[#EDECF2] dark:bg-[#0E121E]'} text-black shadow-md duration-200 dark:text-white transition-all`}>
+            
+//             </div> */}
+//             <nav className={`fixed left-0 top-0 h-20 w-full md:h-16 z-50 navbar-enter transition-all duration-300 ${scrolled ? 'shadow-lg' : ''}`}>
+//                  <div className={`relative bg-[#EDECF2] dark:bg-[#0E121E] text-black shadow-md duration-200 dark:text-white transition-all`}>
+            
+//                     <div>
+//                         {message.ouvre && (
+//                             <Snackbar open={open} autoHideDuration={5000} onClose={handleClose}>
+//                                 <Alert onClose={handleClose} severity={message.statut} variant="filled" sx={{ width: "100%" }}>
+//                                     {message.texte}
+//                                 </Alert>
+//                             </Snackbar>
+//                         )}
+//                     </div>
+                    
+//                     <div className=" bg-gradient-to-r from-[#E1DFE7] to-[#F5F4F8] dark:from-[#0E121E] dark:to-[#0E121E] px-10 py-2 shadow-sm shadow-gray-400 dark:shadow-white/10">
+//                         <div className="flex flex-wrap items-center justify-between gap-2">
+//                             <div className="w-1/2 md:w-auto transform transition-all duration-300 hover:scale-105">
+//                                 <Link to="/" className="flex gap-2 items-center text-2xl font-bold sm:text-3xl group">
+//                                     <img src={logoBleu} alt="Logo" className="w-10 transform transition-transform duration-300 group-hover:rotate-12" />
+//                                     <span className=" font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+//                                         MaBeauté
+//                                     </span>
+//                                 </Link>
 //                             </div>
-//                         </div>
 
-//                         {/* guide */}
-//                         <div className="flex items-center justify-between gap-2 max-md:hidden md:w-auto lg:gap-4">
-//                             {/* Panier */}
-//                             <button
-//                                 onClick={() => setOpenPanier(true)}
-//                                 className="flex items-center justify-end gap-3 rounded-full px-4 py-1 hover:bg-gray-300 dark:hover:bg-[#161B2A]"
-//                             >
-//                                 <span>Panier</span>
-//                                 <Badge
-//                                     badgeContent={items.length}
-//                                     color="info"
-//                                 >
-//                                     <FaCartShopping className="cursor-pointer text-xl dark:text-white" />
-//                                 </Badge>
-//                             </button>
-
-//                             <div className="h-6 w-px bg-gray-950/10 dark:bg-white/10"></div>
-
-//                             {/* Connexion / Profil */}
-//                             {(isAuthenticated && user?.roleUsers === "ROLE_USER") || (dejaConnecte && userProviseur.roleUsers === "ROLE_USER") ? (
-//                                 <div className="dropdown dropdown-end">
-//                                     <label
-//                                         tabIndex={0}
-//                                         className="flex items-center justify-end gap-3 rounded-full px-4 py-1 text-white hover:bg-gray-300 dark:hover:bg-[#161B2A]"
-//                                     >
-//                                         <img
-//                                             src={profileImage}
-//                                             alt="avatar"
-//                                             className="h-10 w-10 flex-shrink-0 rounded-full"
-//                                         />
-//                                     </label>
-
-//                                     <ul
-//                                         tabIndex={0}
-//                                         className="menu dropdown-content rounded-box mt-2 w-40 bg-gray-300 p-2 text-black shadow dark:bg-gray-800 dark:text-white"
-//                                     >
-//                                         <li className="text-black hover:bg-gray-400 dark:text-white dark:hover:bg-gray-900">
-//                                             <Link to="/profile">
-//                                                 <img
-//                                                     src={"/public/image/user.png"}
-//                                                     alt="avatar"
-//                                                     className="h-6 w-6 flex-shrink-0 rounded-full"
-//                                                 />
-//                                                 <span>{nomUserConncte}</span>
-//                                             </Link>
-//                                         </li>
-//                                         <li className="text-black hover:bg-gray-400 dark:text-white dark:hover:bg-gray-900">
-//                                             <button onClick={seDeconnecter}>Se déconnecter</button>
-//                                         </li>
-//                                     </ul>
+//                             <div className="flex w-full justify-start md:w-auto">
+//                                 <div className="relative group">
+//                                     <input
+//                                         type="text"
+//                                         placeholder="Recherche..."
+//                                         value={searchTerm}
+//                                         onChange={handleSearchChange}
+//                                         className="w-[350px] rounded-full border-2 border-gray-300 px-4 py-[5px] search-focus focus:border-[#2563EB] focus:outline-none dark:border-gray-500 dark:bg-[#161B2A] transition-all duration-300 pl-10"
+//                                     />
+//                                     <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-2xl text-gray-500 group-hover:text-[#2563EB] transition-colors duration-300" />
 //                                 </div>
-//                             ) : (
-//                                 <div className="flex gap-2">
-//                                     <button
-//                                         onClick={openLoginModal}
-//                                         className="flex items-center justify-end gap-3 rounded-full px-4 py-1 hover:bg-gray-300 dark:hover:bg-[#161B2A]"
-//                                     >
+//                             </div>
+
+//                             <div className="flex items-center justify-between gap-2 max-md:hidden md:w-auto lg:gap-4">
+//                                 <button
+//                                     onClick={() => setOpenPanier(true)}
+//                                     className={`flex items-center justify-end gap-3 rounded-full px-4 py-2 hover:bg-gray-300 dark:hover:bg-[#161B2A] transition-all duration-300 transform hover:scale-105 ${cartAnimation ? 'cart-animate' : ''}`}
+//                                 >
+//                                     <span className="font-medium">Panier</span>
+//                                     <Badge badgeContent={items.length} color="info" className={cartAnimation ? 'badge-pulse' : ''}>
+//                                         <FaCartShopping className="cursor-pointer text-xl dark:text-white" />
+//                                     </Badge>
+//                                 </button>
+
+//                                 <div className="h-6 w-px bg-gradient-to-b from-transparent via-gray-400 to-transparent dark:via-white/20"></div>
+
+//                                 {(isAuthenticated && user?.roleUsers === "ROLE_USER") || (dejaConnecte && userProviseur?.roleUsers === "ROLE_USER") ? (
+//                                     <div className="dropdown z-50 dropdown-end">
+//                                         <label tabIndex={0} className="flex items-center justify-end gap-3 rounded-full px-4 py-1 hover:bg-gray-300 dark:hover:bg-[#161B2A] cursor-pointer transition-all duration-300 transform hover:scale-105">
+//                                             <img src={profileImage} alt="avatar" className="h-8 w-8 flex-shrink-0 rounded-full ring-2 ring-[#2563EB] ring-offset-2 dark:ring-offset-gray-800 transition-all duration-300 hover:ring-4" />
+//                                         </label>
+//                                         <ul tabIndex={0} className="menu dropdown-hover dropdown-content rounded-box mt-2 w-60 bg-white dark:bg-gray-800 p-2 shadow-xl border border-gray-200 dark:border-gray-700">
+//                                             <li className="text-black hover:text-accent  dark:text-white  rounded-lg transition-colors duration-200">
+//                                                 <Link to="/profile" className="flex items-center gap-2">
+//                                                     <img src={profileImage} alt="avatar" className="h-6 w-6 flex-shrink-0 rounded-full" />
+//                                                     <span className="truncate">{nomUserConncte}</span>
+//                                                 </Link>
+//                                             </li>
+//                                             <li className="text-black  dark:text-white hover:text-accent rounded-lg transition-colors duration-200">
+//                                                 <button onClick={seDeconnecter}>Se déconnecter</button>
+//                                             </li>
+//                                         </ul>
+//                                     </div>
+//                                 ) : (
+//                                     <button onClick={openLoginModal} className="flex items-center justify-end gap-3 rounded-full px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-purple-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium">
 //                                         Se connecter
 //                                     </button>
+//                                 )}
+
+//                                 <div className="h-6 w-px bg-gradient-to-b from-transparent via-gray-400 to-transparent dark:via-white/20"></div>
+//                                 <div className="transform transition-all duration-300 hover:scale-110">
+//                                     <DarkMode />
 //                                 </div>
-//                             )}
-
-//                             <div className="h-6 w-px bg-gray-950/10 dark:bg-white/10"></div>
-
-//                             {/* Darkmode Switch */}
-//                             <div>
-//                                 <DarkMode />
 //                             </div>
 //                         </div>
 //                     </div>
-//                 </div>
 
-//                 {/* Navbar Bas */}
-//                 <div
-//                     data-aos="zoom-in"
-//                     className="items-center justify-center px-20 dark:bg-[#161B2A]"
-//                 >
-//                     <div className="flex w-full items-center justify-end gap-2 py-3">
-//                         <div className="ml-4 flex items-center justify-between gap-8">
-//                             <button className="flex items-center justify-center gap-2 rounded-full px-3 py-1 hover:bg-gray-300 dark:hover:bg-gray-800">
-//                                 <RiHome5Fill className="cursor-pointer" />
-//                                 <Link to="/">Accueil</Link>
-//                             </button>
-//                             <button className="flex items-center justify-center gap-2 rounded-full px-3 py-1 hover:bg-gray-300 dark:hover:bg-gray-800">
-//                                 <MdOutlineStarRate className="cursor-pointer text-[#2563EB] dark:text-yellow-500" />
-//                                 <Link to="/Produit">Nos Produits</Link>
-//                             </button>
-//                             {((isAuthenticated && user?.roleUsers === "ROLE_USER") || (dejaConnecte && userProviseur.roleUsers === "ROLE_USER")) && (
-//                                 <button className="flex items-center justify-center gap-2 rounded-full px-3 py-1 hover:bg-gray-300 dark:hover:bg-gray-800">
-//                                     <MdBookmarkBorder className="cursor-pointer" />
-//                                     <Link to="/MesCommande">Mes Commandes</Link>
-//                                 </button>
-//                             )}
+//                     <div className="items-center justify-center px-20 bg-white/50 dark:bg-[#161B2A]/50 backdrop-blur-sm">
+//                         <div className="flex w-full items-center justify-end gap-2 py-3">
+//                             <div className="ml-4 flex items-center justify-between gap-8">
+//                                 <Link to="/" className="nav-link flex items-center justify-center gap-2 rounded-full px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium">
+//                                     <RiHome5Fill className="text-accent" />
+//                                     <span>Accueil</span>
+//                                 </Link>
+//                                 <Link to="/Produit" className="nav-link flex items-center justify-center gap-2 rounded-full px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium">
+//                                     <MdOutlineStarRate className="text-[#2563EB] dark:text-yellow-400 text-xl" />
+//                                     <span>Nos Produits</span>
+//                                 </Link>
+//                                 {((isAuthenticated && user?.roleUsers === "ROLE_USER") || (dejaConnecte && userProviseur?.roleUsers === "ROLE_USER")) && (
+//                                     <Link to="/MesCommande" className="nav-link flex items-center justify-center gap-2 rounded-full px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium">
+//                                         <MdBookmarkBorder className="text-accent" />
+//                                         <span>Mes Commandes</span>
+//                                     </Link>
+//                                 )}
+//                                 <Link to="/apropos" className="nav-link flex items-center justify-center gap-2 rounded-full px-4 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 font-medium">
+//                                     <FaQuestion className="text-accent text-xl" />
+//                                     <span>A propos</span>
+//                                 </Link>
+//                             </div>
 //                         </div>
 //                     </div>
-//                 </div>
 
-//                 <Panier
-//                     open={ouvrePanier}
-//                     onclose={() => setOuvrePanier(false)}
-//                 />
-//             </div>
+//                     <Panier open={ouvrePanier} onclose={() => setOuvrePanier(false)} />
+//                 </div>
+//             </nav>
 
 //             {/* Modal de Connexion */}
-//             <dialog
-//                 id="login_modal"
-//                 className={`modal ${isLoginModalOpen ? "modal-open" : ""}`}
-//             >
+//             <dialog id="login_modal" className={`modal ${isLoginModalOpen ? "modal-open" : ""}`}>
 //                 <div className="modal-box bg-slate-200 dark:bg-gray-800">
 //                     <form method="dialog">
-//                         <button
-//                             className="btn btn-circle btn-ghost btn-sm absolute right-2 top-2"
-//                             onClick={closeLoginModal}
-//                         >
-//                             ✕
-//                         </button>
+//                         <button className="btn btn-circle btn-ghost btn-sm absolute right-2 top-2" onClick={closeLoginModal}>✕</button>
 //                     </form>
-
 //                     <h3 className="mb-6 text-center text-lg font-bold text-gray-900 dark:text-white">Connectez-vous à votre compte</h3>
-
 //                     <form onSubmit={handleLoginSubmit}>
 //                         {messageError && (
-//                                 <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-red-50 p-3 text-red-800 dark:bg-red-800/10 dark:text-red-500">
+//                             <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-red-50 p-3 text-red-800 dark:bg-red-800/10 dark:text-red-500">
 //                                 <MdInfoOutline size={20} />
-//                                 <span> {messageError}</span>
+//                                 <span>{messageError}</span>
 //                             </div>
 //                         )} 
 //                         <div className="mx-8 mb-5 flex flex-col items-center justify-center">
@@ -1410,25 +1423,16 @@ export default Navbar;
 //                                 margY="my-2"
 //                             />
 //                         </div>
-
 //                         <div className="mb-4 text-center">
 //                             <p className="text-sm text-gray-600 dark:text-gray-300">
 //                                 Pas encore de compte ?{" "}
-//                                 <button
-//                                     type="button"
-//                                     className="text-accent hover:underline"
-//                                     onClick={switchToRegister}
-//                                 >
+//                                 <button type="button" className="text-accent hover:underline" onClick={switchToRegister}>
 //                                     Créer un compte
 //                                 </button>
 //                             </p>
 //                         </div>
-
 //                         <div className="modal-action justify-center">
-//                             <button
-//                                 type="submit"
-//                                 className="btn btn-accent btn-outline btn-wide"
-//                             >
+//                             <button type="submit" className="btn btn-accent btn-outline btn-wide transform transition-all duration-300 hover:scale-105">
 //                                 {loading ? (
 //                                     <div className="flex flex-row items-center justify-center gap-2">
 //                                         <span className="loading loading-spinner text-accent"></span>
@@ -1441,81 +1445,48 @@ export default Navbar;
 //                         </div>
 //                     </form>
 //                 </div>
-
-//                 {/* Backdrop pour fermer le modal */}
-//                 <form
-//                     method="dialog"
-//                     className="modal-backdrop"
-//                 >
+//                 <form method="dialog" className="modal-backdrop">
 //                     <button onClick={closeLoginModal}>Fermer</button>
 //                 </form>
 //             </dialog>
 
 //             {/* Modal d'Inscription */}
-//             <dialog
-//                 id="register_modal"
-//                 className={`modal ${isRegisterModalOpen ? "modal-open" : ""}`}
-//             >
+//             <dialog id="register_modal" className={`modal ${isRegisterModalOpen ? "modal-open" : ""}`}>
 //                 <div className="modal-box max-w-2xl bg-slate-200 dark:bg-gray-800">
 //                     <form method="dialog">
-//                         <button
-//                             className="btn btn-circle btn-ghost btn-sm absolute right-2 top-2"
-//                             onClick={closeRegisterModal}
-//                         >
-//                             ✕
-//                         </button>
+//                         <button className="btn btn-circle btn-ghost btn-sm absolute right-2 top-2" onClick={closeRegisterModal}>✕</button>
 //                     </form>
-
 //                     <h3 className="mb-6 text-center text-lg font-bold text-gray-900 dark:text-white">Créez votre compte</h3>
-
 //                     <form onSubmit={handleRegisterSubmit}>
 //                         {messageError && (
-//                                 <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-red-50 p-3 text-red-800 dark:bg-red-800/10 dark:text-red-500">
+//                             <div className="mt-4 flex justify-center space-x-1 rounded-lg bg-red-50 p-3 text-red-800 dark:bg-red-800/10 dark:text-red-500">
 //                                 <MdInfoOutline size={20} />
-//                                 <span> {messageError}</span>
+//                                 <span>{messageError}</span>
 //                             </div>
 //                         )} 
-                            
 //                         <div className="mb-5 flex h-[400px] flex-col items-center justify-center overflow-y-auto px-4">
-                            
 //                             <div className="mt-4 w-2/3 items-start">
 //                                 <FormControl error={!!registerErrors.civiliteClient}>
-//                                     <FormLabel
-//                                         id="choix-label"
-//                                         className="text-gray-600 dark:text-slate-300"
-//                                     >
+//                                     <FormLabel id="choix-label" className="text-gray-600 dark:text-slate-300">
 //                                         Civilité du Client
 //                                     </FormLabel>
 //                                     <RadioGroup
 //                                         row
-//                                         aria-labelledby="demo-row-radio-buttons-group-label"
 //                                         name="civiliteClient"
 //                                         value={registerData.civiliteClient || ""}
 //                                         className="gap-5 text-gray-600 dark:text-slate-300"
 //                                         onChange={handleRegisterChange}
 //                                     >
-//                                         <FormControlLabel
-//                                             value="Mr"
-//                                             control={<Radio />}
-//                                             label="Mr"
-//                                         />
-//                                         <FormControlLabel
-//                                             value="Mme"
-//                                             control={<Radio />}
-//                                             label="Mme"
-//                                         />
-//                                         <FormControlLabel
-//                                             value="Mlle"
-//                                             control={<Radio />}
-//                                             label="Mlle"
-//                                         />
+//                                         <FormControlLabel value="Mr" control={<Radio />} label="Mr" />
+//                                         <FormControlLabel value="Mme" control={<Radio />} label="Mme" />
+//                                         <FormControlLabel value="Mlle" control={<Radio />} label="Mlle" />
 //                                     </RadioGroup>
 //                                     <FormHelperText>{registerErrors.civiliteClient}</FormHelperText>
 //                                 </FormControl>
 //                             </div>
 
 //                             <InputValidate
-//                                 IconComponent={FaUser}
+//                                 IconComponent={IoPerson}
 //                                 type="text"
 //                                 largeur="full"
 //                                 placeholder="Votre nom..."
@@ -1618,12 +1589,12 @@ export default Navbar;
 //                         <div className="modal-action justify-center">
 //                             <button
 //                                 type="submit"
-//                                 className="btn btn-accent btn-outline btn-wide"
+//                                 className="btn btn-accent btn-outline btn-wide transform transition-all duration-300 hover:scale-105"
 //                             >
 //                                 {loading ? (
 //                                     <div className="flex flex-row items-center justify-center gap-2">
 //                                         <span className="loading loading-spinner text-accent"></span>
-//                                         <span>Connexion en cours...</span>
+//                                         <span>Inscription en cours...</span>
 //                                     </div>
 //                                 ) : (
 //                                     "S'inscrire à nouveau compte"
@@ -1634,14 +1605,11 @@ export default Navbar;
 //                 </div>
 
 //                 {/* Backdrop pour fermer le modal */}
-//                 <form
-//                     method="dialog"
-//                     className="modal-backdrop"
-//                 >
-//                     <button onClick={closeRegisterModal}>close</button>
+//                 <form method="dialog" className="modal-backdrop">
+//                     <button onClick={closeRegisterModal}>Fermer</button>
 //                 </form>
 //             </dialog>
-//         </nav>
+//         </>
 //     );
 // };
 
